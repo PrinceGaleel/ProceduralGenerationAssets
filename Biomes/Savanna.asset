@@ -1,0 +1,44 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e3b490bc7d82cca4ca791f6c878fd181, type: 3}
+  m_Name: Savanna
+  m_EditorClassIdentifier: 
+  BiomeName: 
+  _GrassSettings:
+    BrushSize: 3
+    NormalLimit: 1
+    GrassDensity: 2
+    SizeWidth: 0.3
+    SizeLength: 0.2
+  TerrainColor: {r: 0.40000004, g: 0.40000004, b: 0, a: 0}
+  _FoliageSettings:
+    FoliageInfos:
+    - Prefab: {fileID: 186820, guid: d6452cc423df5ae4e99b4cdef7b10e10, type: 3}
+      MinFoliageScale: 1.5
+      MaxExtensionHeight: 1
+      ChanceOfSpawning: 0.5
+    - Prefab: {fileID: 107988, guid: c56d23e67fdb15a41a0e520fdd34d8cc, type: 3}
+      MinFoliageScale: 1.5
+      MaxExtensionHeight: 1
+      ChanceOfSpawning: 0.5
+    _PerlinData:
+      PerlinOffset:
+        x: 0
+        y: 0
+      PerlinScale: 0.2
+    PlacementThreshold: 0.3
+    SquareCheckSize: 15
+    ChanceOfTree: 0.4
+  LowestPoint: 0.6
+  HighestPoint: 0.8
+  LowestTemperature: 0.5
+  HighestTemperature: 0.9

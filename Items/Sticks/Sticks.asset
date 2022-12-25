@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 18a7193c35199f5438b84af38d75cf16, type: 3}
+  m_Name: Sticks
+  m_EditorClassIdentifier: 
+  _ItemType: 0
+  ItemName: Stick
+  Description: A stick of wood. A wooden stick. A sticken wood. A wood of stick.
+  ItemImage: {fileID: 21300000, guid: bfa91c5126c1b2d4fbf3925e1d93e99e, type: 3}
+  Value: 0
+  Recipes:
+  - _Item: {fileID: 11400000, guid: 8bbb3afeb4759874394e60d04351d4c2, type: 2}
+    Amount: 1
+    AmountCrafted: 4
+  DropPrefab: {fileID: 1154308530469040, guid: 5455f9e43e8967b44b11706d6eeb5e8c, type: 3}
+  OtherPrefab: {fileID: 0}

@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e3b490bc7d82cca4ca791f6c878fd181, type: 3}
+  m_Name: Ice Plains
+  m_EditorClassIdentifier: 
+  BiomeName: Ice Plains
+  _GrassSettings:
+    BrushSize: 3
+    NormalLimit: 1
+    GrassDensity: 2
+    SizeWidth: 0.3
+    SizeLength: 0.2
+  TerrainColor: {r: 1, g: 1, b: 1, a: 0}
+  _FoliageSettings:
+    FoliageInfos: []
+    _PerlinData:
+      PerlinOffset:
+        x: 0
+        y: 0
+      PerlinScale: 0.2
+    PlacementThreshold: 0
+    SquareCheckSize: 0
+    ChanceOfTree: 0
+  LowestPoint: 0.8
+  HighestPoint: 1
+  LowestTemperature: 0
+  HighestTemperature: 0.3
