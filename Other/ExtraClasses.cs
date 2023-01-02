@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.AI;
 
 [Serializable]
 public class FloatRange
@@ -21,6 +22,39 @@ public class FloatRange
     {
         return Min + ((float)rnd.NextDouble() * Range);
     }    
+}
+
+public class ExtraUtils
+{
+    public static string RemoveSpace(string input)
+    {
+        string output = string.Copy(input);
+
+        if (output.Length > 0)
+        {
+            while (output[0] == ' ')
+            {
+                output = output.Remove(0, 1);
+            }
+
+            while (output[^1] == ' ')
+            {
+                output = output.Remove(output.Length - 1, 1);
+            }
+        }
+
+        return output;
+    }
+
+    public static Vector3 GetNavMeshPos(Vector3 pos)
+    {
+        if(NavMesh.SamplePosition(pos, out NavMeshHit hit, 10, ~0))
+        {
+            return hit.position;
+        }
+
+        return Vector3.zero;
+    }
 }
 
 [Serializable]

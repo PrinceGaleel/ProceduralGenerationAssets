@@ -1,11 +1,8 @@
-﻿// character randomizer version 1.30
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 public class CharacterOrganizer : MonoBehaviour
 {
-    public static CharacterOrganizer Instance;
-
     [Header("Material")]
     public Material _Material;
 
@@ -42,72 +39,21 @@ public class CharacterOrganizer : MonoBehaviour
     [Header("Body Art Colors")]
     public Color[] BodyArt = { new Color(0.0509804f, 0.6745098f, 0.9843138f), new(0.7215686f, 0.2666667f, 0.2666667f), new(0.3058824f, 0.7215686f, 0.6862745f), new(0.9254903f, 0.882353f, 0.8509805f), new(0.3098039f, 0.7058824f, 0.3137255f), new(0.5294118f, 0.3098039f, 0.6470588f), new(0.8666667f, 0.7764707f, 0.254902f), new(0.2392157f, 0.4588236f, 0.8156863f) };
 
-    private bool IsMale;
-
-    private CharacterObjectParents Male;
-    private CharacterObjectParents Female;
-    private CharacterObjectListsAllGender AllGender;
-
-    public int HeadAllElements = -1;
-    public int HeadNoElements = -1;
-    public int Eyebrow = -1;
-    public int FacialHair = -1;
-    public int Torso = -1;
-    public int ArmUpperRight = -1;
-    public int ArmUpperLeft = -1;
-    public int ArmLowerRight = -1;
-    public int ArmlowerLeft = -1;
-    public int HandRight = -1;
-    public int HandLeft = -1;
-    public int Hips = -1;
-    public int LegRight = -1;
-    public int LegLeft = -1;
+    public CharacterObjectParents Male;
+    public CharacterObjectParents Female;
+    public CharacterObjectListsAllGender AllGender;
 
     private void Awake()
     {
-        if (Instance)
-        {
-            Debug.Log("Error: Multiple character organizer instances detected");
-            Destroy(gameObject);
-            enabled = false;
-        }
-        else
-        {
-            Instance = this;
-            BuildParentParts();
-        }
+        BuildParentParts();
     }
 
-    private void Start()
-    {
-        DefaultCharacter();
-    }
-
-    private void DefaultCharacter()
-    {
-        IsMale = true;
-
-        Male.HeadAllElements.GetChild(0).gameObject.SetActive(true);
-        Male.Eyebrow.GetChild(0).gameObject.SetActive(true);
-        Male.FacialHair.GetChild(0).gameObject.SetActive(true);
-        Male.Torso.GetChild(0).gameObject.SetActive(true);
-        Male.ArmUpperRight.GetChild(0).gameObject.SetActive(true);
-        Male.ArmUpperLeft.GetChild(0).gameObject.SetActive(true);
-        Male.ArmLowerRight.GetChild(0).gameObject.SetActive(true);
-        Male.ArmlowerLeft.GetChild(0).gameObject.SetActive(true);
-        Male.HandRight.GetChild(0).gameObject.SetActive(true);
-        Male.HandLeft.GetChild(0).gameObject.SetActive(true);
-        Male.Hips.GetChild(0).gameObject.SetActive(true);
-        Male.LegRight.GetChild(0).gameObject.SetActive(true);
-        Male.LegLeft.GetChild(0).gameObject.SetActive(true);
-    }
-
-    private void BuildParentParts()
+    protected void BuildParentParts()
     {
         Transform[] rootTransforms = gameObject.GetComponentsInChildren<Transform>();
-        Male = new(rootTransforms, "Male");
-        Female = new(rootTransforms, "Female");
-        AllGender = new(rootTransforms);
+        SetGender(Male, rootTransforms, "Male");
+        SetGender(Female, rootTransforms, "Female");
+        SetAllGender(AllGender, rootTransforms);
     }
 
     private static Transform BuildList(string characterPart, Transform[] rootTransform)
@@ -129,156 +75,84 @@ public class CharacterOrganizer : MonoBehaviour
         return null;
     }
 
-    public void ChangeGender()
+    public void SetGender(CharacterObjectParents container, Transform[] rootTransforms, string prefix)
     {
-        DisableGenderParts();
-        IsMale = !IsMale;
-        EnableGenderParts();
+        //build out male lists
+        container.HeadAllElements = BuildList(prefix + "_Head_All_Elements", rootTransforms);
+        container.HeadNoElements = BuildList(prefix + "_Head_No_Elements", rootTransforms);
+        container.Eyebrow = BuildList(prefix + "_01_Eyebrows", rootTransforms);
+        container.FacialHair = BuildList(prefix + "_02_FacialHair", rootTransforms);
+        container.Torso = BuildList(prefix + "_03_Torso", rootTransforms);
+        container.ArmUpperRight = BuildList(prefix + "_04_Arm_Upper_Right", rootTransforms);
+        container.ArmUpperLeft = BuildList(prefix + "_05_Arm_Upper_Left", rootTransforms);
+        container.ArmLowerRight = BuildList(prefix + "_06_Arm_Lower_Right", rootTransforms);
+        container.ArmlowerLeft = BuildList(prefix + "_07_Arm_Lower_Left", rootTransforms);
+        container.HandRight = BuildList(prefix + "_08_Hand_Right", rootTransforms);
+        container.HandLeft = BuildList(prefix + "_09_Hand_Left", rootTransforms);
+        container.Hips = BuildList(prefix + "_10_Hips", rootTransforms);
+        container.LegRight = BuildList(prefix + "_11_Leg_Right", rootTransforms);
+        container.LegLeft = BuildList(prefix + "_12_Leg_Left", rootTransforms);
     }
 
-    private void DisableGenderParts()
+    public void SetAllGender(CharacterObjectListsAllGender container, Transform[] rootTransforms)
     {
-        CharacterObjectParents whichGender;
-
-        if (IsMale)
-        {
-            whichGender = Male;
-        }
-        else
-        {
-            whichGender = Female;
-        }
-
-        whichGender.HeadAllElements.GetChild(HeadAllElements).gameObject.SetActive(false);
-        whichGender.HeadNoElements.GetChild(HeadNoElements).gameObject.SetActive(false);
-        whichGender.Eyebrow.GetChild(Eyebrow).gameObject.SetActive(false);
-
-        if (IsMale)
-        {
-            whichGender.FacialHair.GetChild(FacialHair).gameObject.SetActive(false);
-        }
-
-        whichGender.Torso.GetChild(Torso).gameObject.SetActive(false);
-        whichGender.ArmUpperRight.GetChild(ArmUpperRight).gameObject.SetActive(false);
-        whichGender.ArmUpperLeft.GetChild(ArmUpperLeft).gameObject.SetActive(false);
-        whichGender.ArmLowerRight.GetChild(ArmLowerRight).gameObject.SetActive(false);
-        whichGender.ArmlowerLeft.GetChild(ArmlowerLeft).gameObject.SetActive(false);
-        whichGender.HandRight.GetChild(HandRight).gameObject.SetActive(false);
-        whichGender.HandLeft.GetChild(HandLeft).gameObject.SetActive(false);
-        whichGender.Hips.GetChild(Hips).gameObject.SetActive(false);
-        whichGender.LegRight.GetChild(LegRight).gameObject.SetActive(false);
-        whichGender.LegLeft.GetChild(LegLeft).gameObject.SetActive(false);
+        container. AllHair = BuildList("All_01_Hair", rootTransforms);
+        container.AllHeadAttachment = BuildList("All_02_Head_Attachment", rootTransforms);
+        container.HeadCoveringsBaseHair = BuildList("HeadCoverings_Base_Hair", rootTransforms);
+        container.HeadCoveringsNoFacialHair = BuildList("HeadCoverings_No_FacialHair", rootTransforms);
+        container.HeadCoveringsNoHair = BuildList("HeadCoverings_No_Hair", rootTransforms);
+        container.ChestAttachment = BuildList("All_03_Chest_Attachment", rootTransforms);
+        container.BackAttachment = BuildList("All_04_Back_Attachment", rootTransforms);
+        container.ShoulderAttachmentRight = BuildList("All_05_Shoulder_Attachment_Right", rootTransforms);
+        container.SHoulderAttachmentLeft = BuildList("All_06_Shoulder_Attachment_Left", rootTransforms);
+        container.ElbowAttachmentRight = BuildList("All_07_Elbow_Attachment_Right", rootTransforms);
+        container.ElbowAttachmentLeft = BuildList("All_08_Elbow_Attachment_Left", rootTransforms);
+        container.HipsAttachment = BuildList("All_09_Hips_Attachment", rootTransforms);
+        container.KneeAttachmentRight = BuildList("All_10_Knee_Attachement_Right", rootTransforms);
+        container.KneeAttachmentLeft = BuildList("All_11_Knee_Attachement_Left", rootTransforms);
+        container.ElfEars = BuildList("Elf_Ear", rootTransforms);
     }
+}
 
-    private void EnableGenderParts()
-    {
-        CharacterObjectParents whichGender;
+[System.Serializable]
+public class CharacterObjectParents
+{
+    public Transform HeadAllElements;
+    public Transform Eyebrow;
+    public Transform FacialHair;
 
-        if (IsMale)
-        {
-            whichGender = Male;
-        }
-        else
-        {
-            whichGender = Female;
-        }
+    public Transform Torso;
+    public Transform ArmUpperRight;
+    public Transform ArmUpperLeft;
+    public Transform ArmLowerRight;
+    public Transform ArmlowerLeft;
+    public Transform HandRight;
+    public Transform HandLeft;
+    public Transform Hips;
+    public Transform LegRight;
+    public Transform LegLeft;
 
-        whichGender.HeadAllElements.GetChild(HeadAllElements).gameObject.SetActive(true);
-        whichGender.HeadNoElements.GetChild(HeadNoElements).gameObject.SetActive(true);
-        whichGender.Eyebrow.GetChild(Eyebrow).gameObject.SetActive(true);
+    public Transform HeadNoElements;
+}
 
-        if (IsMale)
-        {
-            whichGender.FacialHair.GetChild(FacialHair).gameObject.SetActive(true);
-        }
+[System.Serializable]
+public class CharacterObjectListsAllGender
+{
+    public Transform AllHair;
 
-        whichGender.Torso.GetChild(Torso).gameObject.SetActive(true);
-        whichGender.ArmUpperRight.GetChild(ArmUpperRight).gameObject.SetActive(true);
-        whichGender.ArmUpperLeft.GetChild(ArmUpperLeft).gameObject.SetActive(true);
-        whichGender.ArmLowerRight.GetChild(ArmLowerRight).gameObject.SetActive(true);
-        whichGender.ArmlowerLeft.GetChild(ArmlowerLeft).gameObject.SetActive(true);
-        whichGender.HandRight.GetChild(HandRight).gameObject.SetActive(true);
-        whichGender.HandLeft.GetChild(HandLeft).gameObject.SetActive(true);
-        whichGender.Hips.GetChild(Hips).gameObject.SetActive(true);
-        whichGender.LegRight.GetChild(LegRight).gameObject.SetActive(true);
-        whichGender.LegLeft.GetChild(LegLeft).gameObject.SetActive(true);
-    }
-
-    [System.Serializable]
-    private class CharacterObjectParents
-    {
-        public Transform HeadAllElements;
-        public Transform HeadNoElements;
-        public Transform Eyebrow;
-        public Transform FacialHair;
-        public Transform Torso;
-        public Transform ArmUpperRight;
-        public Transform ArmUpperLeft;
-        public Transform ArmLowerRight;
-        public Transform ArmlowerLeft;
-        public Transform HandRight;
-        public Transform HandLeft;
-        public Transform Hips;
-        public Transform LegRight;
-        public Transform LegLeft;
-
-        public CharacterObjectParents(Transform[] rootTransforms, string prefix)
-        {
-            //build out male lists
-            HeadAllElements = BuildList(prefix + "_Head_All_Elements", rootTransforms);
-            HeadNoElements = BuildList(prefix + "_Head_No_Elements", rootTransforms);
-            Eyebrow = BuildList(prefix + "_01_Eyebrows", rootTransforms);
-            FacialHair = BuildList(prefix + "_02_FacialHair", rootTransforms);
-            Torso = BuildList(prefix + "_03_Torso", rootTransforms);
-            ArmUpperRight = BuildList(prefix + "_04_Arm_Upper_Right", rootTransforms);
-            ArmUpperLeft = BuildList(prefix + "_05_Arm_Upper_Left", rootTransforms);
-            ArmLowerRight = BuildList(prefix + "_06_Arm_Lower_Right", rootTransforms);
-            ArmlowerLeft = BuildList(prefix + "_07_Arm_Lower_Left", rootTransforms);
-            HandRight = BuildList(prefix + "_08_Hand_Right", rootTransforms);
-            HandLeft = BuildList(prefix + "_09_Hand_Left", rootTransforms);
-            Hips = BuildList(prefix + "_10_Hips", rootTransforms);
-            LegRight = BuildList(prefix + "_11_Leg_Right", rootTransforms);
-            LegLeft = BuildList(prefix + "_12_Leg_Left", rootTransforms);
-        }
-    }
-
-    [System.Serializable]
-    private class CharacterObjectListsAllGender
-    {
-        public Transform HeadCoveringsBaseHair;
-        public Transform HeadCoveringsNoFacialHair;
-        public Transform HeadCoveringsNoHair;
-        public Transform AllHair;
-        public Transform AllHeadAttachment;
-        public Transform ChestAttachment;
-        public Transform BackAttachment;
-        public Transform ShoulderAttachmentRight;
-        public Transform SHoulderAttachmentLeft;
-        public Transform ElbowAttachmentRight;
-        public Transform ElbowAttachmentLeft;
-        public Transform HipsAttachment;
-        public Transform KneeAttachmentRight;
-        public Transform KneeAttachmentLeft;
-        public Transform Ears;
-        public Transform ElfEars;
-
-        public CharacterObjectListsAllGender(Transform[] rootTransforms)
-        {
-            AllHair = BuildList("All_01_Hair", rootTransforms);
-            AllHeadAttachment = BuildList("All_02_Head_Attachment", rootTransforms);
-            HeadCoveringsBaseHair = BuildList("HeadCoverings_Base_Hair", rootTransforms);
-            HeadCoveringsNoFacialHair = BuildList("HeadCoverings_No_FacialHair", rootTransforms);
-            HeadCoveringsNoHair = BuildList("HeadCoverings_No_Hair", rootTransforms);
-            ChestAttachment = BuildList("All_03_Chest_Attachment", rootTransforms);
-            BackAttachment = BuildList("All_04_Back_Attachment", rootTransforms);
-            ShoulderAttachmentRight = BuildList("All_05_Shoulder_Attachment_Right", rootTransforms);
-            SHoulderAttachmentLeft = BuildList("All_06_Shoulder_Attachment_Left", rootTransforms);
-            ElbowAttachmentRight = BuildList("All_07_Elbow_Attachment_Right", rootTransforms);
-            ElbowAttachmentLeft = BuildList("All_08_Elbow_Attachment_Left", rootTransforms);
-            HipsAttachment = BuildList("All_09_Hips_Attachment", rootTransforms);
-            KneeAttachmentRight = BuildList("All_10_Knee_Attachement_Right", rootTransforms);
-            KneeAttachmentLeft = BuildList("All_11_Knee_Attachement_Left", rootTransforms);
-            ElfEars = BuildList("Elf_Ear", rootTransforms);
-        }
-    }
+    public Transform HeadCoveringsBaseHair;
+    public Transform HeadCoveringsNoFacialHair;
+    public Transform HeadCoveringsNoHair;
+    public Transform AllHeadAttachment;
+    public Transform ChestAttachment;
+    public Transform BackAttachment;
+    public Transform ShoulderAttachmentRight;
+    public Transform SHoulderAttachmentLeft;
+    public Transform ElbowAttachmentRight;
+    public Transform ElbowAttachmentLeft;
+    public Transform HipsAttachment;
+    public Transform KneeAttachmentRight;
+    public Transform KneeAttachmentLeft;
+    public Transform Ears;
+    public Transform ElfEars;
 }

@@ -13,17 +13,11 @@ MonoBehaviour:
   m_Name: Taiga
   m_EditorClassIdentifier: 
   BiomeName: Taiga
-  _GrassSettings:
-    BrushSize: 3
-    NormalLimit: 1
-    GrassDensity: 2
-    SizeWidth: 0.3
-    SizeLength: 0.2
-  TerrainColor: {r: 0.6, g: 1, b: 0.40000004, a: 0}
+  TerrainColor: {r: 0.30079675, g: 0.5, b: 0.2055256, a: 1}
   _FoliageSettings:
     FoliageInfos: []
     _PerlinData:
-      PerlinOffset:
+      Offset:
         x: 0
         y: 0
       PerlinScale: 0.2

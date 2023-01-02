@@ -4,14 +4,22 @@ using System.Linq;
 using UnityEngine;
 using System.Threading;
 
+public enum StructureTypes
+{
+    Village,
+    MobDen
+}
+
 public class StructureCreator : MonoBehaviour
 {
+    public static StructureCreator Instance;
     public static List<Vector2Int> VillageChunks = new();
     public static List<Vector2Int> MobDensToCreate = new() { new Vector2Int(0, 0) };
 
-    [Header("Village Variables")]
-    private static StructureCreator Instance;
+    [Header("Mob Den Variables")]
+    public GameObject[] MobDenPrefabs;
 
+    [Header("Village Variables")]
     private static Queue<Chunk> VillagesToPrepare;
     private static Queue<Dictionary<Vector2, GameObject>> VillagesToCreate;
     public static Queue<Transform> StructureParents;
@@ -185,32 +193,8 @@ public class StructureCreator : MonoBehaviour
                         StructureParents.Enqueue(chunk.StructureParent);
                     }
 
-                highestY += 5;
-                lowestY -= 5;
-                highestX += 5;
-                lowestX -= 5;
 
-                int highestChunkY = Mathf.CeilToInt(highestY / 240);
-                int lowestChunkY = Mathf.FloorToInt(lowestY / 240);
-                int highestChunkX = Mathf.CeilToInt(highestX / 240);
-                int lowestChunkX = Mathf.FloorToInt(lowestX / 240);
-
-                Vector2 centre = new((lowestX + highestX) / 2, (lowestY + highestY) / 2);
-                Vector2 extents = new(Mathf.Abs(lowestX - highestX), Mathf.Abs(lowestY - highestY));
-
-                lock (FoliageManager.TreesToRemove)
-                {
-                    for (int i = lowestChunkY; i <= highestChunkY; i++)
-                    {
-                        for (int j = lowestChunkX; j <= highestChunkX; j++)
-                        {
-                            if (!FoliageManager.TreesToRemove.ContainsKey(new(i, j)))
-                            {
-                                FoliageManager.TreesToRemove.Add(new(i, j), new(new(centre.x, 0, centre.y), new(extents.x, 500, extents.y)));
-                            }
-                        }
-                    }
-                }
+                FoliageManager.AddTreesToRemove(new(lowestX, lowestY), new(highestX, highestY));
             }
         }
     }

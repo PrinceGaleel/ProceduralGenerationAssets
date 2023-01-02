@@ -23,7 +23,7 @@ public abstract class CharacterStats : MonoBehaviour
     public float BaseDamage;
 
     [Header("Levelling")]
-    public int CurrentXP;
+    public int CurrentExp;
     public int ExpToLevelUp;
     public int Level;
     public int SkillPoints;
@@ -36,6 +36,7 @@ public abstract class CharacterStats : MonoBehaviour
 
     [Header("Other")]
     public Races Race;
+    public int MyTeamID;
 
     public void SetRequiredXP()
     {
@@ -54,11 +55,15 @@ public abstract class CharacterStats : MonoBehaviour
     {
         CharStandardAwake();
         SetRequiredXP();
-        CurrentXP = 0;
+        CurrentExp = 0;
     }
 
     protected void CharStandardAwake()
     {
+        CurrentHealth = MaxHealth;
+        CurrentMana = MaxMana;
+        CurrentStamina = MaxStamina;
+
         FindHitboxes();
         if (!Anim)
         {
@@ -128,11 +133,39 @@ public abstract class CharacterStats : MonoBehaviour
         }
     }
 
+    public void DefaultIncreaseStamina(float amount)
+    {
+        CurrentStamina = CurrentStamina + Mathf.Abs(amount) < MaxStamina ? CurrentStamina + Mathf.Abs(amount) : MaxStamina;
+    }
+
+    public void DefaultDecreaseStamina(float amount)
+    {
+        CurrentStamina = CurrentStamina - Mathf.Abs(amount) > 0 ? CurrentStamina - Mathf.Abs(amount) : 0;
+    }
+
+    public void DefaultIncreaseMana(float amount)
+    {
+        CurrentMana = CurrentMana + Mathf.Abs(amount) < MaxStamina ? CurrentMana + Mathf.Abs(amount) : MaxStamina;
+    }
+
+    public void DefaultDecreaseMana(float amount)
+    {
+        CurrentMana = CurrentMana - Mathf.Abs(amount) > 0 ? CurrentMana - Mathf.Abs(amount) : 0;
+    }
+
     protected abstract void Death();
 
     public abstract void IncreaseHealth(float amount);
 
     public abstract void DecreaseHealth(float amount);
+
+    public abstract void IncreaseStamina(float amount);
+
+    public abstract void DecreaseStamina(float amount);
+
+    public abstract void IncreaseMana(float amount);
+
+    public abstract void DecreaseMana(float amount);
 
     public void StandardDeath()
     {

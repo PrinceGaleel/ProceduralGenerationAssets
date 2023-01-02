@@ -7,8 +7,8 @@ public class Chunk : MonoBehaviour
 {
     public Vector2Int WorldPosition { get; private set; }
     public Vector2Int ChunkPosition { private set; get; }
-    private MeshFilter _MeshFilter;
-    private MeshRenderer _MeshRenderer;
+    public MeshFilter ChunkMeshFilter { get; private set; }
+    private MeshRenderer ChunkMeshRenderer;
     private MeshCollider _MeshCollider;
 
     public Transform FoliageParent;
@@ -19,7 +19,7 @@ public class Chunk : MonoBehaviour
     public const int ChunkSize = 60;
 
     public bool TerrainReady;
-    public bool HasTrees;
+    public bool TreeReady;
     public bool GrassReady;
     public bool Active
     {
@@ -40,7 +40,7 @@ public class Chunk : MonoBehaviour
         ChunkPosition = worldPos / ChunkSize;
         Active = false;
         TerrainReady = false;
-        HasTrees = false;
+        TreeReady = false;
 
         transform.position = new(worldPos.x, 0, worldPos.y);
         gameObject.transform.SetParent(World.WorldTransform);
@@ -48,20 +48,16 @@ public class Chunk : MonoBehaviour
         gameObject.layer = LayerMask.NameToLayer("Terrain");
         gameObject.isStatic = true;
 
-        _MeshFilter = gameObject.AddComponent<MeshFilter>();
-        _MeshRenderer = gameObject.AddComponent<MeshRenderer>();
+        ChunkMeshFilter = gameObject.AddComponent<MeshFilter>();
+        ChunkMeshRenderer = gameObject.AddComponent<MeshRenderer>();
         _MeshCollider = gameObject.AddComponent<MeshCollider>();
 
-        _MeshRenderer.materials = new Material[1] { World.Instance.MeshMaterial };
-
-        if (RenderTerrainMap.Instance)
-        {
-            RenderTerrainMap.Instance.Renderers.Add(_MeshRenderer);
-        }
+        ChunkMeshRenderer.materials = new Material[1] { World.MeshMaterial };
 
         Foliages = new();
         FoliageParent = new GameObject("Foliage").transform;
         FoliageParent.SetParent(transform);
+        FoliageParent.gameObject.SetActive(false);
 
         for (int i = 0; i < World.Biomes.Length; i++)
         {
@@ -89,6 +85,16 @@ public class Chunk : MonoBehaviour
     public static float GetPerlinNoise(float x, float y, PerlinData perlinData)
     {
         return Mathf.Abs(Mathf.PerlinNoise((x + perlinData.Offset.x + BaseOffset) / ChunkSize * perlinData.PerlinScale, (y + perlinData.Offset.y + BaseOffset) / ChunkSize * perlinData.PerlinScale));
+    }
+
+    public static Vector3 GetPerlinPosition(float x, float y)
+    {
+        return new(x, GetPerlinNoise(x + (ChunkSize / 2), y + (ChunkSize / 2), World.CurrentSaveData.HeightPerlin) * SaveData.HeightMultipler, y);
+    }
+
+    public static Vector2Int GetChunkPosition(Vector2 position)
+    {
+        return new(Mathf.RoundToInt(position.x / ChunkSize), Mathf.RoundToInt(position.y / ChunkSize));
     }
 
     public void CreateMesh()
@@ -187,10 +193,11 @@ public class Chunk : MonoBehaviour
 
         mesh.RecalculateNormals();
 
-        _MeshFilter.mesh = mesh;
+        ChunkMeshFilter.mesh = mesh;
         _MeshCollider.sharedMesh = mesh;
 
         TerrainReady = true;
+        Active = true;
     }
 
     public class FoliageInfoToMove

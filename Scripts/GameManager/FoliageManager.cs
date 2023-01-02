@@ -10,8 +10,7 @@ public class FoliageManager : MonoBehaviour
     public static Dictionary<int, float[]> FoliageThresholds { private set; get; }
     public static Queue<Chunk> FoliageToAdd;
     public static Queue<Chunk> FoliageToRemove;
-    public static Dictionary<Vector2Int, Bounds> TreesToRemove;
-    public static Dictionary<Vector2Int, Bounds> FutureTreesToRemove;
+    private static Dictionary<Vector2Int, Bounds> TreesToRemove;
     public Transform InactiveParent;
 
     private void Awake()
@@ -74,16 +73,14 @@ public class FoliageManager : MonoBehaviour
                         if (World.ActiveTerrain[keys[i]].Foliages.Count > 0)
                         {
                             RemoveTrees(World.ActiveTerrain[keys[i]], TreesToRemove[keys[i]]);
-                            continue;
+                            TreesToRemove.Remove(keys[i]);
                         }
-                    }
-
-                    FutureTreesToRemove.Add(keys[i], TreesToRemove[keys[i]]);                    
+                    }               
                 }
-                TreesToRemove = new();
             }
         }
-        else if (FoliageToAdd.Count > 0 && (FoliageToAdd.Count <= FoliageToRemove.Count || FoliageToRemove.Count == 0))
+        
+        if (FoliageToAdd.Count > 0 && (FoliageToAdd.Count <= FoliageToRemove.Count || FoliageToRemove.Count == 0))
         {
             lock (FoliageToAdd)
             {
@@ -104,7 +101,7 @@ public class FoliageManager : MonoBehaviour
                         }
                     }
 
-                    chunk.HasTrees = true;
+                    chunk.TreeReady = true;
                 }
             }
         }
@@ -120,7 +117,37 @@ public class FoliageManager : MonoBehaviour
                         StoreFoliage(chunk.Foliages[j]);
                     }
 
-                    chunk.HasTrees = false;
+                    chunk.TreeReady = false;
+                }
+            }
+        }
+    }
+
+    public static void AddTreesToRemove(Vector2 lowest, Vector2 highest)
+    {
+        highest.y += 5;
+        lowest.y -= 5;
+        highest.x += 5;
+        lowest.x -= 5;
+
+        int highestChunkY = Mathf.CeilToInt(highest.y / 240);
+        int lowestChunkY = Mathf.FloorToInt(lowest.y / 240);
+        int highestChunkX = Mathf.CeilToInt(highest.x/ 240);
+        int lowestChunkX = Mathf.FloorToInt(lowest.x / 240);
+
+        Vector2 centre = new((lowest.x + highest.x) / 2, (lowest.y + highest.y) / 2);
+        Vector2 extents = new(Mathf.Abs(lowest.x - highest.x), Mathf.Abs(lowest.y - highest.y));
+
+        lock (TreesToRemove)
+        {
+            for (int i = lowestChunkY; i <= highestChunkY; i++)
+            {
+                for (int j = lowestChunkX; j <= highestChunkX; j++)
+                {
+                    if (!TreesToRemove.ContainsKey(new(i, j)))
+                    {
+                        TreesToRemove.Add(new(i, j), new(new(centre.x, 0, centre.y), new(extents.x, 1000, extents.y)));
+                    }
                 }
             }
         }
@@ -139,7 +166,11 @@ public class FoliageManager : MonoBehaviour
         {
             if (bounds.Contains(chunk.Foliages[i].Position))
             {
-                StoreFoliage(chunk.Foliages[i]);
+                if (chunk.Foliages[i].Foliage)
+                {
+                    chunk.Foliages[i].Foliage.parent = InactiveParent.GetChild(chunk.Foliages[i].BiomeNum).GetChild(chunk.Foliages[i].FoliageNum);
+                }
+
                 chunk.Foliages.RemoveAt(i);
             }
         }
@@ -151,7 +182,6 @@ public class FoliageManager : MonoBehaviour
         FoliageToAdd = new();
         FoliageToRemove = new();
         TreesToRemove = new();
-        FutureTreesToRemove = new();
 
         for (int i = 0; i < World.Biomes.Length; i++)
         {

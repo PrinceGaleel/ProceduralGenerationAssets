@@ -13,20 +13,15 @@ MonoBehaviour:
   m_Name: Ocean
   m_EditorClassIdentifier: 
   BiomeName: Ocean
-  _GrassSettings:
-    BrushSize: 0
-    NormalLimit: 0
-    GrassDensity: 1
-    SizeWidth: 0
-    SizeLength: 0
-  TerrainColor: {r: 0.4433962, g: 0.2252799, b: 0, a: 0}
+  TerrainColor: {r: 0.4433962, g: 0.2252799, b: 0, a: 1}
   _FoliageSettings:
     FoliageInfos: []
-    PerlinOffset:
-      x: 0
-      y: 0
+    _PerlinData:
+      Offset:
+        x: 0
+        y: 0
+      PerlinScale: 0.05
     PlacementThreshold: 0
-    PerlinScale: 0
     SquareCheckSize: 0
     ChanceOfTree: 0
   LowestPoint: 0

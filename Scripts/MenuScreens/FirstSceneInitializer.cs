@@ -4,9 +4,13 @@ using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
 
-public class FirstSceneManager : MonoBehaviour
+public class FirstSceneInitializer : MonoBehaviour
 {
     public BiomeData[] Biomes;
+
+    public Material MeshMaterial;
+    public Material GrassMaterial;
+    public ComputeShader GrassShader;
 
     public CustomDictionary<GameObject, Vector2> CenterBuildings;
     public CustomDictionary<GameObject, Vector2> EssentialBuildings;
@@ -16,8 +20,9 @@ public class FirstSceneManager : MonoBehaviour
 
     private void Awake()
     {
-        SettingsMenu.InitializeSettings();
-        GlobalSettings.LoadSettings();
+        World.MeshMaterial = MeshMaterial;
+        World.GrassMaterial = GrassMaterial;
+        World.GrassShader = GrassShader;
 
         StructureCreator.CenterBuildings = CenterBuildings;
         StructureCreator.EssentialBuildings = EssentialBuildings;
@@ -45,6 +50,7 @@ public class FirstSceneManager : MonoBehaviour
 
     private void Start()
     {
+        GlobalSettings.LoadSettings();
         SceneTransitioner.LoadScene("MainMenu");
     }
 

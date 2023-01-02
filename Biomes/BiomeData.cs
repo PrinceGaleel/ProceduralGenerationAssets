@@ -7,7 +7,6 @@ using UnityEngine;
 public class BiomeData : ScriptableObject
 {
     public string BiomeName;
-    public GrassSettings _GrassSettings;
 
     public Color TerrainColor;
     public FoliageSettings _FoliageSettings;
@@ -37,17 +36,6 @@ public struct FoliageInfo
     public float MinFoliageScale;
     public float MaxExtensionHeight;
     public float ChanceOfSpawning;
-}
-
-[Serializable]
-public struct GrassSettings
-{
-    public float BrushSize;
-    [Range(0, 1)] public float NormalLimit;
-    [Range(1, 5)] public int GrassDensity;
-
-    public float SizeWidth;
-    public float SizeLength;
 }
 
 [Serializable]

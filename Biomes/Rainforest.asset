@@ -13,13 +13,7 @@ MonoBehaviour:
   m_Name: Rainforest
   m_EditorClassIdentifier: 
   BiomeName: Rainforest
-  _GrassSettings:
-    BrushSize: 3
-    NormalLimit: 1
-    GrassDensity: 2
-    SizeWidth: 0.3
-    SizeLength: 0.2
-  TerrainColor: {r: 0.023529414, g: 0.8000001, b: 0.023529414, a: 0}
+  TerrainColor: {r: 0, g: 0.4716981, b: 0, a: 1}
   _FoliageSettings:
     FoliageInfos:
     - Prefab: {fileID: 1131937550485510, guid: ec0f40c29e23c9642a58a3d6f3b7cb17, type: 3}
@@ -31,7 +25,7 @@ MonoBehaviour:
       MaxExtensionHeight: 1
       ChanceOfSpawning: 0.2
     _PerlinData:
-      PerlinOffset:
+      Offset:
         x: 0
         y: 0
       PerlinScale: 0.2

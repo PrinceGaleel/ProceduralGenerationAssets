@@ -13,13 +13,7 @@ MonoBehaviour:
   m_Name: Pine Forest
   m_EditorClassIdentifier: 
   BiomeName: Pine Forest
-  _GrassSettings:
-    BrushSize: 3
-    NormalLimit: 1
-    GrassDensity: 2
-    SizeWidth: 0.3
-    SizeLength: 0.2
-  TerrainColor: {r: 0.003921569, g: 0.32941177, b: 0.003921569, a: 0}
+  TerrainColor: {r: 0.003921569, g: 0.32941177, b: 0.003921569, a: 1}
   _FoliageSettings:
     FoliageInfos:
     - Prefab: {fileID: 1193767893405740, guid: 4e16b49d47a3b344fa4ea79eaa2c5ec9, type: 3}
@@ -35,7 +29,7 @@ MonoBehaviour:
       MaxExtensionHeight: 1
       ChanceOfSpawning: 0.2
     _PerlinData:
-      PerlinOffset:
+      Offset:
         x: 0
         y: 0
       PerlinScale: 0.2

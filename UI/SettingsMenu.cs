@@ -6,11 +6,23 @@ using UnityEngine.UI;
 
 public class SettingsMenu : MonoBehaviour
 {
+    public static SettingsMenu Instance;
+
+    [Header("Panel")]
+    public GameObject GraphicsPanel;
+    public GameObject AudioPanel;
+
+    private GameObject NextToDisable;
+
     [Header("FPS")]
     private readonly static FullScreenMode[] ScreenModes = new FullScreenMode[3] { FullScreenMode.ExclusiveFullScreen, FullScreenMode.FullScreenWindow, FullScreenMode.Windowed };
 
     public TMP_Dropdown ResolutionsDropdown;
     public TMP_Dropdown ScreenModesDropdown;
+
+    private const int FPSIncremenet = 10;
+    private const int MinFPS = 30;
+    private const int MaxFPS = 300;
 
     public Slider FPSSlider;
     public TextMeshProUGUI FPSText;
@@ -18,14 +30,59 @@ public class SettingsMenu : MonoBehaviour
 
     [Header("Other")]
     public Slider MusicSlider;
-    public TextCarousel ViewDistance;
+    public TextMeshProUGUI MusicVolumeText;
 
     private void Awake()
     {
-        FPSSlider.value = Application.targetFrameRate;
-        FPSText.text = Application.targetFrameRate.ToString();
+        if (Instance)
+        {
+            Debug.Log("ERROR: Multiple settings menus detected");
+            Destroy(gameObject);
+            enabled = false;
+        }
+        else
+        {
+            Instance = this;
+            InitializeSettings();
+            GraphicsPanel.SetActive(true);
+            AudioPanel.SetActive(false);
+            NextToDisable = GraphicsPanel;
+        }
+    }
 
-        ViewDistance.SetOptions(new string[10] { "1", "2", "3", "4", "5", "6", "7", "8", "9", "10" }, GlobalSettings.CurrentSettings.ViewDistance);
+    public void SetFPSText()
+    {
+        FPSText.text = (FPSSlider.value * FPSIncremenet).ToString();
+    }
+
+    public void OnLeave()
+    {
+        int vSync;
+        if (VSyncToggle.isOn)
+        {
+            vSync = 2;
+        }
+        else
+        {
+            vSync = 0;
+        }
+
+        GlobalSettings.CurrentSettings._ScreenSettings = new(Screen.resolutions[ResolutionsDropdown.value].width, Screen.resolutions[ResolutionsDropdown.value].height, 
+            ScreenModes[ScreenModesDropdown.value], (int)(FPSSlider.value * FPSIncremenet), vSync);
+        GlobalSettings.CurrentSettings.MusicVolume = MusicSlider.value / 100;
+
+        GlobalSettings.SaveSettings();
+        EnableGraphicsPanel();
+    }
+
+    public void InitializeSettings()
+    {
+        MusicSlider.value = GlobalSettings.CurrentSettings.MusicVolume * 100;
+
+        FPSSlider.minValue = MinFPS / FPSIncremenet;
+        FPSSlider.maxValue = MaxFPS / FPSIncremenet;
+        FPSSlider.value = Application.targetFrameRate / FPSIncremenet;
+        FPSText.text = Application.targetFrameRate.ToString();
 
         if (QualitySettings.vSyncCount == 0)
         {
@@ -65,31 +122,22 @@ public class SettingsMenu : MonoBehaviour
         ResolutionsDropdown.value = toSet;
     }
 
-    public void SetFPSText()
+    public void EnableGraphicsPanel()
     {
-        FPSText.text = FPSSlider.value.ToString();
+        NextToDisable.SetActive(false);
+        GraphicsPanel.SetActive(true);
+        NextToDisable = GraphicsPanel;
     }
 
-    public void OnLeave()
+    public void EnableAudioPanel()
     {
-        int vSync;
-        if (VSyncToggle.isOn)
-        {
-            vSync = 2;
-        }
-        else
-        {
-            vSync = 0;
-        }
-
-        GlobalSettings.CurrentSettings.SetViewDistance = ViewDistance.CurrentPosition;
-        GlobalSettings.CurrentSettings._ScreenSettings = new(Screen.resolutions[ResolutionsDropdown.value].width, Screen.resolutions[ResolutionsDropdown.value].height, 
-            ScreenModes[ScreenModesDropdown.value], Mathf.FloorToInt(FPSSlider.value), vSync);
-        GlobalSettings.SaveSettings();
+        NextToDisable.SetActive(false);
+        AudioPanel.SetActive(true);
+        NextToDisable = AudioPanel;
     }
 
-    public static void InitializeSettings()
+    public void ChangeMusicVolume()
     {
-
+        MusicVolumeText.text = Mathf.FloorToInt(MusicSlider.value).ToString();
     }
 }

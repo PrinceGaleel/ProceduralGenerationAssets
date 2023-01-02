@@ -13,17 +13,11 @@ MonoBehaviour:
   m_Name: Swamp
   m_EditorClassIdentifier: 
   BiomeName: Swamp
-  _GrassSettings:
-    BrushSize: 0
-    NormalLimit: 0
-    GrassDensity: 1
-    SizeWidth: 0
-    SizeLength: 0
-  TerrainColor: {r: 0.20000002, g: 0.20000002, b: 0, a: 0}
+  TerrainColor: {r: 0.20000002, g: 0.20000002, b: 0, a: 1}
   _FoliageSettings:
     FoliageInfos: []
     _PerlinData:
-      PerlinOffset:
+      Offset:
         x: 0
         y: 0
       PerlinScale: 0.1

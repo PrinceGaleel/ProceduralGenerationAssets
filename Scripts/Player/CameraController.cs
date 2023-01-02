@@ -24,9 +24,8 @@ public class CameraController : MonoBehaviour
     private const float CollisionOffset = 0.4f;
     private const float MinCollisionDist = 0.2f;
 
-    public Transform[] ThirdPersonAttachments;
-    public Transform[] FirstPersonAttachments;
-    private Transform[] FirstPersonChildTransforms;
+    public List<Transform> FirstPersonDisable;
+    public List<Transform> FirstPersonArmsLayer;
 
     private Outline CurrentOutline;
 
@@ -51,30 +50,11 @@ public class CameraController : MonoBehaviour
                     enabled = false;
                 }
             }
-
-            int numChildren = 0;
-            for (int i = 0; i < FirstPersonAttachments.Length; i++)
-            {
-                numChildren += FirstPersonAttachments[i].childCount;
-            }
-
-            FirstPersonChildTransforms = new Transform[numChildren];
-
-            for (int j = 0, i = 0; i < FirstPersonAttachments.Length; i++)
-            {
-                for (int k = 0; k < FirstPersonAttachments[i].childCount; k++)
-                {
-                    FirstPersonChildTransforms[j] = FirstPersonAttachments[i].GetChild(k);
-
-                    j++;
-                }
-            }
         }
     }
 
     private void Start()
     {
-        ChangeHeadAttachState(false);
         CurrentCamDist = 0;
         MainCam.transform.localPosition = new Vector3(0, 0, -CurrentCamDist);
         CamParent.transform.localRotation = Quaternion.Euler(0, 0, 0);
@@ -159,13 +139,8 @@ public class CameraController : MonoBehaviour
         }
     }
 
-    private void ChangeHeadAttachState(bool isEnabled)
+    public void ChangeHeadAttachState(bool isEnabled)
     {
-        for (int i = 0; i < ThirdPersonAttachments.Length; i++)
-        {
-            ThirdPersonAttachments[i].gameObject.SetActive(isEnabled);
-        }
-
         string layerName;
         if (isEnabled)
         {
@@ -176,9 +151,14 @@ public class CameraController : MonoBehaviour
             layerName = "Arms";
         }
 
-        for (int i = 0; i < FirstPersonChildTransforms.Length; i++)
+        for (int i = 0; i < FirstPersonArmsLayer.Count; i++)
         {
-            FirstPersonChildTransforms[i].gameObject.layer = LayerMask.NameToLayer(layerName);
+            FirstPersonArmsLayer[i].gameObject.layer = LayerMask.NameToLayer(layerName);
+        }
+
+        for (int i = 0; i < FirstPersonDisable.Count; i++)
+        {
+            FirstPersonDisable[i].gameObject.SetActive(isEnabled);
         }
     }
 

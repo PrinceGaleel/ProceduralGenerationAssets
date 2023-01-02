@@ -13,17 +13,11 @@ MonoBehaviour:
   m_Name: Ice Plains
   m_EditorClassIdentifier: 
   BiomeName: Ice Plains
-  _GrassSettings:
-    BrushSize: 3
-    NormalLimit: 1
-    GrassDensity: 2
-    SizeWidth: 0.3
-    SizeLength: 0.2
-  TerrainColor: {r: 1, g: 1, b: 1, a: 0}
+  TerrainColor: {r: 0.5566038, g: 0.5566038, b: 0.5566038, a: 1}
   _FoliageSettings:
     FoliageInfos: []
     _PerlinData:
-      PerlinOffset:
+      Offset:
         x: 0
         y: 0
       PerlinScale: 0.2

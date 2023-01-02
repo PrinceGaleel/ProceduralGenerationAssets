@@ -3,12 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Threading;
 
-public enum StructureTypes
-{ 
-    Village,
-    MobDen
-}
-
 public class World : MonoBehaviour
 {
     public static World Instance;
@@ -17,6 +11,10 @@ public class World : MonoBehaviour
     public static Vector2Int LastPlayerChunkPos { private set; get; }
     private static Vector2Int CurrentPlayerChunkPos { get { return new(Mathf.RoundToInt(PlayerController.Instance.transform.position.x / Chunk.ChunkSize), Mathf.RoundToInt(PlayerController.Instance.transform.position.z / Chunk.ChunkSize)); } }
     public static BiomeData[] Biomes;
+
+    [Header("Character Variables")]
+    public GameObject MaleCharacterBase;
+    public GameObject FemaleCharacterBase;
 
     [Header("Chunk Variables")]
     private static Thread ChunkThread;
@@ -28,12 +26,19 @@ public class World : MonoBehaviour
     public static Queue<Vector2Int> MeshesToUpdate;
     public static CustomDictionary<GrassChunk, List<GrassChunk.SourceVertex>> AssignGrassMesh;
     public static CustomDictionary<Chunk, StructureTypes> StructuresToCreate;
-    private static int RoundedChunkViewDist;
+
+    public const int ChunkRenderDistance = 400;
+    public const int GrassRenderDistance = 120;
+    public const int TreeRenderDistance = 200;
+
+    private static int RoundedChunkViewDistance;
+    private static int RoundedGrassViewDistance;
+    private static int RoundedTreeViewDistance;
 
     [Header("Materials and Shaders")]
-    public Material MeshMaterial;
-    public Material GrassMaterial;
-    public ComputeShader GrassShader;
+    public static Material MeshMaterial;
+    public static Material GrassMaterial;
+    public static ComputeShader GrassShader;
     public Transform WaterDisplay;
     public static List<ShaderInteractor> ShaderInteractors;
 
@@ -75,43 +80,12 @@ public class World : MonoBehaviour
         }
         else
         {
-            PlayerController.Instance.gameObject.SetActive(false);
             CheckForNewChunks();
         }
     }
 
     private void Update()
     {
-        if (LastPlayerChunkPos != CurrentPlayerChunkPos)
-        {
-            LastPlayerChunkPos = CurrentPlayerChunkPos;
-
-            foreach (KeyValuePair<Vector2Int, Chunk> pair in ActiveTerrain)
-            {
-                if (pair.Value.Active)
-                {
-                    if (Vector2Int.Distance(pair.Key * Chunk.ChunkSize, LastPlayerChunkPos) >= GlobalSettings.CurrentSettings.ViewDistanceInWorld)
-                    {
-                        pair.Value.Active = false;
-                    }
-                }
-            }
-
-            lock (ActiveGrass)
-            {
-                for (int i = ActiveGrass.Count - 1; i > -1; i--)
-                {
-                    if (Vector2Int.Distance(ActiveTerrain[ActiveGrass[i]].WorldPosition, LastPlayerChunkPos) >= GrassChunk.GrassRenderDistance)
-                    {
-                        ActiveTerrain[ActiveGrass[i]].GrassMesh.enabled = false;
-                        ActiveGrass.RemoveAt(i);
-                    }
-                }
-            }
-        }
-
-        //CheckForNewChunks();
-
         if (StructuresToCreate.Count > 0)
         {
             lock (StructuresToCreate)
@@ -124,7 +98,8 @@ public class World : MonoBehaviour
                 }
                 else if (pair.Value == StructureTypes.MobDen)
                 {
-                    Chunk.GetPerlinNoise(pair.Key.WorldPosition.x, pair.Key.WorldPosition.y, CurrentSaveData.HeightPerlin);
+                    Instantiate(StructureCreator.Instance.MobDenPrefabs[Random.Range(0, StructureCreator.Instance.MobDenPrefabs.Length)], 
+                        Chunk.GetPerlinPosition(pair.Key.WorldPosition.x, pair.Key.WorldPosition.y), Quaternion.identity).transform.SetParent(pair.Key.StructureParent);
                 }
             }
         }
@@ -142,6 +117,12 @@ public class World : MonoBehaviour
             {
                 ActiveTerrain[MeshesToUpdate.Dequeue()].AssignMesh();
             }
+        }
+
+        if (LastPlayerChunkPos != CurrentPlayerChunkPos)
+        {
+            CheckChunks();
+            NavMeshManager.CheckNavMesh();
         }
     }
 
@@ -169,8 +150,9 @@ public class World : MonoBehaviour
 
         LastPlayerChunkPos = new(0, 0);
 
-        GrassChunk.RoundedGrassViewDistance = Mathf.CeilToInt((float)GrassChunk.GrassRenderDistance / Chunk.ChunkSize);
-        RoundedChunkViewDist = Mathf.CeilToInt((float)GlobalSettings.CurrentSettings.ViewDistanceInWorld / Chunk.ChunkSize);
+        RoundedChunkViewDistance = Mathf.FloorToInt((float)ChunkRenderDistance / Chunk.ChunkSize);
+        RoundedGrassViewDistance = Mathf.FloorToInt((float)GrassRenderDistance / Chunk.ChunkSize);
+        RoundedTreeViewDistance = Mathf.FloorToInt((float)TreeRenderDistance / Chunk.ChunkSize);
 
         Chunk.Triangles = new int[Chunk.ChunkSize * Chunk.ChunkSize * 6];
         for (int y = 0, tris = 0, vertexIndex = 0; y < Chunk.ChunkSize; y++)
@@ -209,45 +191,105 @@ public class World : MonoBehaviour
         }
     }
 
+    public void CheckChunks()
+    {
+        LastPlayerChunkPos = CurrentPlayerChunkPos;
+
+        foreach (KeyValuePair<Vector2Int, Chunk> pair in ActiveTerrain)
+        {
+            if (Vector2Int.Distance(pair.Key * Chunk.ChunkSize, LastPlayerChunkPos * Chunk.ChunkSize) >= ChunkRenderDistance)
+            {
+                pair.Value.Active = false;
+            }
+        }
+
+        for (int i = ActiveGrass.Count - 1; i > -1; i--)
+        {
+            if (Vector2Int.Distance(ActiveTerrain[ActiveGrass[i]].WorldPosition, LastPlayerChunkPos * Chunk.ChunkSize) >= GrassRenderDistance)
+            {
+                ActiveTerrain[ActiveGrass[i]].GrassMesh.enabled = false;
+                ActiveGrass.RemoveAt(i);
+            }
+        }
+
+        for (int i = ActiveTrees.Count - 1; i > -1; i--)
+        {
+            if (Vector2Int.Distance(ActiveTerrain[ActiveTrees[i]].WorldPosition, LastPlayerChunkPos * Chunk.ChunkSize) >= TreeRenderDistance)
+            {
+                ActiveTerrain[ActiveTrees[i]].FoliageParent.gameObject.SetActive(false);
+                ActiveTrees.RemoveAt(i);
+            }
+        }
+
+        CheckForNewChunks();
+    }
+
     private void CheckForNewChunks()
     {
-        for (int x = -RoundedChunkViewDist; x <= RoundedChunkViewDist; x++)
+        for (int x = -RoundedChunkViewDistance; x <= RoundedChunkViewDistance; x++)
         {
-            for (int z = -RoundedChunkViewDist; z <= RoundedChunkViewDist; z++)
+            for (int z = -RoundedChunkViewDistance; z <= RoundedChunkViewDistance; z++)
             {
                 Vector2Int chunkToCheck = new(x + LastPlayerChunkPos.x, z + LastPlayerChunkPos.y);
 
-                if (ActiveTerrain.ContainsKey(chunkToCheck))
+                if (Vector2Int.Distance(chunkToCheck, LastPlayerChunkPos) < RoundedChunkViewDistance)
                 {
-                    ActiveTerrain[chunkToCheck].Active = true;
-                }
-                else
-                {
-                    ActiveTerrain.Add(chunkToCheck, new GameObject().AddComponent<Chunk>());
-                    ActiveTerrain[chunkToCheck].Initialize(chunkToCheck * Chunk.ChunkSize);
-                    MeshesToCreate.Enqueue(chunkToCheck);
+                    if (!ActiveTerrain.ContainsKey(chunkToCheck))
+                    {
+                        ActiveTerrain.Add(chunkToCheck, new GameObject().AddComponent<Chunk>());
+                        ActiveTerrain[chunkToCheck].Initialize(chunkToCheck * Chunk.ChunkSize);
+                        MeshesToCreate.Enqueue(chunkToCheck);
+                    }
+                    else
+                    {
+                        ActiveTerrain[chunkToCheck].Active = true;
+                    }
                 }
             }
         }
 
-        for (int x = -GrassChunk.RoundedGrassViewDistance; x <= GrassChunk.RoundedGrassViewDistance; x++)
+        for (int x = -RoundedGrassViewDistance; x <= RoundedGrassViewDistance; x++)
         {
-            for (int z = -GrassChunk.RoundedGrassViewDistance; z <= GrassChunk.RoundedGrassViewDistance; z++)
+            for (int z = -RoundedGrassViewDistance; z <= RoundedGrassViewDistance; z++)
             {
                 Vector2Int chunkToCheck = new(x + LastPlayerChunkPos.x, z + LastPlayerChunkPos.y);
 
                 if (ActiveTerrain.ContainsKey(chunkToCheck))
                 {
-                    if (Vector2Int.Distance(LastPlayerChunkPos, chunkToCheck * Chunk.ChunkSize) < GrassChunk.GrassRenderDistance)
+                    if (Vector2Int.Distance(LastPlayerChunkPos, chunkToCheck) < RoundedGrassViewDistance)
                     {
                         lock (ActiveGrass)
                         {
                             Chunk chunk = ActiveTerrain[chunkToCheck];
-                            if (!ActiveGrass.Contains(chunk.ChunkPosition) && chunk.GrassReady && chunk.TerrainReady)
+                            if (!ActiveGrass.Contains(chunkToCheck) && chunk.GrassReady && chunk.TerrainReady)
                             {
                                 chunk.GrassMesh.enabled = true;
                                 ActiveGrass.Add(chunk.ChunkPosition);
                                 RenderTerrainMap.Instance.ReloadBlending();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        for (int x = -RoundedTreeViewDistance; x <= RoundedTreeViewDistance; x++)
+        {
+            for (int z = -RoundedTreeViewDistance; z <= RoundedTreeViewDistance; z++)
+            {
+                Vector2Int chunkToCheck = new(x + LastPlayerChunkPos.x, z + LastPlayerChunkPos.y);
+
+                if (ActiveTerrain.ContainsKey(chunkToCheck))
+                {
+                    if (Vector2Int.Distance(LastPlayerChunkPos, chunkToCheck) < RoundedTreeViewDistance)
+                    {
+                        lock (ActiveTrees)
+                        {
+                            Chunk chunk = ActiveTerrain[chunkToCheck];
+                            if (!ActiveTrees.Contains(chunkToCheck) && chunk.TreeReady)
+                            {
+                                ActiveTerrain[chunkToCheck].FoliageParent.gameObject.SetActive(true);
+                                ActiveTrees.Add(chunkToCheck);
                             }
                         }
                     }

@@ -13,17 +13,11 @@ MonoBehaviour:
   m_Name: Beach
   m_EditorClassIdentifier: 
   BiomeName: Beach
-  _GrassSettings:
-    BrushSize: 0
-    NormalLimit: 0
-    GrassDensity: 1
-    SizeWidth: 0
-    SizeLength: 0
-  TerrainColor: {r: 1, g: 1, b: 0.40000004, a: 0}
+  TerrainColor: {r: 0.33962262, g: 0.33962262, b: 0.14280626, a: 0}
   _FoliageSettings:
     FoliageInfos: []
     _PerlinData:
-      PerlinOffset:
+      Offset:
         x: 0
         y: 0
       PerlinScale: 0.05

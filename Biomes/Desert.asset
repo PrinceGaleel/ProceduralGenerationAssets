@@ -13,20 +13,15 @@ MonoBehaviour:
   m_Name: Desert
   m_EditorClassIdentifier: 
   BiomeName: Hot Desert
-  _GrassSettings:
-    BrushSize: 0
-    NormalLimit: 0
-    GrassDensity: 0
-    SizeWidth: 0
-    SizeLength: 0
-  TerrainColor: {r: 1, g: 0.6, b: 0.20000002, a: 0}
+  TerrainColor: {r: 0.3773585, g: 0.2341962, b: 0.091033906, a: 1}
   _FoliageSettings:
     FoliageInfos: []
-    PerlinOffset:
-      x: 0
-      y: 0
+    _PerlinData:
+      Offset:
+        x: 0
+        y: 0
+      PerlinScale: 0.05
     PlacementThreshold: 0
-    PerlinScale: 0
     SquareCheckSize: 0
     ChanceOfTree: 0
   LowestPoint: 0.8

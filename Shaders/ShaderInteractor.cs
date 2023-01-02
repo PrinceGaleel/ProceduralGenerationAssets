@@ -4,18 +4,7 @@ public class ShaderInteractor : MonoBehaviour
 {
     private void Start()
     {
-        bool found = false;
-        if (World.ShaderInteractors != null)
-        {
-            World.ShaderInteractors.Add(this);
-            found = true;
-        }
-
-        if (!found)
-        {
-            Destroy(this);
-            enabled = false;
-        }
+        World.ShaderInteractors.Add(this);
     }
 
     private void Update()

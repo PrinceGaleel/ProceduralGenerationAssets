@@ -7,7 +7,7 @@ public class TeamsManager : MonoBehaviour
     public static TeamsManager Instance;
 
     public static int TeamCounter { private set; get; }
-    private static Dictionary<int, Team> Teams;
+    public static Dictionary<int, Team> Teams { get; private set; }
 
     private void Awake()
     {
@@ -29,7 +29,20 @@ public class TeamsManager : MonoBehaviour
         TeamCounter = 0;
     }
 
-    public static Team AddTeam(string factionName, bool isAutoHostile)
+    public static void RemoveTeam(int teamID)
+    {
+        foreach (int team in Teams.Keys)
+        {
+            if(Teams[team].Enemies.Contains(teamID))
+            {
+                Teams[team].Enemies.Remove(teamID);
+            }
+        }
+
+        Teams.Remove(teamID);
+    }
+
+    public static int AddTeam(string factionName, bool isAutoHostile)
     {
         List<int> keys = new(Teams.Keys);
         Teams.Add(TeamCounter, new(factionName, isAutoHostile));
@@ -51,7 +64,7 @@ public class TeamsManager : MonoBehaviour
         }
 
         TeamCounter += 1;
-        return Teams[TeamCounter - 1];
+        return TeamCounter - 1;
     }
 
     public static Dictionary<int, Team> GetTeams()

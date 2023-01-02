@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum ItemType
+public enum ItemTypes
 {
     Crafting,
     Tool,
@@ -11,14 +11,14 @@ public enum ItemType
     Misc,
     Potion,
     Food,
-    Null
+    Other
 }
 
 [CreateAssetMenu()]
 public class Item : ScriptableObject
 {
     [Header("Item Info")]
-    public ItemType _ItemType;
+    public ItemTypes _ItemType;
     public string ItemName;
     [TextArea(10, 10)]
     public string Description;

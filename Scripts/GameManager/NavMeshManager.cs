@@ -6,19 +6,23 @@ using UnityEngine.AI;
 
 public class NavMeshManager : MonoBehaviour
 {
-    private static NavMeshManager Instance;
+    public static NavMeshManager Instance;
+    private static Dictionary<Transform, NavMeshBuildSource> Sources;
+    private static Dictionary<Vector2Int, List<MonoBehaviour>> UnreadyToEnable;
+    private static Vector2Int LastToEnable;
 
-    private static ThreadSafeNavMeshSurface _NavMeshSurface;
-    private static Dictionary<Vector2Int, Chunk> NavMeshes;
     private static List<Chunk> ChunksToAdd;
     private static List<Chunk> ChunksToRemove;
-    private static NavMeshData _NavMeshData;
+
     private static AsyncOperation UpdateOperation;
 
-    //private readonly static Thread NavMeshThread = new(new ThreadStart(NavMeshUpdate));
     private const int NavMeshedDistance = 150;
     private static readonly int NormalizedNavDistance = Mathf.CeilToInt((float)NavMeshedDistance / Chunk.ChunkSize);
-    private const int UpdatePauseSeconds = 2;
+
+    [Header("Surface")]
+    public NavMeshData _NavMeshData;
+    private NavMeshDataInstance NavMeshDataInstance;
+    private NavMeshBuildSettings BuildSettings;
 
     private void Awake()
     {
@@ -32,32 +36,98 @@ public class NavMeshManager : MonoBehaviour
         {
             Instance = this;
 
-            NavMeshes = new();
             ChunksToAdd = new();
             ChunksToRemove = new();
-
+            UnreadyToEnable = new();
             transform.position = Vector3.zero;
 
-            if (!_NavMeshSurface)
-            {
-                _NavMeshSurface = GetComponent<ThreadSafeNavMeshSurface>();
+            Sources = new();
 
-                if (!_NavMeshSurface)
-                {
-                    _NavMeshSurface = gameObject.AddComponent<ThreadSafeNavMeshSurface>();
-                }
-            }
+            BuildSettings = NavMesh.GetSettingsByID(0);
         }
     }
 
     private void Start()
     {
-        _NavMeshData = _NavMeshSurface.BuildNavMesh();
-        UpdateOperation = _NavMeshSurface.UpdateNavMesh(_NavMeshData);
-        StartCoroutine(UpdateNav());
+        LastToEnable = Chunk.GetChunkPosition(new Vector2(World.CurrentSaveData.LastPosition.x, World.CurrentSaveData.LastPosition.z) + new Vector2(1000, 1000));
+        _NavMeshData = NavMeshBuilder.BuildNavMeshData(BuildSettings, new(Sources.Values), CalculateWorldBounds(new(Sources.Values)), transform.position, transform.rotation);
+
+        if (_NavMeshData != null)
+        {
+            _NavMeshData.name = gameObject.name;
+
+            NavMeshDataInstance.Remove();
+            NavMeshDataInstance = new();
+
+            if (!NavMeshDataInstance.valid)
+            {
+                if (_NavMeshData != null)
+                {
+                    NavMeshDataInstance = NavMesh.AddNavMeshData(_NavMeshData, transform.position, transform.rotation);
+                    NavMeshDataInstance.owner = this;
+                }
+            }
+        }
+
+        UpdateOperation = NavMeshBuilder.UpdateNavMeshDataAsync(_NavMeshData, BuildSettings, new(Sources.Values), CalculateWorldBounds(new(Sources.Values)));
     }
 
     private void Update()
+    {
+        if (UpdateOperation.isDone)
+        {
+            if (UnreadyToEnable.ContainsKey(LastToEnable))
+            {
+                foreach (MonoBehaviour value in UnreadyToEnable[LastToEnable])
+                {
+                    value.enabled = true;
+                }
+
+                UnreadyToEnable.Remove(LastToEnable);
+            }
+
+            for (int i = 0; i < ChunksToRemove.Count; i++)
+            {
+                if (Vector2Int.Distance(ChunksToRemove[i].WorldPosition, World.LastPlayerChunkPos * Chunk.ChunkSize) < NavMeshedDistance)
+                {
+                    ChunksToRemove.RemoveAt(i);
+                    i -= 1;
+                }
+            }
+
+            for (int i = 0; i < ChunksToAdd.Count; i++)
+            {
+                if (Vector2Int.Distance(ChunksToAdd[i].WorldPosition, World.LastPlayerChunkPos * Chunk.ChunkSize) > NavMeshedDistance)
+                {
+                    ChunksToAdd.RemoveAt(i);
+                    i -= 1;
+                }
+            }
+
+            bool updateMesh = false;
+            if (ChunksToAdd.Count > 0)
+            {
+                AddSource(ChunksToAdd[0].transform, ChunksToAdd[0].ChunkMeshFilter.sharedMesh);
+                LastToEnable = ChunksToAdd[0].ChunkPosition;
+                ChunksToAdd.RemoveAt(0);
+                updateMesh = true;
+            }
+
+            if (ChunksToRemove.Count > 0)
+            {
+                Sources.Remove(ChunksToRemove[0].transform);
+                ChunksToRemove.RemoveAt(0);
+                updateMesh = true;
+            }
+
+            if (updateMesh)
+            {
+                UpdateOperation = NavMeshBuilder.UpdateNavMeshDataAsync(_NavMeshData, BuildSettings, new(Sources.Values), CalculateWorldBounds(new(Sources.Values)));
+            }
+        }
+    }
+
+    public static void CheckNavMesh()
     {
         for (int x = -NormalizedNavDistance; x <= NormalizedNavDistance; x++)
         {
@@ -68,9 +138,9 @@ public class NavMeshManager : MonoBehaviour
                     Chunk chunk = World.ActiveTerrain[new(x + World.LastPlayerChunkPos.x, z + World.LastPlayerChunkPos.y)];
                     if (chunk.Active)
                     {
-                        if (!ChunksToAdd.Contains(chunk) && !NavMeshes.ContainsKey(chunk.WorldPosition))
+                        if (!ChunksToAdd.Contains(chunk) && !Sources.ContainsKey(chunk.transform))
                         {
-                            if (Vector2Int.Distance(World.LastPlayerChunkPos, chunk.WorldPosition) < NavMeshedDistance)
+                            if (Vector2Int.Distance(World.LastPlayerChunkPos * Chunk.ChunkSize, chunk.WorldPosition) < NavMeshedDistance)
                             {
                                 ChunksToAdd.Add(chunk);
                             }
@@ -80,76 +150,97 @@ public class NavMeshManager : MonoBehaviour
             }
         }
 
-        foreach (Vector2Int key in NavMeshes.Keys)
+        foreach (Transform key in Sources.Keys)
         {
-            if (NavMeshes[key].gameObject.activeSelf && !ChunksToRemove.Contains(NavMeshes[key]))
+            Chunk chunk = World.ActiveTerrain[Chunk.GetChunkPosition(new(key.position.x, key.position.z))];
+            if (key.gameObject.activeSelf && !ChunksToRemove.Contains(chunk))
             {
-                if (Vector2Int.Distance(NavMeshes[key].WorldPosition, World.LastPlayerChunkPos) > NavMeshedDistance)
+                if (Vector2Int.Distance(chunk.WorldPosition, World.LastPlayerChunkPos * Chunk.ChunkSize) > NavMeshedDistance)
                 {
-                    ChunksToRemove.Add(NavMeshes[key]);
+                    ChunksToRemove.Add(chunk);
                 }
             }
         }
     }
 
-    private static IEnumerator UpdateNav()
+    public static void AddUnreadyToEnable(Vector2Int chunkPosition, MonoBehaviour behaviour)
     {
-        while (Instance)
+        if (Sources.ContainsKey(World.ActiveTerrain[chunkPosition].transform))
         {
-            if (UpdateOperation.isDone)
+            behaviour.enabled = true;
+        }
+        else if (UnreadyToEnable.ContainsKey(chunkPosition))
+        {
+            UnreadyToEnable[chunkPosition].Add(behaviour);
+        }
+        else
+        {
+            UnreadyToEnable.Add(chunkPosition, new() { behaviour });
+        }
+    }
+
+    private void AddSource(Transform sourceTransform, Mesh mesh)
+    {
+        Sources.Add(sourceTransform, new()
+        {
+            transform = sourceTransform.localToWorldMatrix,
+            size = Vector3.zero,
+            shape = NavMeshBuildSourceShape.Mesh,
+            area = 0,
+            sourceObject = mesh
+        });
+    }
+
+    private static Vector3 Abs(Vector3 v)
+    {
+        return new Vector3(Mathf.Abs(v.x), Mathf.Abs(v.y), Mathf.Abs(v.z));
+    }
+
+    private static Bounds GetWorldBounds(Matrix4x4 mat, Bounds bounds)
+    {
+        Vector3 absAxisX = Abs(mat.MultiplyVector(Vector3.right));
+        Vector3 absAxisY = Abs(mat.MultiplyVector(Vector3.up));
+        Vector3 absAxisZ = Abs(mat.MultiplyVector(Vector3.forward));
+        Vector3 worldPosition = mat.MultiplyPoint(bounds.center);
+        Vector3 worldSize = absAxisX * bounds.size.x + absAxisY * bounds.size.y + absAxisZ * bounds.size.z;
+        return new Bounds(worldPosition, worldSize);
+    }
+
+    public Bounds CalculateWorldBounds(List<NavMeshBuildSource> sources)
+    {
+        // Use the unscaled matrix for the NavMeshSurface
+        Matrix4x4 worldToLocal = Matrix4x4.TRS(transform.position, transform.rotation, Vector3.one);
+        worldToLocal = worldToLocal.inverse;
+
+        Bounds result = new();
+        foreach (NavMeshBuildSource src in sources)
+        {
+            switch (src.shape)
             {
-                for (int i = 0; i < ChunksToRemove.Count; i++)
-                {
-                    if (Vector2Int.Distance(ChunksToRemove[i].WorldPosition, World.LastPlayerChunkPos) < NavMeshedDistance)
+                case NavMeshBuildSourceShape.Mesh:
                     {
-                        ChunksToRemove.RemoveAt(i);
-                        i -= 1;
+                        Mesh m = src.sourceObject as Mesh;
+                        result.Encapsulate(GetWorldBounds(worldToLocal * src.transform, m.bounds));
+                        break;
                     }
-                }
-
-                for (int i = 0; i < ChunksToAdd.Count; i++)
-                {
-                    if (Vector2Int.Distance(ChunksToAdd[i].WorldPosition, World.LastPlayerChunkPos) > NavMeshedDistance)
+                case NavMeshBuildSourceShape.Terrain:
                     {
-                        ChunksToAdd.RemoveAt(i);
-                        i -= 1;
+                        // Terrain pivot is lower/left corner - shift bounds accordingly
+                        TerrainData t = src.sourceObject as TerrainData;
+                        result.Encapsulate(GetWorldBounds(worldToLocal * src.transform, new Bounds(0.5f * t.size, t.size)));
+                        break;
                     }
-                }
-
-                if (ChunksToAdd.Count > 0)
-                {
-                    NavMeshes.Add(ChunksToAdd[0].WorldPosition, ChunksToAdd[0]);
-                    ChunksToAdd[0].transform.SetParent(Instance.transform);
-                    ChunksToAdd.RemoveAt(0);
-
-                    _NavMeshSurface.UpdateNavMesh(_NavMeshData);
-
-                    yield return new WaitForSeconds(UpdatePauseSeconds);
-                }
-                
-                if (ChunksToRemove.Count > 0)
-                {
-                    NavMeshes[ChunksToRemove[0].WorldPosition].transform.SetParent(World.WorldTransform);
-                    NavMeshes.Remove(ChunksToRemove[0].WorldPosition);
-                    ChunksToRemove.RemoveAt(0);
-
-                    _NavMeshSurface.UpdateNavMesh(_NavMeshData);
-
-                    yield return new WaitForSeconds(UpdatePauseSeconds);
-                }
+                case NavMeshBuildSourceShape.Box:
+                case NavMeshBuildSourceShape.Sphere:
+                case NavMeshBuildSourceShape.Capsule:
+                case NavMeshBuildSourceShape.ModifierBox:
+                    result.Encapsulate(GetWorldBounds(worldToLocal * src.transform, new Bounds(Vector3.zero, src.size)));
+                    break;
             }
-
-            yield return null;
         }
-    }
 
-    /*
-    private void OnDestroy()
-    {
-        if (NavMeshThread.IsAlive)
-        {
-            NavMeshThread.Abort();
-        }
+        // Inflate the bounds a bit to avoid clipping co-planar sources
+        result.Expand(0.1f);
+        return result;
     }
-    */
 }

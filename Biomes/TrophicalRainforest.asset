@@ -13,13 +13,7 @@ MonoBehaviour:
   m_Name: TrophicalRainforest
   m_EditorClassIdentifier: 
   BiomeName: Trophical Rainforest
-  _GrassSettings:
-    BrushSize: 3
-    NormalLimit: 1
-    GrassDensity: 2
-    SizeWidth: 0.3
-    SizeLength: 0.2
-  TerrainColor: {r: 0.17631577, g: 0.6320754, b: 0, a: 0}
+  TerrainColor: {r: 0.11602015, g: 0.41509432, b: 0, a: 1}
   _FoliageSettings:
     FoliageInfos:
     - Prefab: {fileID: 1566788591921752, guid: ade320581e1d71549a58dbd8584ccb54, type: 3}
@@ -35,7 +29,7 @@ MonoBehaviour:
       MaxExtensionHeight: 1
       ChanceOfSpawning: 0.3
     _PerlinData:
-      PerlinOffset:
+      Offset:
         x: 0
         y: 0
       PerlinScale: 0.2

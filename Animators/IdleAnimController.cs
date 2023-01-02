@@ -3,26 +3,27 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 
-public class IdleAnimController : MonoBehaviour
+public class IdleAnimController : BasicAI
 {
-    public Animator _Animator;
-    public NavMeshAgent Agent;
-
-    public string WalkingTransition = "SlowWalk";
-    public string IdleTransition = "Idle";
     public AnimationInformation[] Animations;
+    public int CurrentTransition;
+
+    public MainAIStates CurrentMainState;
+    public SecondaryAIStates GenericAIState;
 
     private float Timer = 0;
     private float _Time;
 
-    private int CurrentTransition;
-    private bool IsMoving;
-    private bool IsTurning;
+    [Header("Transition Names")]
+    public string WalkingTransition = "SlowWalk";
+    public string IdleTransition = "Idle";
 
     private System.Random Rnd;
 
     private void Awake()
     {
+        AIAwake();
+
         if (Animations == null)
         {
             Debug.Log("Error: IdleAnimController has no transition names, " + gameObject.name);
@@ -39,50 +40,23 @@ public class IdleAnimController : MonoBehaviour
             return;
         }
 
-        if(!_Animator)
-        {
-            _Animator = GetComponent<Animator>();
-
-            if (!_Animator)
-            {
-                Debug.Log("Error: IdleAnimController missing anim, " + gameObject.name);
-                Destroy(this);
-                enabled = false;
-                return;
-            }
-        }
-
-        if(!Agent)
-        {
-            Agent = GetComponent<NavMeshAgent>();
-
-            if (!Agent)
-            {
-                Debug.Log("Error: IdleAnimController missing agent, " + gameObject.name);
-                Destroy(this);
-                enabled = false;
-                return;
-            }
-        }
-
-        Agent.updateRotation = false;
         Rnd = new();
     }
 
     private void Start()
     {
-        NewIdle(0);
+        SetIdle(0);
         _Time = Animations[0].TimeRange.Random(Rnd);
         Timer = _Time + 1;
     }
 
     private void Update()
     {
-        if (IsMoving)
+        if (GenericAIState == SecondaryAIStates.Moving)
         {
-            if (Agent.remainingDistance == 0)
+            if (Vector3.Distance(transform.position, CurrentDestination) < 0.5f)
             {
-                IsMoving = false;
+                GenericAIState = SecondaryAIStates.Rotating;
             }
             else
             {
@@ -100,9 +74,20 @@ public class IdleAnimController : MonoBehaviour
                 transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.Euler(transform.eulerAngles.x, yRotation, transform.eulerAngles.z), Time.deltaTime * 2);
             }
         }
-        else if (transform.rotation == Animations[CurrentTransition].Position.rotation)
+        else if (GenericAIState == SecondaryAIStates.Rotating)
         {
-            _Animator.SetTrigger(Animations[CurrentTransition].TransitionName);
+            if (transform.rotation == Animations[CurrentTransition].Position.rotation)
+            {
+                GenericAIState = SecondaryAIStates.Waiting;
+            }
+            else
+            {
+                transform.rotation = Quaternion.Lerp(transform.rotation, Animations[CurrentTransition].Position.rotation, Time.deltaTime * 2);
+            }
+        }
+        else 
+        {
+            ChangeAnimation(Animations[CurrentTransition].TransitionName);
 
             if (Timer > _Time)
             {
@@ -110,7 +95,7 @@ public class IdleAnimController : MonoBehaviour
 
                 if (newTransition != CurrentTransition)
                 {
-                    NewIdle(newTransition);
+                    SetIdle(newTransition);
                 }
                 else
                 {
@@ -123,20 +108,50 @@ public class IdleAnimController : MonoBehaviour
                 Timer += Time.deltaTime;
             }
         }
-        else
-        {
-            transform.rotation = Quaternion.Lerp(transform.rotation, Animations[CurrentTransition].Position.rotation, Time.deltaTime * 2);
-        }
     }
 
-    public void NewIdle(int newTransition)
+    public void SetIdle(int newTransition)
     {
         CurrentTransition = newTransition;
-        Agent.SetDestination(Animations[CurrentTransition].Position.position);
-        _Animator.SetTrigger(WalkingTransition);
-        IsMoving = true;
+        SetIdling(Animations[CurrentTransition].Position.position);
         _Time = Animations[0].TimeRange.Random(Rnd);
         Timer = 0;
+    }
+
+    protected override void Death()
+    {
+        Anim.SetTrigger("Die");
+        StandardDeath();
+    }
+
+    public override void DecreaseHealth(float amount)
+    {
+        DefaultDecreaseHealth(amount);
+    }
+
+    public override void IncreaseHealth(float amount)
+    {
+        DefaultIncreaseHealth(amount);
+    }
+
+    public override void DecreaseStamina(float amount)
+    {
+        DefaultDecreaseHealth(amount);
+    }
+
+    public override void IncreaseStamina(float amount)
+    {
+        DefaultIncreaseHealth(amount);
+    }
+
+    public override void DecreaseMana(float amount)
+    {
+        DefaultDecreaseHealth(amount);
+    }
+
+    public override void IncreaseMana(float amount)
+    {
+        DefaultIncreaseHealth(amount);
     }
 
     [System.Serializable]

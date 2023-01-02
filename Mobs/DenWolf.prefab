@@ -1546,7 +1546,7 @@ MonoBehaviour:
   CurrentMana: 0
   MaxMana: 0
   BaseDamage: 20
-  CurrentXP: 0
+  CurrentExp: 0
   ExpToLevelUp: 0
   Level: 0
   SkillPoints: 0
@@ -1561,13 +1561,20 @@ MonoBehaviour:
   Agent: {fileID: 2582036066771152963}
   HeadConstraint: {fileID: 0}
   Target: {fileID: 0}
-  Den: {fileID: 0}
-  NormalSpeed: 3.5
+  IdleName: Idle
+  RestingAnim: Resting
+  WalkingAnim: Run Forward
+  RunningAnim: Run Forward
+  BackwardAnim: Walk Backward
+  WaitingAnim: Look Around
+  NormalSpeed: 4
   BackingOffSpeed: 2
-  SprintSpeed: 5
+  SprintSpeed: 6
   DodgeSpeed: 9
-  AttackRange: 2
-  AttackCooldown: 0
+  RotationSpeed: 2
+  AttackRange: 3
+  AttackCooldown: 5
+  Den: {fileID: 0}
 --- !u!95 &95605706055870404
 Animator:
   serializedVersion: 4

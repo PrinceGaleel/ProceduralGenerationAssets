@@ -9,7 +9,7 @@ using System.Runtime.Serialization.Formatters.Binary;
 public class SaveData
 {
     public int SaveNum;
-    public const float HeightMultipler = 200;
+    public const float HeightMultipler = 100;
     private const float MaxPerlinOffset = 100000;
 
     [Header("Base Perlin Settings")]
@@ -18,12 +18,12 @@ public class SaveData
 
     [Header("World Data")]
     public Vector3Serializable LastPosition;
-    public string[] BiomesIDs;
 
     [Header("Save Info")]
     public string SaveName;
     public string CharacterName;
     public float TimeInSeconds;
+    public CharacterSkin CharSkin;
 
     public string TotalTime
     {
@@ -34,20 +34,19 @@ public class SaveData
         }
     }
 
-    public SaveData(string characterName, string[] biomeIDs, string saveName, PerlinData heightPerlin, PerlinData temperaturePerlin)
+    public SaveData(string characterName, CharacterSkin charSkin, string saveName, PerlinData heightPerlin, PerlinData temperaturePerlin)
     {
         HeightPerlin = heightPerlin;
         TemperaturePerlin = temperaturePerlin;
-
+        CharSkin = charSkin;
         LastPosition = new();
         SaveName = saveName;
         CharacterName = characterName;
         TimeInSeconds = 0;
-        BiomesIDs = biomeIDs;
         LastPosition = new();
     }
 
-    public static string SaveMap(string characterName, string[] biomeIDs)
+    public static string SaveMap(string characterName, CharacterSkin charSkin)
     {
         BinaryFormatter formatter = new();
 
@@ -57,7 +56,7 @@ public class SaveData
         System.Random random = new();
         Vector2Serializable offset = new(((float)random.NextDouble() * MaxPerlinOffset) + 10000, ((float)random.NextDouble() * MaxPerlinOffset) + 10000);
 
-        SaveData saveData = new(characterName, biomeIDs, saveNum.ToString(), new(offset), new(offset + new Vector2Serializable(10000, 10000)));
+        SaveData saveData = new(characterName, charSkin, saveNum.ToString(), new(offset, 0.1f), new(offset + new Vector2Serializable(10000, 10000), 0.2f));
 
         if (!Directory.Exists(savePath))
         {

@@ -11,21 +11,24 @@ public class UIController : MonoBehaviour
     [Header("Panels")]
     public GameObject HUD;
     public UIInventory Inventory;
-    public GameObject Map;
-    public GameObject PauseMenu;
+    public MenuManager PauseMenu;
     private bool IsOccupied;
 
     [Header("HUD")]
+    public RectTransform HealthBar;
+    public RectTransform ManaBar;
+    public RectTransform StaminaBar;
+
+    public RectTransform NorthRotator;
+
     public TextMeshProUGUI InteractInfo;
     public TextMeshProUGUI MessageInfo;
     public TextMeshProUGUI TimeText;
-    
-    [Header("FPS")]
+
     public TextMeshProUGUI FrameRateCounter;
     private float FPSTimer = 0;
     private readonly float FPSTime = 1;
     private int NumFrames = 0;
-
 
     private void Awake()
     {
@@ -38,7 +41,7 @@ public class UIController : MonoBehaviour
         {
             Instance = this;
 
-            if(!InteractInfo)
+            if (!InteractInfo)
             {
                 Debug.Log("UI Alert: InteractInfo not set");
                 InteractInfo = transform.Find("InteractInfo").GetComponent<TextMeshProUGUI>();
@@ -53,10 +56,10 @@ public class UIController : MonoBehaviour
             InteractInfo.text = "";
             MessageInfo.text = "";
             ToggleInventory(false);
-            ToggleMap(false);
+            //ToggleMap(false);
             TogglePauseMenu(false);
 
-            if(!MessageInfo.GetComponent<DisableTimer>())
+            if (!MessageInfo.GetComponent<DisableTimer>())
             {
                 MessageInfo.gameObject.AddComponent<DisableTimer>();
             }
@@ -73,6 +76,8 @@ public class UIController : MonoBehaviour
             NumFrames = 0;
             FPSTimer = 0;
         }
+
+        NorthRotator.rotation = Quaternion.Euler(0, 0, PlayerStats.PlayerTransform.eulerAngles.y);
 
         if (Input.GetKeyDown(KeyCode.I))
         {
@@ -91,15 +96,32 @@ public class UIController : MonoBehaviour
             {
                 ToggleInventory(false);
             }
+            /*
             else if (Map.activeSelf)
             {
                 ToggleMap(false);
             }
+            */
             else
             {
-                TogglePauseMenu(!PauseMenu.activeSelf);
+                TogglePauseMenu(!PauseMenu.gameObject.activeSelf);
             }
         }
+    }
+
+    public static void SetHealthBar(float percentage)
+    {
+        Instance.HealthBar.localScale = new(percentage, 1, 1);
+    }
+
+    public static void SetManaBar(float percentage)
+    {
+        Instance.ManaBar.localScale = new(percentage, 1, 1);
+    }
+
+    public static void SetStaminaBar(float percentage)
+    {
+        Instance.StaminaBar.localScale = new(percentage, 1, 1);
     }
 
     public void SetMessageInfo(float activatedTime, string message)
@@ -121,9 +143,10 @@ public class UIController : MonoBehaviour
         IsOccupied = isEnabled;
         TogglePlayer(!isEnabled);
         HUD.SetActive(!isEnabled);
-        PauseMenu.SetActive(isEnabled);
+        PauseMenu.gameObject.SetActive(isEnabled);
     }
 
+    /*
     public void ToggleMap(bool isEnabled)
     {
         IsOccupied = isEnabled;
@@ -131,6 +154,7 @@ public class UIController : MonoBehaviour
         HUD.SetActive(!isEnabled);
         Map.SetActive(isEnabled);
     }
+    */
 
     private void TogglePlayerMovement(bool enabled)
     {
@@ -142,7 +166,7 @@ public class UIController : MonoBehaviour
     {
         Cursor.visible = isEnabled;
 
-        if(isEnabled)
+        if (isEnabled)
         {
             Cursor.lockState = CursorLockMode.None;
         }
@@ -157,5 +181,4 @@ public class UIController : MonoBehaviour
         TogglePlayerMovement(isEnabled);
         ToggleCursor(!isEnabled);
     }
-
 }

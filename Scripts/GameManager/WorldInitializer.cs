@@ -10,9 +10,11 @@ public class WorldInitializer : MonoBehaviour
         {
             if (FoliageManager.FoliageToAdd.Count == 0)
             {
+                NavMeshManager.CheckNavMesh();
                 PlayerController.Instance.gameObject.SetActive(true);
                 SceneTransitioner.ToggleScreen(false);
                 FoliageManager.Instance.enabled = true;
+                World.Instance.CheckChunks();
                 Destroy(this);
                 enabled = false;
             }

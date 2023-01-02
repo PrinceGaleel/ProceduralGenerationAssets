@@ -1,15 +1,17 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.AI;
 
 public class MobDen : MonoBehaviour
 {
-    public Transform SpawnPoint;
-    public Team MyTeam;
+    public Transform SpawnTransform;
+    public Vector3 SpawnPoint;
+    public int MyTeamID;
     private DenStates CurrentState;
 
-    public int MaxSpawn;
     public int MinSpawn;
+    public int MaxSpawn;
 
     private int NumToSpawn;
     public float TerritoryRadius;
@@ -20,7 +22,10 @@ public class MobDen : MonoBehaviour
     public GameObject Mob;
 
     public float SearchTime;
-    public float SearchTimer;
+    private float SearchTimer;
+
+    public Vector2 Highest;
+    public Vector2 Lowest;
 
     public enum DenStates
     {
@@ -32,36 +37,49 @@ public class MobDen : MonoBehaviour
     {
         NumToSpawn = World.Rnd.Next(MinSpawn, MaxSpawn);
 
-        MyTeam = TeamsManager.AddTeam("Mob Den", true);
-
         Enemies = new();
-        Mobs = new(NumToSpawn);
         CurrentState = DenStates.Patrolling;
+
+        if(!SpawnTransform)
+        {
+            SpawnTransform = transform;
+        }
+
+        FoliageManager.AddTreesToRemove(Lowest + new Vector2(transform.position.x, transform.position.z), Highest + new Vector2(transform.position.x, transform.position.z));
+
+        if (!NavMesh.SamplePosition(transform.position, out _, 10, ~0))
+        {
+            enabled = false;
+            NavMeshManager.AddUnreadyToEnable(Chunk.GetChunkPosition(new(transform.position.x, transform.position.z)), this);
+        }
     }
 
     private void Start()
     {
-        for (int i = 0; i < NumToSpawn; i++)
+        if (!NavMesh.SamplePosition(transform.position, out _, 10, ~0))
         {
-            Mobs.Add(Instantiate(Mob, SpawnPoint.position, Quaternion.identity).GetComponent<DenMob>());
-            Mobs[i].Den = this;
-
-            List<Vector3> patrolPoints = new();
-            for (int j = 0; j < patrolPoints.Count; j++)
-            {
-                float x = (((float)World.Rnd.NextDouble() * TerritoryRadius * 2) - TerritoryRadius) + transform.position.x;
-                float z = (((float)World.Rnd.NextDouble() * TerritoryRadius * 2) - TerritoryRadius) + transform.position.z;
-
-                if (Physics.Raycast(new Vector3(x, 1000, z), -transform.up, out RaycastHit hit, 10000, LayerMask.GetMask("Terrain")))
-                {
-                    patrolPoints.Add(hit.point);
-                }
-            }
-
-            Mobs[i].SetPatrolling(patrolPoints.ToArray());
+            enabled = false;
+            return;
         }
 
-        MyTeam.Members.AddRange(Mobs);
+        if (NavMesh.SamplePosition(SpawnTransform.position, out NavMeshHit hit, 10, ~0))
+        {
+            SpawnPoint = hit.position;
+        }
+        else
+        {
+            SpawnPoint = SpawnTransform.position;
+        }
+
+        MyTeamID = TeamsManager.AddTeam("Mob Den", true);
+        Mobs = new(NumToSpawn);
+        for (int i = 0; i < NumToSpawn; i++)
+        {
+            SpawnMob();
+        }
+
+        TeamsManager.Teams[MyTeamID].Members.AddRange(Mobs);
+        SearchTimer = 0;
     }
 
     private void Update()
@@ -72,20 +90,7 @@ public class MobDen : MonoBehaviour
         {
             SearchTimer = 0;
 
-            Dictionary<int, Team> teams = TeamsManager.GetTeams();
-            foreach (int teamID in teams.Keys)
-            {
-                if (teams[teamID] != MyTeam)
-                {
-                    foreach (CharacterStats character in teams[teamID].Members)
-                    {
-                        if (Vector3.Distance(character.transform.position, transform.position) < TerritoryRadius)
-                        {
-                            Enemies.Add(character);
-                        }
-                    }
-                }
-            }
+            EnemySearch();
         }
 
         if (CurrentState == DenStates.Patrolling)
@@ -104,28 +109,113 @@ public class MobDen : MonoBehaviour
         {
             if (Enemies.Count == 0)
             {
-                foreach (DenMob mob in Mobs)
-                {
-                    mob.SetPatrolling();
-                }
-
-                CurrentState = DenStates.Patrolling;
+                SetPatrolling();
             }
         }
     }
 
-    public void GetNewAttackTarget(DenMob mob)
+    public void SpawnMob()
     {
-        mob.Target = Enemies[0];
+        DenMob mob = Instantiate(Mob, SpawnPoint, Quaternion.identity).GetComponent<DenMob>();
+        Mobs.Add(mob);
+        mob.Den = this;
+        mob.MyTeamID = MyTeamID;
+        mob.transform.SetParent(transform);
+        AssignPatrolPoints(mob);
+    }
 
-        for (int j = 1; j < Enemies.Count; j++)
+    public void AssignPatrolPoints(DenMob mob)
+    {
+        List<Vector3> patrolPoints = new();
+
+        for (int j = 0; j < 3; j++)
         {
-            if (Vector3.Distance(mob.transform.position, mob.Target.transform.position) > Vector3.Distance(mob.transform.position, Enemies[j].transform.position))
+            float x = (((float)World.Rnd.NextDouble() * (TerritoryRadius * 0.7f) * 2) - (TerritoryRadius * 0.7f)) + transform.position.x;
+            float z = (((float)World.Rnd.NextDouble() * (TerritoryRadius * 0.7f) * 2) - (TerritoryRadius * 0.7f)) + transform.position.z;
+
+            if(NavMesh.SamplePosition(Chunk.GetPerlinPosition(x,z), out NavMeshHit hit, 10, ~0))
             {
-                mob.Target = Enemies[j];
+                patrolPoints.Add(hit.position);
             }
         }
 
-        mob.SetAttacking();
+        mob.SetPatrolling(patrolPoints.ToArray());
+    }
+
+    private void EnemySearch()
+    {
+        Enemies = new();
+        Dictionary<int, Team> teams = TeamsManager.GetTeams();
+        foreach (int teamID in teams.Keys)
+        {
+            if (teamID != MyTeamID)
+            {
+                foreach (CharacterStats character in teams[teamID].Members)
+                {
+                    if (Vector3.Distance(character.transform.position, transform.position) < TerritoryRadius)
+                    {
+                        Enemies.Add(character);
+                    }
+                }
+            }
+        }
+    }
+
+    private void SetPatrolling()
+    {
+        foreach (DenMob mob in Mobs)
+        {
+            mob.SetPatrolling();
+        }
+
+        CurrentState = DenStates.Patrolling;
+    }
+
+    public void GetNewAttackTarget(DenMob mob)
+    {
+        EnemySearch();
+
+        if (Enemies.Count > 0)
+        {
+            mob.Target = Enemies[0];
+
+            for (int j = 1; j < Enemies.Count; j++)
+            {
+                if (Vector3.Distance(mob.transform.position, mob.Target.transform.position) > Vector3.Distance(mob.transform.position, Enemies[j].transform.position))
+                {
+                    mob.Target = Enemies[j];
+                }
+            }
+
+            mob.SetAttacking();
+        }
+        else
+        {
+            mob.SetPatrolling();
+        }
+    }
+
+    private void OnDisable()
+    {
+        foreach (DenMob mob in Mobs)
+        {
+            mob.Agent.Warp(SpawnPoint);
+            mob.gameObject.SetActive(false);
+        }
+    }
+
+    private void OnEnable()
+    {
+        foreach (DenMob mob in Mobs)
+        {
+            mob.gameObject.SetActive(true);
+        }
+
+        SetPatrolling();
+    }
+
+    private void OnDestroy()
+    {
+        TeamsManager.RemoveTeam(MyTeamID);
     }
 }
