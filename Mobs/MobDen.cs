@@ -21,9 +21,6 @@ public class MobDen : MonoBehaviour
 
     public GameObject Mob;
 
-    public float SearchTime;
-    private float SearchTimer;
-
     public Vector2 Highest;
     public Vector2 Lowest;
 
@@ -35,11 +32,6 @@ public class MobDen : MonoBehaviour
 
     private void Awake()
     {
-        NumToSpawn = World.Rnd.Next(MinSpawn, MaxSpawn);
-
-        Enemies = new();
-        CurrentState = DenStates.Patrolling;
-
         if(!SpawnTransform)
         {
             SpawnTransform = transform;
@@ -62,6 +54,12 @@ public class MobDen : MonoBehaviour
             return;
         }
 
+        MyTeamID = TeamsManager.AddTeam("Mob Den", true);
+        lock (TeamsManager.MobDens)
+        {
+            TeamsManager.MobDens.Add(this);
+        }
+
         if (NavMesh.SamplePosition(SpawnTransform.position, out NavMeshHit hit, 10, ~0))
         {
             SpawnPoint = hit.position;
@@ -71,28 +69,26 @@ public class MobDen : MonoBehaviour
             SpawnPoint = SpawnTransform.position;
         }
 
-        MyTeamID = TeamsManager.AddTeam("Mob Den", true);
+        Initialize();
+        TeamsManager.Teams[MyTeamID].Members.AddRange(Mobs);
+    }
+
+    public void Initialize()
+    {
+        NumToSpawn = World.Rnd.Next(MinSpawn, MaxSpawn);
+
+        Enemies = new();
+        CurrentState = DenStates.Patrolling;
+
         Mobs = new(NumToSpawn);
         for (int i = 0; i < NumToSpawn; i++)
         {
             SpawnMob();
         }
-
-        TeamsManager.Teams[MyTeamID].Members.AddRange(Mobs);
-        SearchTimer = 0;
     }
 
     private void Update()
     {
-        SearchTimer += Time.deltaTime;
-
-        if (SearchTimer > SearchTime)
-        {
-            SearchTimer = 0;
-
-            EnemySearch();
-        }
-
         if (CurrentState == DenStates.Patrolling)
         {
             if (Enemies.Count > 0)
@@ -142,25 +138,6 @@ public class MobDen : MonoBehaviour
         mob.SetPatrolling(patrolPoints.ToArray());
     }
 
-    private void EnemySearch()
-    {
-        Enemies = new();
-        Dictionary<int, Team> teams = TeamsManager.GetTeams();
-        foreach (int teamID in teams.Keys)
-        {
-            if (teamID != MyTeamID)
-            {
-                foreach (CharacterStats character in teams[teamID].Members)
-                {
-                    if (Vector3.Distance(character.transform.position, transform.position) < TerritoryRadius)
-                    {
-                        Enemies.Add(character);
-                    }
-                }
-            }
-        }
-    }
-
     private void SetPatrolling()
     {
         foreach (DenMob mob in Mobs)
@@ -173,8 +150,6 @@ public class MobDen : MonoBehaviour
 
     public void GetNewAttackTarget(DenMob mob)
     {
-        EnemySearch();
-
         if (Enemies.Count > 0)
         {
             mob.Target = Enemies[0];

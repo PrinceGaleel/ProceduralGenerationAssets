@@ -42,6 +42,14 @@ public class RenderTerrainMap : MonoBehaviour
             CamToDrawWidth.targetTexture = TempTexture;
             CamToDrawWidth.depthTextureMode = DepthTextureMode.Depth;
         }
+    }
+
+    private void Start()
+    {
+        if (!Focus)
+        {
+            Focus = PlayerStats.PlayerTransform;
+        }
 
         enabled = false;
     }

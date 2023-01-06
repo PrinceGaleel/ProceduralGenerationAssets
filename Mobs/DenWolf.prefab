@@ -1485,9 +1485,7 @@ GameObject:
   - component: {fileID: 4904765105591257009}
   - component: {fileID: 95605706055870404}
   - component: {fileID: 8193417202916341566}
-  - component: {fileID: 8680486445511598371}
   - component: {fileID: 2582036066771152963}
-  - component: {fileID: 3349032374055800194}
   - component: {fileID: -2819125382277446055}
   m_Layer: 9
   m_Name: DenWolf
@@ -1545,12 +1543,25 @@ MonoBehaviour:
   MaxStamina: 100
   CurrentMana: 0
   MaxMana: 0
-  BaseDamage: 20
+  BaseDamage: 10
   CurrentExp: 0
   ExpToLevelUp: 0
   Level: 0
   SkillPoints: 0
+  StaminaRegen: 7
+  StaminaRegenTimer: 0
+  StaminaRegenTime: 5
+  NormalSpeed: 4
+  BackingOffSpeed: 2
+  SprintSpeed: 6
+  IdleName: Idle
+  RestingAnim: Resting
+  WalkingAnim: Run Forward
+  RunningAnim: Run Forward
+  BackwardAnim: Walk Backward
+  WaitingAnim: Look Around
   Race: 0
+  MyTeamID: 0
   Anim: {fileID: 95605706055870404}
   _Inventory: {fileID: 8193417202916341566}
   Fists:
@@ -1561,17 +1572,8 @@ MonoBehaviour:
   Agent: {fileID: 2582036066771152963}
   HeadConstraint: {fileID: 0}
   Target: {fileID: 0}
-  IdleName: Idle
-  RestingAnim: Resting
-  WalkingAnim: Run Forward
-  RunningAnim: Run Forward
-  BackwardAnim: Walk Backward
-  WaitingAnim: Look Around
-  NormalSpeed: 4
-  BackingOffSpeed: 2
-  SprintSpeed: 6
   DodgeSpeed: 9
-  RotationSpeed: 2
+  RotationSpeed: 3
   AttackRange: 3
   AttackCooldown: 5
   Den: {fileID: 0}
@@ -1608,62 +1610,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Gold: 0
---- !u!114 &8680486445511598371
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1811715708561768}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b2d8418b0b9634b1892b0268dd9c2743, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  boneShape: 1
-  drawBones: 1
-  drawTripods: 0
-  boneSize: 1
-  tripodSize: 1
-  boneColor: {r: 0, g: 0, b: 1, a: 0.5}
-  m_Transforms:
-  - {fileID: 4154831818910090}
-  - {fileID: 4230920813161270}
-  - {fileID: 4833081250803438}
-  - {fileID: 4997454921013844}
-  - {fileID: 4782287469994934}
-  - {fileID: 4619445079164584}
-  - {fileID: 4686261789675184}
-  - {fileID: 4772623687703054}
-  - {fileID: 4688204644123184}
-  - {fileID: 4354466377913512}
-  - {fileID: 4425063895611754}
-  - {fileID: 4026868497616864}
-  - {fileID: 4197434537351984}
-  - {fileID: 4378162152422636}
-  - {fileID: 4067498377280714}
-  - {fileID: 4443455109344090}
-  - {fileID: 4962444700739804}
-  - {fileID: 4329129143263900}
-  - {fileID: 4876207203215356}
-  - {fileID: 4140538588012784}
-  - {fileID: 4292955234690126}
-  - {fileID: 4849966072436682}
-  - {fileID: 4202501825360932}
-  - {fileID: 4208365589244550}
-  - {fileID: 4438999630136684}
-  - {fileID: 4425155927798372}
-  - {fileID: 4352400696056632}
-  - {fileID: 4221589643657052}
-  - {fileID: 4962564196104630}
-  - {fileID: 4312666553867028}
-  - {fileID: 4459281916256590}
-  - {fileID: 4598738025430834}
-  - {fileID: 4092637601559042}
-  - {fileID: 4703960927674292}
-  - {fileID: 4249162398858666}
-  - {fileID: 4524469913099368}
-  - {fileID: 4640025665840298}
 --- !u!195 &2582036066771152963
 NavMeshAgent:
   m_ObjectHideFlags: 0
@@ -1686,20 +1632,6 @@ NavMeshAgent:
   m_BaseOffset: 0
   m_WalkableMask: 4294967295
   m_ObstacleAvoidanceType: 4
---- !u!136 &3349032374055800194
-CapsuleCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1811715708561768}
-  m_Material: {fileID: 0}
-  m_IsTrigger: 0
-  m_Enabled: 1
-  m_Radius: 0.5
-  m_Height: 1
-  m_Direction: 1
-  m_Center: {x: 0, y: 0, z: 0}
 --- !u!114 &-2819125382277446055
 MonoBehaviour:
   m_ObjectHideFlags: 0

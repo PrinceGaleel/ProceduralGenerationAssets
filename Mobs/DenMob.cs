@@ -17,9 +17,14 @@ public class DenMob : BasicAI
         SetRequiredXP();
         CurrentExp = 0;
     }
+    private void Start()
+    {
+        AIStart();
+    }
 
     private void Update()
     {
+        CheckStamina();
         GenericTimer += Time.deltaTime;
 
         if (MainState == MainAIStates.Idling)
@@ -38,7 +43,7 @@ public class DenMob : BasicAI
                 if (DestinationDistance < 1)
                 {
                     GenericTimer = 0;
-                    SetWaiting();
+                    SetWaiting(WaitingAnim);
                 }
             }
             else if (SecondaryState == SecondaryAIStates.Waiting)
@@ -66,18 +71,15 @@ public class DenMob : BasicAI
                 {
                     if (SecondaryState == SecondaryAIStates.Moving)
                     {
-                        if (DestinationTargetDistance > AttackRange)
+                        RotateTowardsPath();
+
+                        if (TargetDistance < AttackRange)
+                        {
+                            SetRotatingTowardsTarget();
+                        }
+                        else if (DestinationTargetDistance > AttackRange)
                         {
                             SetRunning(Target.transform.position);
-                        }
-                        else
-                        {
-                            RotateTowardsPath();
-
-                            if (TargetDistance < AttackRange)
-                            {
-                                SetRotatingTowardsTarget();
-                            }
                         }
                     }
                     else if (SecondaryState == SecondaryAIStates.Rotating)
@@ -88,9 +90,9 @@ public class DenMob : BasicAI
                             {
                                 Attack();
                                 GenericTimer = 0;
-                                GenericTime = 0.7f;
+                                GenericTime = 1;
                                 MainState = MainAIStates.BackingOff;
-                                SetFrozen(Target.transform.position);
+                                FollowThroughAttack(Target.transform.position);
                             }
                         }
                         else
@@ -121,7 +123,7 @@ public class DenMob : BasicAI
                         }
                         else if (DestinationDistance < 1)
                         {
-                            SetWaiting();
+                            SetWaiting(IdleName);
                         }
                     }
                     else if (SecondaryState == SecondaryAIStates.Waiting)
@@ -136,11 +138,12 @@ public class DenMob : BasicAI
                             SetBackingOff(Target.transform.position);
                         }
                     }
-                    else if (SecondaryState == SecondaryAIStates.Frozen)
+                    else if (SecondaryState == SecondaryAIStates.Null)
                     {
+                        RotateTowardsPath();
                         if (GenericTimer > GenericTime)
                         {
-                            SecondaryState = SecondaryAIStates.Moving;
+                            SetBackingOff(Target.transform.position);
                         }
                     }
                 }
@@ -153,17 +156,6 @@ public class DenMob : BasicAI
         else
         {
             Den.GetNewAttackTarget(this);
-        }
-    }
-
-    private void GetNewEnemy()
-    {
-        if (Den.Enemies.Count > 0)
-        {
-        }
-        else
-        {
-            SetPatrolling();
         }
     }
 

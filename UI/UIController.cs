@@ -55,15 +55,19 @@ public class UIController : MonoBehaviour
 
             InteractInfo.text = "";
             MessageInfo.text = "";
-            ToggleInventory(false);
-            //ToggleMap(false);
-            TogglePauseMenu(false);
 
             if (!MessageInfo.GetComponent<DisableTimer>())
             {
                 MessageInfo.gameObject.AddComponent<DisableTimer>();
             }
         }
+    }
+
+    private void Start()
+    {
+        ToggleInventory(false);
+        TogglePauseMenu(false);
+        //ToggleMap(false);        
     }
 
     private void Update()
@@ -159,7 +163,7 @@ public class UIController : MonoBehaviour
     private void TogglePlayerMovement(bool enabled)
     {
         CameraController.Instance.enabled = enabled;
-        PlayerController.Instance.enabled = enabled;
+        PlayerStats.Instance.CanMove = enabled;
     }
 
     private void ToggleCursor(bool isEnabled)

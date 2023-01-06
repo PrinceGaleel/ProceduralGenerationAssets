@@ -253,10 +253,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ad1caaa3c870c4e43801e7ae41e4273b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  SpawnPoint: {fileID: 1473257245099024268}
+  SpawnTransform: {fileID: 0}
+  SpawnPoint: {x: 0, y: 0, z: 0}
+  MyTeamID: 0
   MinSpawn: 3
   MaxSpawn: 6
-  TerritoryRadius: 30
+  TerritoryRadius: 45
   Mobs: []
   Enemies: []
   Mob: {fileID: 1811715708561768, guid: b14d6a01c21e5a343886f957a01fac72, type: 3}
@@ -1424,7 +1426,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4073387752772590, guid: e4efea68f7a2f5f4e8be9deb8c0ba72c, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 11.700001
+      value: 11.89
       objectReference: {fileID: 0}
     - target: {fileID: 4073387752772590, guid: e4efea68f7a2f5f4e8be9deb8c0ba72c, type: 3}
       propertyPath: m_LocalPosition.y
@@ -1432,7 +1434,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4073387752772590, guid: e4efea68f7a2f5f4e8be9deb8c0ba72c, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 8.140001
+      value: 6.32
       objectReference: {fileID: 0}
     - target: {fileID: 4073387752772590, guid: e4efea68f7a2f5f4e8be9deb8c0ba72c, type: 3}
       propertyPath: m_LocalRotation.w
