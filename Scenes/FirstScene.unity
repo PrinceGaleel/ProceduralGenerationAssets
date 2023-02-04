@@ -152,6 +152,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f5461d33dbe463144b75ef04a0cc1545, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ChunkPrefab: {fileID: 494863018967752294, guid: 79041f7f64b69fe468ec0907e6c4e9d9,
+    type: 3}
   Biomes:
   - {fileID: 11400000, guid: c9ea084c765c6cc42b942e77549d6441, type: 2}
   - {fileID: 11400000, guid: bdf4692a28e1ab24696fcb7f2cfbbed1, type: 2}
@@ -170,33 +172,20 @@ MonoBehaviour:
   GrassMaterial: {fileID: 2100000, guid: 2df821560363b734f9e608cd58c126e7, type: 2}
   GrassShader: {fileID: 7200000, guid: 710ea47fbf095524caa7eba6d0e1fa25, type: 3}
   CenterBuildings:
-    Pairs:
-    - Key: {fileID: 1984039378238888, guid: 1a685772a67f7764d8e10df637b9a0d0, type: 3}
-      Value: {x: 1, y: 1}
+    Keys: []
+    Values: []
   EssentialBuildings:
-    Pairs:
-    - Key: {fileID: 3389285761867239321, guid: 810670d07d5f9264e9985b7227f8d086, type: 3}
-      Value: {x: 8.2, y: 7.14}
+    Keys: []
+    Values: []
   Houses:
-    Pairs:
-    - Key: {fileID: 1791110076982393335, guid: 2fd1cd7c8c2f2494b9b52ed9b95d385b, type: 3}
-      Value: {x: 3.73, y: 4.55}
-    - Key: {fileID: 6700880355890446163, guid: 7f1637e4a7546214ebfa505fa6fe3360, type: 3}
-      Value: {x: 6, y: 5.5}
-    - Key: {fileID: 7962954651740228810, guid: 35189b239c5d9ee41a3f6f46a7ed1c06, type: 3}
-      Value: {x: 5.5, y: 6.9}
-    - Key: {fileID: 8509984767618133145, guid: 0395fe1da35faca489d6eec13c3566f6, type: 3}
-      Value: {x: 5.4, y: 5.25}
-    - Key: {fileID: 5491026771132458477, guid: 7ed6cac11c934264fa2629499f3f88f1, type: 3}
-      Value: {x: 3.4, y: 3.8}
+    Keys: []
+    Values: []
   OptionalBuilding:
-    Pairs: []
+    Keys: []
+    Values: []
   Extras:
-    Pairs:
-    - Key: {fileID: 3475780335782670365, guid: b54aca656a87349499f9f5f17d502b24, type: 3}
-      Value: {x: 2.3, y: 4}
-    - Key: {fileID: 1445319258866443025, guid: b7315854fa809914eb79326964c58f11, type: 3}
-      Value: {x: 2.1, y: 2.23}
+    Keys: []
+    Values: []
 --- !u!4 &192318521
 Transform:
   m_ObjectHideFlags: 0

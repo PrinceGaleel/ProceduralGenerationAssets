@@ -10,14 +10,24 @@ public class SaveInfoContainer : MonoBehaviour
     public TextMeshProUGUI SaveTime;
     public string SaveName;
     public SaveData _SaveData;
-    public GameObject SelectionImage;
+    private LoadGame _LoadGame;
 
-    public void Initialize(SaveData saveData)
+    public void Initialize(SaveData saveData, LoadGame loadGame)
     {
         CharacterName.text = saveData.CharacterName;
         SaveTime.text = saveData.TotalTime;
         SaveName = saveData.SaveName;
         _SaveData = saveData;
-        SelectionImage.SetActive(false);
+        _LoadGame = loadGame;
+    }
+
+    public void AttemptDeleteSave()
+    {
+        _LoadGame.ToggleDeleteConfirmation(this);
+    }
+
+    public void AttemptLoadSave()
+    {
+        _LoadGame.ToggleLoadConfirmation(this);
     }
 }

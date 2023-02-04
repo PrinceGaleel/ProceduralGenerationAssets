@@ -3,26 +3,28 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Threading;
 using UnityEngine.AI;
+using System.Collections.Concurrent;
+using Unity.Jobs;
 
 public class NavMeshManager : MonoBehaviour
 {
     public static NavMeshManager Instance;
-    private static Dictionary<Transform, NavMeshBuildSource> Sources;
+
+    private static HashSet<Vector2Int> AwaitingFoliage;
+    private static ConcurrentQueue<Vector2Int> ChunksToAdd;
+    private static Dictionary<Vector2Int, NavMeshBuildSource> SourcesDict;
+    private static List<NavMeshBuildSource> ActiveSources;
+    private static AsyncOperation NavMeshProgress;
+    private static JobHandle SourcesProgress;
+
     private static Dictionary<Vector2Int, List<MonoBehaviour>> UnreadyToEnable;
-    private static Vector2Int LastToEnable;
-
-    private static List<Chunk> ChunksToAdd;
-    private static List<Chunk> ChunksToRemove;
-
-    private static AsyncOperation UpdateOperation;
-
-    private const int NavMeshedDistance = 150;
-    private static readonly int NormalizedNavDistance = Mathf.CeilToInt((float)NavMeshedDistance / Chunk.ChunkSize);
+    private static ConcurrentQueue<List<MonoBehaviour>> ToEnable;
 
     [Header("Surface")]
-    public NavMeshData _NavMeshData;
-    private NavMeshDataInstance NavMeshDataInstance;
-    private NavMeshBuildSettings BuildSettings;
+    private static NavMeshData _NavMeshData;
+    private static NavMeshDataInstance DataInstance;
+    private static NavMeshBuildSettings BuildSettings;
+    private static Bounds _Bounds;
 
     private void Awake()
     {
@@ -30,142 +32,162 @@ public class NavMeshManager : MonoBehaviour
         {
             Debug.Log("ERROR: Multiple nav mesh managers detected");
             Destroy(gameObject);
-            enabled = false;
         }
         else
         {
             Instance = this;
 
-            ChunksToAdd = new();
-            ChunksToRemove = new();
+            ActiveSources = new();
+            SourcesDict = new();
             UnreadyToEnable = new();
-            transform.position = Vector3.zero;
+            ToEnable = new();
+            ChunksToAdd = new();
+            AwaitingFoliage = new();
 
-            Sources = new();
+            _Bounds = new(new(0, (SaveData.HeightMultipler / 2), 0), new(((World.LODTwoDistance * 2) + 1) * Chunk.DefaultChunkSize, SaveData.HeightMultipler + 50, ((World.LODTwoDistance * 2) + 1) * Chunk.DefaultChunkSize));
 
             BuildSettings = NavMesh.GetSettingsByID(0);
-        }
-    }
+            BuildSettings.overrideTileSize = true;
+            BuildSettings.overrideVoxelSize = true;
+            BuildSettings.tileSize = 256;
+            BuildSettings.voxelSize = 0.15f;
 
-    private void Start()
-    {
-        LastToEnable = Chunk.GetChunkPosition(new Vector2(World.CurrentSaveData.LastPosition.x, World.CurrentSaveData.LastPosition.z) + new Vector2(1000, 1000));
-        _NavMeshData = NavMeshBuilder.BuildNavMeshData(BuildSettings, new(Sources.Values), CalculateWorldBounds(new(Sources.Values)), transform.position, transform.rotation);
-
-        if (_NavMeshData != null)
-        {
-            _NavMeshData.name = gameObject.name;
-
-            NavMeshDataInstance.Remove();
-            NavMeshDataInstance = new();
-
-            if (!NavMeshDataInstance.valid)
-            {
-                if (_NavMeshData != null)
-                {
-                    NavMeshDataInstance = NavMesh.AddNavMeshData(_NavMeshData, transform.position, transform.rotation);
-                    NavMeshDataInstance.owner = this;
-                }
-            }
+            _NavMeshData = new(0);
+            _NavMeshData.name = Instance.gameObject.name;
+            DataInstance = NavMesh.AddNavMeshData(_NavMeshData);
+            DataInstance.owner = Instance;
         }
 
-        UpdateOperation = NavMeshBuilder.UpdateNavMeshDataAsync(_NavMeshData, BuildSettings, new(Sources.Values), CalculateWorldBounds(new(Sources.Values)));
+        enabled = false;
     }
 
     private void Update()
     {
-        if (UpdateOperation.isDone)
+        if (SourcesProgress.IsCompleted)
         {
-            if (UnreadyToEnable.ContainsKey(LastToEnable))
+            if (NavMeshProgress.isDone)
             {
-                foreach (MonoBehaviour value in UnreadyToEnable[LastToEnable])
+                if (ToEnable.Count > 0)
                 {
-                    value.enabled = true;
+                    if (ToEnable.TryDequeue(out List<MonoBehaviour> monos))
+                    {
+                        foreach (MonoBehaviour mono in monos)
+                        {
+                            mono.enabled = true;
+                        }
+                    }
                 }
 
-                UnreadyToEnable.Remove(LastToEnable);
-            }
-
-            for (int i = 0; i < ChunksToRemove.Count; i++)
-            {
-                if (Vector2Int.Distance(ChunksToRemove[i].WorldPosition, World.LastPlayerChunkPos * Chunk.ChunkSize) < NavMeshedDistance)
+                if (ChunksToAdd.Count == 0)
                 {
-                    ChunksToRemove.RemoveAt(i);
-                    i -= 1;
+                    enabled = false;
                 }
-            }
-
-            for (int i = 0; i < ChunksToAdd.Count; i++)
-            {
-                if (Vector2Int.Distance(ChunksToAdd[i].WorldPosition, World.LastPlayerChunkPos * Chunk.ChunkSize) > NavMeshedDistance)
+                else if (ChunksToAdd.TryDequeue(out Vector2Int chunkPos))
                 {
-                    ChunksToAdd.RemoveAt(i);
-                    i -= 1;
+                    Chunk chunk = World.ActiveTerrain[chunkPos];
+                    ActiveSources.Add(new()
+                    {
+                        transform = chunk.MyTransform.localToWorldMatrix,
+                        size = Vector3.zero,
+                        shape = NavMeshBuildSourceShape.Mesh,
+                        area = 0,
+                        sourceObject = chunk.TerrainMesh
+                    });
+                    SourcesDict[chunk.ChunkPosition] = ActiveSources[^1];
+                    NavMeshProgress = NavMeshBuilder.UpdateNavMeshDataAsync(_NavMeshData, BuildSettings, ActiveSources, _Bounds);
                 }
-            }
-
-            bool updateMesh = false;
-            if (ChunksToAdd.Count > 0)
-            {
-                AddSource(ChunksToAdd[0].transform, ChunksToAdd[0].ChunkMeshFilter.sharedMesh);
-                LastToEnable = ChunksToAdd[0].ChunkPosition;
-                ChunksToAdd.RemoveAt(0);
-                updateMesh = true;
-            }
-
-            if (ChunksToRemove.Count > 0)
-            {
-                Sources.Remove(ChunksToRemove[0].transform);
-                ChunksToRemove.RemoveAt(0);
-                updateMesh = true;
-            }
-
-            if (updateMesh)
-            {
-                UpdateOperation = NavMeshBuilder.UpdateNavMeshDataAsync(_NavMeshData, BuildSettings, new(Sources.Values), CalculateWorldBounds(new(Sources.Values)));
             }
         }
     }
 
-    public static void CheckNavMesh()
+    public static void Initialize()
     {
-        for (int x = -NormalizedNavDistance; x <= NormalizedNavDistance; x++)
+        NavMeshProgress = NavMeshBuilder.UpdateNavMeshDataAsync(_NavMeshData, BuildSettings, ActiveSources, _Bounds);
+        SourcesProgress = new CheckNavMesh().Schedule();
+        Instance.enabled = true;
+    }
+
+    public static void RemoveChunk(Vector2Int chunkPos)
+    {
+        if (SourcesDict.ContainsKey(chunkPos))
         {
-            for (int z = -NormalizedNavDistance; z <= NormalizedNavDistance; z++)
+            ActiveSources.Remove(SourcesDict[chunkPos]);
+            SourcesDict.Remove(chunkPos);
+        }
+    }
+
+    public static void AddChunk(Vector2Int chunkPos)
+    {
+        if (AwaitingFoliage.Contains(chunkPos))
+        {
+            AwaitingFoliage.Remove(chunkPos);
+
+            if (World.ActiveTerrain[chunkPos].TerrainMesh && (int)World.ActiveTerrain[chunkPos].CurrentLODState <= (int)TerrainLODStates.LODTwo)
             {
-                if (World.ActiveTerrain.ContainsKey(new(x + World.LastPlayerChunkPos.x, z + World.LastPlayerChunkPos.y)))
+                ChunksToAdd.Enqueue(chunkPos);
+            }
+        }
+    }
+
+    public static void UpdateNavMesh()
+    {
+        SourcesProgress = new CheckNavMesh().Schedule();
+        Instance.enabled = true;
+    }
+
+    public struct CheckNavMesh : IJob
+    {
+        public void Execute()
+        {
+            for (int x = -World.LODTwoDistance; x <= World.LODTwoDistance; x++)
+            {
+                for (int z = -World.LODTwoDistance; z <= World.LODTwoDistance; z++)
                 {
-                    Chunk chunk = World.ActiveTerrain[new(x + World.LastPlayerChunkPos.x, z + World.LastPlayerChunkPos.y)];
-                    if (chunk.Active)
+                    Vector2Int chunkToCheck = new(x + World.LastPlayerChunkPos.x, z + World.LastPlayerChunkPos.y);
+
+                    if (World.ActiveTerrain.ContainsKey(chunkToCheck) && !SourcesDict.ContainsKey(chunkToCheck))
                     {
-                        if (!ChunksToAdd.Contains(chunk) && !Sources.ContainsKey(chunk.transform))
+                        Chunk chunk = World.ActiveTerrain[chunkToCheck];
+                        if (chunk.TerrainMesh && (int)chunk.CurrentLODState <= (int)TerrainLODStates.LODTwo)
                         {
-                            if (Vector2Int.Distance(World.LastPlayerChunkPos * Chunk.ChunkSize, chunk.WorldPosition) < NavMeshedDistance)
+                            SourcesDict.Add(chunk.ChunkPosition, new());
+
+                            if (chunk.HasTrees)
                             {
-                                ChunksToAdd.Add(chunk);
+                                ChunksToAdd.Enqueue(chunkToCheck);
+                                _Bounds.center = new(World.LastPlayerChunkPos.x * Chunk.DefaultChunkSize, (SaveData.HeightMultipler / 2), World.LastPlayerChunkPos.y * Chunk.DefaultChunkSize);
+
+                                if (UnreadyToEnable.ContainsKey(chunkToCheck))
+                                {
+                                    ToEnable.Enqueue(UnreadyToEnable[chunkToCheck]);
+                                    UnreadyToEnable.Remove(chunkToCheck);
+                                }
+                            }
+                            else
+                            {
+                                AwaitingFoliage.Add(chunk.ChunkPosition);
                             }
                         }
                     }
                 }
             }
-        }
 
-        foreach (Transform key in Sources.Keys)
-        {
-            Chunk chunk = World.ActiveTerrain[Chunk.GetChunkPosition(new(key.position.x, key.position.z))];
-            if (key.gameObject.activeSelf && !ChunksToRemove.Contains(chunk))
+            List<Vector2Int> keys = new(SourcesDict.Keys);
+            foreach (Vector2Int key in keys)
             {
-                if (Vector2Int.Distance(chunk.WorldPosition, World.LastPlayerChunkPos * Chunk.ChunkSize) > NavMeshedDistance)
+                Chunk chunk = World.ActiveTerrain[key];
+                if (Mathf.Abs(World.LastPlayerChunkPos.x - chunk.ChunkPosition.x) > World.LODTwoDistance || Mathf.Abs(World.LastPlayerChunkPos.y - chunk.ChunkPosition.y) > World.LODTwoDistance)
                 {
-                    ChunksToRemove.Add(chunk);
+                    RemoveChunk(chunk.ChunkPosition);
+                    _Bounds.center = new(World.LastPlayerChunkPos.x * Chunk.DefaultChunkSize, (SaveData.HeightMultipler / 2), World.LastPlayerChunkPos.y * Chunk.DefaultChunkSize);
                 }
             }
         }
     }
-
+      
     public static void AddUnreadyToEnable(Vector2Int chunkPosition, MonoBehaviour behaviour)
     {
-        if (Sources.ContainsKey(World.ActiveTerrain[chunkPosition].transform))
+        if (SourcesDict.ContainsKey(chunkPosition))
         {
             behaviour.enabled = true;
         }
@@ -177,70 +199,5 @@ public class NavMeshManager : MonoBehaviour
         {
             UnreadyToEnable.Add(chunkPosition, new() { behaviour });
         }
-    }
-
-    private void AddSource(Transform sourceTransform, Mesh mesh)
-    {
-        Sources.Add(sourceTransform, new()
-        {
-            transform = sourceTransform.localToWorldMatrix,
-            size = Vector3.zero,
-            shape = NavMeshBuildSourceShape.Mesh,
-            area = 0,
-            sourceObject = mesh
-        });
-    }
-
-    private static Vector3 Abs(Vector3 v)
-    {
-        return new Vector3(Mathf.Abs(v.x), Mathf.Abs(v.y), Mathf.Abs(v.z));
-    }
-
-    private static Bounds GetWorldBounds(Matrix4x4 mat, Bounds bounds)
-    {
-        Vector3 absAxisX = Abs(mat.MultiplyVector(Vector3.right));
-        Vector3 absAxisY = Abs(mat.MultiplyVector(Vector3.up));
-        Vector3 absAxisZ = Abs(mat.MultiplyVector(Vector3.forward));
-        Vector3 worldPosition = mat.MultiplyPoint(bounds.center);
-        Vector3 worldSize = absAxisX * bounds.size.x + absAxisY * bounds.size.y + absAxisZ * bounds.size.z;
-        return new Bounds(worldPosition, worldSize);
-    }
-
-    public Bounds CalculateWorldBounds(List<NavMeshBuildSource> sources)
-    {
-        // Use the unscaled matrix for the NavMeshSurface
-        Matrix4x4 worldToLocal = Matrix4x4.TRS(transform.position, transform.rotation, Vector3.one);
-        worldToLocal = worldToLocal.inverse;
-
-        Bounds result = new();
-        foreach (NavMeshBuildSource src in sources)
-        {
-            switch (src.shape)
-            {
-                case NavMeshBuildSourceShape.Mesh:
-                    {
-                        Mesh m = src.sourceObject as Mesh;
-                        result.Encapsulate(GetWorldBounds(worldToLocal * src.transform, m.bounds));
-                        break;
-                    }
-                case NavMeshBuildSourceShape.Terrain:
-                    {
-                        // Terrain pivot is lower/left corner - shift bounds accordingly
-                        TerrainData t = src.sourceObject as TerrainData;
-                        result.Encapsulate(GetWorldBounds(worldToLocal * src.transform, new Bounds(0.5f * t.size, t.size)));
-                        break;
-                    }
-                case NavMeshBuildSourceShape.Box:
-                case NavMeshBuildSourceShape.Sphere:
-                case NavMeshBuildSourceShape.Capsule:
-                case NavMeshBuildSourceShape.ModifierBox:
-                    result.Encapsulate(GetWorldBounds(worldToLocal * src.transform, new Bounds(Vector3.zero, src.size)));
-                    break;
-            }
-        }
-
-        // Inflate the bounds a bit to avoid clipping co-planar sources
-        result.Expand(0.1f);
-        return result;
     }
 }

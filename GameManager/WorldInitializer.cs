@@ -6,54 +6,66 @@ public class WorldInitializer : MonoBehaviour
 {
     private void Start()
     {
-        World.CheckForNewChunks();
+        PlayerStats.PlayerTransform.position = Chunk.GetPerlinPosition(World.CurrentSaveData.LastPosition.x, World.CurrentSaveData.LastPosition.z) + new Vector3(0, 50, 0);
+        Vector2Int currentPlayerChunkPos = new(Mathf.RoundToInt(PlayerStats.PlayerTransform.position.x / Chunk.DefaultChunkSize), Mathf.RoundToInt(PlayerStats.PlayerTransform.position.z / Chunk.DefaultChunkSize));
 
-        while (World.MeshesToCreate.Count > 0)
+        for (int x = -World.LODFiveDistance; x <= World.LODFiveDistance; x++)
         {
-            World.ActiveTerrain[World.MeshesToCreate.Dequeue()].CreateMesh();
-        }
-
-        while (World.MeshesToUpdate.Count > 0)
-        {
-            World.ActiveTerrain[World.MeshesToUpdate.Dequeue()].AssignMesh();
-        }
-
-        FoliageManager.PopulateChunks();
-
-        World.CheckForNewChunks();
-
-        if (World.StructuresToCreate.Count > 0)
-        {
-            lock (World.StructuresToCreate)
+            for (int z = -World.LODFiveDistance; z <= World.LODFiveDistance; z++)
             {
-                CustomPair<Chunk, StructureTypes> pair = World.StructuresToCreate.TakePairAt(0);
+                Vector2Int chunkPos = new(x + currentPlayerChunkPos.x, z + currentPlayerChunkPos.y);
+                Vector2Int absDistance = new(Mathf.Abs(currentPlayerChunkPos.x - chunkPos.x), Mathf.Abs(currentPlayerChunkPos.y - chunkPos.y));
 
-                if (pair.Value == StructureTypes.Village)
+                if (World.ActiveTerrain.TryAdd(chunkPos, Instantiate(World.ChunkPrefab, World.WorldTransform).GetComponent<Chunk>()))
                 {
-                    StructureCreator.CreateVillage(pair.Key);
-                }
-                else if (pair.Value == StructureTypes.MobDen)
-                {
-                    Instantiate(StructureCreator.Instance.MobDenPrefabs[Random.Range(0, StructureCreator.Instance.MobDenPrefabs.Length)],
-                        Chunk.GetPerlinPosition(pair.Key.WorldPosition.x, pair.Key.WorldPosition.y), Quaternion.identity).transform.SetParent(pair.Key.StructureParent);
+                    World.ActiveTerrain[chunkPos].SetPositions(chunkPos);
+                    World.ActiveTerrain[chunkPos].MoveTransform();
+
+                    if (absDistance.x <= World.LODOneDistance && absDistance.y <= World.LODOneDistance)
+                    {
+                        World.ActiveTerrain[chunkPos].AssignLODOne();
+                    }
+                    else if (absDistance.x <= World.LODTwoDistance && absDistance.y <= World.LODTwoDistance)
+                    {
+                        World.ActiveTerrain[chunkPos].AssignLODTwo();
+                    }
+                    else if (absDistance.x <= World.LODThreeDistance && absDistance.y <= World.LODThreeDistance)
+                    {
+                        World.ActiveTerrain[chunkPos].AssignLODThree();
+                    }
+                    else if (absDistance.x <= World.LODFourDistance && absDistance.y <= World.LODFourDistance)
+                    {
+                        World.ActiveTerrain[chunkPos].AssignLODFour();
+                    }
+                    else
+                    {
+                        World.ActiveTerrain[chunkPos].AssignLODFive();
+                    }
+
+                    World.ActiveTerrain[chunkPos].AssignMesh();
                 }
             }
         }
+
+        while (FoliageManager.FoliagesToAdd.Count > 0)
+        {
+            FoliageManager.Nextoliage();
+        }
+
+        NavMeshManager.Initialize();
+        FoliageManager.Instance.enabled = true;
+        World.Instance.enabled = true;
+        PlayerStats.Instance.gameObject.SetActive(true);
+
+        StartCoroutine(Initializer());
     }
 
-    private void Update()
+    private IEnumerator Initializer()
     {
-        if (FoliageManager.FoliageToAdd.Count == 0)
-        {
-            PlayerStats.PlayerTransform.gameObject.SetActive(true);
-            NavMeshManager.CheckNavMesh();
-            SceneTransitioner.ToggleScreen(false);
-            FoliageManager.Instance.enabled = true;
-
-            World.Instance.enabled = true;
-            World.ChunkThread.Start();
-            Destroy(this);
-            enabled = false;
-        }
+        yield return new WaitForSecondsRealtime(5);
+        SceneTransitioner.ToggleScreen(false);
+        RenderTerrainMap.ReloadBlending();
+        Destroy(this);
+        enabled = false;
     }
 }

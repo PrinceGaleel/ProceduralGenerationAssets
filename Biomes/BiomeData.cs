@@ -23,9 +23,6 @@ public class FoliageSettings
 {
     [Header("Foliage")]
     public FoliageInfo[] FoliageInfos;
-    public PerlinData _PerlinData;
-    public float PlacementThreshold;
-    public int SquareCheckSize;
     public float ChanceOfTree;
 }
 
@@ -49,17 +46,5 @@ public class PerlinData
     {
         Offset = perlinOffset;
         PerlinScale = perlinScale;
-    }
-
-    public PerlinData(float perlinScale)
-    {
-        Offset = new();
-        PerlinScale = perlinScale;
-    }
-
-    public PerlinData()
-    {
-        Offset = new();
-        PerlinScale = DefaultPerlinScale;
     }
 }

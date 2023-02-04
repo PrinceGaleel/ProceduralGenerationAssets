@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 
+/*
 public class IdleAnimController : BasicAI
 {
     public AnimationInformation[] Animations;
@@ -52,7 +53,7 @@ public class IdleAnimController : BasicAI
 
     private void Update()
     {
-        if (GenericAIState == SecondaryAIStates.Moving)
+        if (GenericAIState == SecondaryAIStates.Walking)
         {
             if (Vector3.Distance(transform.position, CurrentDestination) < 0.5f)
             {
@@ -159,6 +160,7 @@ public class IdleAnimController : BasicAI
     {
         public Transform Position;
         public string TransitionName;
-        public FloatRange TimeRange;
+        public Vector2Serializable TimeRange;
     }
 }
+*/

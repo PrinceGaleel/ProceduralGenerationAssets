@@ -17,6 +17,7 @@ public class DenMob : BasicAI
         SetRequiredXP();
         CurrentExp = 0;
     }
+
     private void Start()
     {
         AIStart();
@@ -25,132 +26,123 @@ public class DenMob : BasicAI
     private void Update()
     {
         CheckStamina();
-        GenericTimer += Time.deltaTime;
+        CurrentStateAction.Invoke();
+    }
 
-        if (MainState == MainAIStates.Idling)
+    protected override void IdleAction()
+    {
+        if (SecondaryState == SecondaryAIStates.Walking && DestinationDistance < 1)
         {
-            if (SecondaryState == SecondaryAIStates.Moving && DestinationDistance < 1)
+            SetIdling();
+        }
+    }
+
+    protected override void PatrolAction()
+    {
+        if (SecondaryState == SecondaryAIStates.Walking)
+        {
+            RotateTowardsPath();
+
+            if (DestinationDistance < 1)
             {
-                SetIdling();
+                WaitingTimer = 0;
+                SetWaiting(WaitingAnim);
             }
         }
-        else if (MainState == MainAIStates.Patrolling)
+        else if (SecondaryState == SecondaryAIStates.Waiting)
         {
-            if (SecondaryState == SecondaryAIStates.Moving)
+            WaitingTimer += Time.deltaTime;
+
+            if (WaitingTime < WaitingTimer)
+            {
+                PatrolNum = (int)Mathf.Repeat(PatrolNum + 1, PatrolPoints.Length - 1);
+
+                if (PatrolNum == 0)
+                {
+                    Array.Reverse(PatrolPoints);
+                }
+
+                SetWalking(PatrolPoints[PatrolNum]);
+            }
+        }
+    }
+
+    protected override void AttackAction()
+    {
+        if (Target)
+        {
+            AttackTimer += Time.deltaTime;
+            if (SecondaryState == SecondaryAIStates.Walking)
             {
                 RotateTowardsPath();
-
-                if (DestinationDistance < 1)
+                if (DestinationTargetDistance > 1)
                 {
-                    GenericTimer = 0;
+                    SetDestination(Target.transform.position);
+                }
+                else if (AttackTimer > AttackCooldown && TargetDistance < AttackRange)
+                {
+                    SetRotating();
+                }
+                else if (TargetDistance < MinBackOffDistance)
+                {
+                    SetBackingOff();
+                }
+                else if (DestinationDistance < 1)
+                {
                     SetWaiting(WaitingAnim);
+                }
+            }
+            else if (SecondaryState == SecondaryAIStates.Rotating)
+            {
+                if (TargetDistance < AttackRange)
+                {
+                    if (RotateTowardsTarget())
+                    {
+                        Attack();
+                        FollowThroughAttack();
+                    }
+                }
+                else
+                {
+                    SetRunning(Target.transform.position);
+                }
+            }
+            else if (SecondaryState == SecondaryAIStates.BackingOff)
+            {
+                BackOff();
+                if (AttackTimer > AttackCooldown || TargetDistance > MaxBackOffDistance)
+                {
+                    SetRunning(Target.transform.position);
+                }
+                else if (TargetDistance > MinBackOffDistance)
+                {
+                    SetWaiting(IdleName);
                 }
             }
             else if (SecondaryState == SecondaryAIStates.Waiting)
             {
-                if (GenericTime < GenericTimer)
+                RotateTowardsTarget();
+                if (AttackTimer > AttackCooldown)
                 {
-                    PatrolNum = (int)Mathf.Repeat(PatrolNum + 1, PatrolPoints.Length - 1);
-
-                    if (PatrolNum == 0)
-                    {
-                        Array.Reverse(PatrolPoints);
-                    }
-
-                    SetWalking(PatrolPoints[PatrolNum]);
+                    SetRunning(Target.transform.position);
+                }
+                else if (TargetDistance > MaxBackOffDistance)
+                {
+                    SetRunning(Target.transform.position);
+                }
+                else if (TargetDistance < MinBackOffDistance)
+                {
+                    SetBackingOff();
                 }
             }
-        }
-        else if (Target)
-        {
-            if (TargetDenDistance < Den.TerritoryRadius * 1.2f)
+            else if (SecondaryState == SecondaryAIStates.FollowThrough)
             {
-                AttackTimer += Time.deltaTime;
-
-                if (MainState == MainAIStates.Attacking)
+                WaitingTimer += Time.deltaTime;
+                Agent.Move(SprintSpeed * Time.deltaTime * transform.forward);
+                if (WaitingTimer > WaitingTime)
                 {
-                    if (SecondaryState == SecondaryAIStates.Moving)
-                    {
-                        RotateTowardsPath();
-
-                        if (TargetDistance < AttackRange)
-                        {
-                            SetRotatingTowardsTarget();
-                        }
-                        else if (DestinationTargetDistance > AttackRange)
-                        {
-                            SetRunning(Target.transform.position);
-                        }
-                    }
-                    else if (SecondaryState == SecondaryAIStates.Rotating)
-                    {
-                        if (TargetDistance < AttackRange)
-                        {
-                            if (RotateTowardsTarget())
-                            {
-                                Attack();
-                                GenericTimer = 0;
-                                GenericTime = 1;
-                                MainState = MainAIStates.BackingOff;
-                                FollowThroughAttack(Target.transform.position);
-                            }
-                        }
-                        else
-                        {
-                            SetRunning(Target.transform.position);
-                        }
-                    }
-                    else if (SecondaryState == SecondaryAIStates.Waiting)
-                    {
-                        if (GenericTimer < GenericTime)
-                        {
-                            SetRunning(Target.transform.position);
-                        }
-                    }
+                    SetBackingOff();
                 }
-                else if (MainState == MainAIStates.BackingOff)
-                {
-                    if (SecondaryState == SecondaryAIStates.Moving)
-                    {
-                        RotateAwayFromPath();
-                        if (AttackTimer > AttackCooldown)
-                        {
-                            SetAttacking();
-                        }
-                        else if (TargetDistance < AttackRange)
-                        {
-                            SetBackingOff(Target.transform.position);
-                        }
-                        else if (DestinationDistance < 1)
-                        {
-                            SetWaiting(IdleName);
-                        }
-                    }
-                    else if (SecondaryState == SecondaryAIStates.Waiting)
-                    {
-                        RotateTowardsTarget();
-                        if (AttackTimer > AttackCooldown)
-                        {
-                            SetAttacking();
-                        }
-                        else if (TargetDistance < AttackRange)
-                        {
-                            SetBackingOff(Target.transform.position);
-                        }
-                    }
-                    else if (SecondaryState == SecondaryAIStates.Null)
-                    {
-                        RotateTowardsPath();
-                        if (GenericTimer > GenericTime)
-                        {
-                            SetBackingOff(Target.transform.position);
-                        }
-                    }
-                }
-            }
-            else
-            {
-                Den.GetNewAttackTarget(this);
             }
         }
         else

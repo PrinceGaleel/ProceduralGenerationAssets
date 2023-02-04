@@ -195,6 +195,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4997454921013844}
+  - component: {fileID: 4647712638488408721}
+  - component: {fileID: 148893146968333776}
   m_Layer: 13
   m_Name: RigBLLeg1
   m_TagString: Untagged
@@ -218,6 +220,34 @@ Transform:
   m_Father: {fileID: 4833081250803438}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: -40.73134, y: 150.20044, z: -60.435226}
+--- !u!65 &4647712638488408721
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1165062035017994}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 0.35082603, y: 0.20003653, z: 0.1}
+  m_Center: {x: -0.12541296, y: -0.005765321, z: -0.00000023037924}
+--- !u!114 &148893146968333776
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1165062035017994}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 33ab0299a00bc3340ac1fbd9370a030d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  CurrentArmorRating: 0
+  Character: {fileID: 4904765105591257009}
+  DamageMultiplier: 0.8
 --- !u!1 &1184568658847334
 GameObject:
   m_ObjectHideFlags: 0
@@ -259,6 +289,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4197434537351984}
+  - component: {fileID: 2834547139259514765}
+  - component: {fileID: 94305481102897365}
   m_Layer: 13
   m_Name: RigFRLeg1
   m_TagString: Untagged
@@ -282,6 +314,34 @@ Transform:
   m_Father: {fileID: 4425063895611754}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: -49.494255, y: 174.91188, z: -61.11522}
+--- !u!65 &2834547139259514765
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1187883249738238}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 0.35082603, y: 0.20003653, z: 0.1}
+  m_Center: {x: -0.12541296, y: -0.005765321, z: -0.00000023037924}
+--- !u!114 &94305481102897365
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1187883249738238}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 33ab0299a00bc3340ac1fbd9370a030d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  CurrentArmorRating: 0
+  Character: {fileID: 4904765105591257009}
+  DamageMultiplier: 0.8
 --- !u!1 &1204771042999782
 GameObject:
   m_ObjectHideFlags: 0
@@ -353,6 +413,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4292955234690126}
+  - component: {fileID: 4499805017470886670}
+  - component: {fileID: 2279220952603785238}
   m_Layer: 13
   m_Name: RigBRLeg3
   m_TagString: Untagged
@@ -376,6 +438,34 @@ Transform:
   m_Father: {fileID: 4140538588012784}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: -11.476452, y: -8.876515, z: -83.76713}
+--- !u!65 &4499805017470886670
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1208772220629568}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 0.2834825, y: 0.11552761, z: 0.0644916}
+  m_Center: {x: -0.09174125, y: -0.006047278, z: 0.025}
+--- !u!114 &2279220952603785238
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1208772220629568}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 33ab0299a00bc3340ac1fbd9370a030d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  CurrentArmorRating: 0
+  Character: {fileID: 4904765105591257009}
+  DamageMultiplier: 0.8
 --- !u!1 &1227735497199808
 GameObject:
   m_ObjectHideFlags: 0
@@ -416,6 +506,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4354466377913512}
+  - component: {fileID: 1201201529523699309}
+  - component: {fileID: 459745196028039706}
   m_Layer: 13
   m_Name: RigNeck1
   m_TagString: Untagged
@@ -439,6 +531,34 @@ Transform:
   m_Father: {fileID: 4425063895611754}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0.05338347, y: 4.273516, z: -12.508069}
+--- !u!65 &1201201529523699309
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1242625238111080}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 0.41039035, y: 0.22911707, z: 0.32925555}
+  m_Center: {x: -0.04480473, y: 0.112946875, z: 0}
+--- !u!114 &459745196028039706
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1242625238111080}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 33ab0299a00bc3340ac1fbd9370a030d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  CurrentArmorRating: 0
+  Character: {fileID: 4904765105591257009}
+  DamageMultiplier: 1
 --- !u!1 &1262260006197776
 GameObject:
   m_ObjectHideFlags: 0
@@ -448,6 +568,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4249162398858666}
+  - component: {fileID: 5435457207835703466}
+  - component: {fileID: 2347593638583374701}
   m_Layer: 13
   m_Name: RigBLLegFoot1
   m_TagString: Untagged
@@ -471,6 +593,34 @@ Transform:
   m_Father: {fileID: 4703960927674292}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: -0.00000036652082, y: 0.0018923155, z: -61.371807}
+--- !u!65 &5435457207835703466
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1262260006197776}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 0.24948293, y: 0.081528015, z: 0.09614635}
+  m_Center: {x: -0.051293425, y: 0.03557292, z: -0.02}
+--- !u!114 &2347593638583374701
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1262260006197776}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 33ab0299a00bc3340ac1fbd9370a030d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  CurrentArmorRating: 0
+  Character: {fileID: 4904765105591257009}
+  DamageMultiplier: 0.8
 --- !u!1 &1271138617705620
 GameObject:
   m_ObjectHideFlags: 0
@@ -546,6 +696,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4026868497616864}
+  - component: {fileID: 2721292349006335822}
+  - component: {fileID: 2028560336870324188}
   m_Layer: 13
   m_Name: RigFLLeg1
   m_TagString: Untagged
@@ -569,6 +721,34 @@ Transform:
   m_Father: {fileID: 4425063895611754}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: -30.142132, y: -170.55367, z: -89.341705}
+--- !u!65 &2721292349006335822
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1329298617036000}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 0.35082603, y: 0.20003653, z: 0.1}
+  m_Center: {x: -0.12541296, y: -0.005765321, z: -0.00000023037924}
+--- !u!114 &2028560336870324188
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1329298617036000}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 33ab0299a00bc3340ac1fbd9370a030d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  CurrentArmorRating: 0
+  Character: {fileID: 4904765105591257009}
+  DamageMultiplier: 0.8
 --- !u!1 &1332994541535204
 GameObject:
   m_ObjectHideFlags: 0
@@ -609,6 +789,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4443455109344090}
+  - component: {fileID: 9112555311769717286}
+  - component: {fileID: 288667880845411636}
   m_Layer: 13
   m_Name: RigFRLegFoot1
   m_TagString: Untagged
@@ -632,6 +814,34 @@ Transform:
   m_Father: {fileID: 4067498377280714}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: -0.000003098438, y: 0.0015808303, z: -61.332478}
+--- !u!65 &9112555311769717286
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1377114964138844}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 0.22313727, y: 0.072302945, z: 0.1}
+  m_Center: {x: -0.044076554, y: 0.034209397, z: -0.00000028349086}
+--- !u!114 &288667880845411636
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1377114964138844}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 33ab0299a00bc3340ac1fbd9370a030d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  CurrentArmorRating: 0
+  Character: {fileID: 4904765105591257009}
+  DamageMultiplier: 0.8
 --- !u!1 &1400499649821958
 GameObject:
   m_ObjectHideFlags: 0
@@ -672,6 +882,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4154831818910090}
+  - component: {fileID: 6986148275192868088}
+  - component: {fileID: 6057183005913699770}
   m_Layer: 13
   m_Name: RigSpine1
   m_TagString: Untagged
@@ -688,13 +900,41 @@ Transform:
   m_GameObject: {fileID: 1400953489847110}
   m_LocalRotation: {x: 0.000000057234587, y: -0.0000000633873, z: -0.043526705, w: 0.9990523}
   m_LocalPosition: {x: -0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 0.99999994, z: 1}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 4230920813161270}
   m_Father: {fileID: 4833081250803438}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: -0.70417947, y: -3.3422923, z: -6.845131}
+--- !u!65 &6986148275192868088
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1400953489847110}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 0.41039035, y: 0.22911708, z: 0.5}
+  m_Center: {x: -0.04480473, y: 0.11294686, z: -1.7158218e-10}
+--- !u!114 &6057183005913699770
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1400953489847110}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 33ab0299a00bc3340ac1fbd9370a030d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  CurrentArmorRating: 0
+  Character: {fileID: 4904765105591257009}
+  DamageMultiplier: 1
 --- !u!1 &1411430603249936
 GameObject:
   m_ObjectHideFlags: 0
@@ -704,6 +944,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4092637601559042}
+  - component: {fileID: 1333058920555939517}
+  - component: {fileID: 8532868364165538788}
   m_Layer: 13
   m_Name: RigBLLeg3
   m_TagString: Untagged
@@ -727,6 +969,34 @@ Transform:
   m_Father: {fileID: 4598738025430834}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 20.46639, y: 8.862868, z: -100.3628}
+--- !u!65 &1333058920555939517
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1411430603249936}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 0.2834825, y: 0.11552761, z: 0.0644916}
+  m_Center: {x: -0.09174125, y: -0.006047278, z: -0.017754441}
+--- !u!114 &8532868364165538788
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1411430603249936}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 33ab0299a00bc3340ac1fbd9370a030d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  CurrentArmorRating: 0
+  Character: {fileID: 4904765105591257009}
+  DamageMultiplier: 0.8
 --- !u!1 &1429635640016956
 GameObject:
   m_ObjectHideFlags: 0
@@ -768,6 +1038,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4230920813161270}
+  - component: {fileID: 7234400653514056209}
+  - component: {fileID: 3057789128421630622}
   m_Layer: 13
   m_Name: RigSpine2
   m_TagString: Untagged
@@ -791,6 +1063,34 @@ Transform:
   m_Father: {fileID: 4154831818910090}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 1.3862098, y: 9.211542, z: -10.003091}
+--- !u!65 &7234400653514056209
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1445458248744940}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 0.41039035, y: 0.22911708, z: 0.2921737}
+  m_Center: {x: -0.044804722, y: 0.11294686, z: 0}
+--- !u!114 &3057789128421630622
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1445458248744940}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 33ab0299a00bc3340ac1fbd9370a030d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  CurrentArmorRating: 0
+  Character: {fileID: 4904765105591257009}
+  DamageMultiplier: 1
 --- !u!1 &1469370110053680
 GameObject:
   m_ObjectHideFlags: 0
@@ -935,7 +1235,6 @@ MonoBehaviour:
   WeaponNum: 0
   Center: {x: -0.14, y: -0.06, z: 0}
   HalfExtents: {x: 0.41, y: 0.32, z: 0.28}
-  WeaponType: 0
   CanPierce: 0
 --- !u!1 &1552276495747358
 GameObject:
@@ -946,6 +1245,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4524469913099368}
+  - component: {fileID: 9070308094111650611}
+  - component: {fileID: 5256876897831708704}
   m_Layer: 13
   m_Name: RigFLLegFoot1
   m_TagString: Untagged
@@ -969,6 +1270,34 @@ Transform:
   m_Father: {fileID: 4459281916256590}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: -0.0000040449913, y: -0.0015914914, z: -61.332474}
+--- !u!65 &9070308094111650611
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1552276495747358}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 0.22313727, y: 0.072302945, z: 0.1}
+  m_Center: {x: -0.044076554, y: 0.034209397, z: -0.00000028349086}
+--- !u!114 &5256876897831708704
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1552276495747358}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 33ab0299a00bc3340ac1fbd9370a030d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  CurrentArmorRating: 0
+  Character: {fileID: 4904765105591257009}
+  DamageMultiplier: 0.8
 --- !u!1 &1564268816905920
 GameObject:
   m_ObjectHideFlags: 0
@@ -1137,6 +1466,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4962444700739804}
+  - component: {fileID: 6023740556189370470}
+  - component: {fileID: 6579430217892095804}
   m_Layer: 13
   m_Name: RigFRLeg2
   m_TagString: Untagged
@@ -1160,6 +1491,34 @@ Transform:
   m_Father: {fileID: 4197434537351984}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: -5.507965, y: -0.88710463, z: -59.46167}
+--- !u!65 &6023740556189370470
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1608325727617038}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 0.35082656, y: 0.08804545, z: 0.1}
+  m_Center: {x: -0.12541299, y: 0.003598891, z: -0.00000023187177}
+--- !u!114 &6579430217892095804
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1608325727617038}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 33ab0299a00bc3340ac1fbd9370a030d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  CurrentArmorRating: 0
+  Character: {fileID: 4904765105591257009}
+  DamageMultiplier: 0.8
 --- !u!1 &1672113489759722
 GameObject:
   m_ObjectHideFlags: 0
@@ -1200,6 +1559,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4312666553867028}
+  - component: {fileID: 5367719928821881568}
+  - component: {fileID: 2332703492170375964}
   m_Layer: 13
   m_Name: RigFLLeg2
   m_TagString: Untagged
@@ -1223,6 +1584,34 @@ Transform:
   m_Father: {fileID: 4026868497616864}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 5.9902987, y: 1.0295622, z: -87.82743}
+--- !u!65 &5367719928821881568
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1681658568965058}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 0.35082656, y: 0.08804545, z: 0.1}
+  m_Center: {x: -0.12541299, y: 0.003598891, z: -0.00000023187177}
+--- !u!114 &2332703492170375964
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1681658568965058}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 33ab0299a00bc3340ac1fbd9370a030d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  CurrentArmorRating: 0
+  Character: {fileID: 4904765105591257009}
+  DamageMultiplier: 0.8
 --- !u!1 &1732460002252636
 GameObject:
   m_ObjectHideFlags: 0
@@ -1232,6 +1621,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4876207203215356}
+  - component: {fileID: 3714526921346611801}
+  - component: {fileID: 1855508902054419815}
   m_Layer: 13
   m_Name: RigBRLegFoot1
   m_TagString: Untagged
@@ -1255,6 +1646,34 @@ Transform:
   m_Father: {fileID: 4329129143263900}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0.00015216882, y: -0.008176983, z: -61.352985}
+--- !u!65 &3714526921346611801
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1732460002252636}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 0.24948293, y: 0.081528015, z: 0.09614635}
+  m_Center: {x: -0.051293425, y: 0.03557292, z: 0.020348536}
+--- !u!114 &1855508902054419815
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1732460002252636}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 33ab0299a00bc3340ac1fbd9370a030d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  CurrentArmorRating: 0
+  Character: {fileID: 4904765105591257009}
+  DamageMultiplier: 0.8
 --- !u!1 &1735516423897896
 GameObject:
   m_ObjectHideFlags: 0
@@ -1264,6 +1683,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4598738025430834}
+  - component: {fileID: 4287236184367003557}
+  - component: {fileID: 4833841729333497609}
   m_Layer: 13
   m_Name: RigBLLeg2
   m_TagString: Untagged
@@ -1287,6 +1708,34 @@ Transform:
   m_Father: {fileID: 4997454921013844}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 1.954035, y: 1.6066804, z: 92.36499}
+--- !u!65 &4287236184367003557
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1735516423897896}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 0.2834825, y: 0.115527615, z: 0.1}
+  m_Center: {x: -0.09174124, y: -0.006047254, z: -0.00000023018191}
+--- !u!114 &4833841729333497609
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1735516423897896}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 33ab0299a00bc3340ac1fbd9370a030d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  CurrentArmorRating: 0
+  Character: {fileID: 4904765105591257009}
+  DamageMultiplier: 0.8
 --- !u!1 &1738986965219230
 GameObject:
   m_ObjectHideFlags: 0
@@ -1296,6 +1745,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4378162152422636}
+  - component: {fileID: 4608081140062547090}
+  - component: {fileID: 1876985196844414730}
+  - component: {fileID: 4565363142431436143}
   m_Layer: 13
   m_Name: RigSpine3
   m_TagString: Untagged
@@ -1319,6 +1771,47 @@ Transform:
   m_Father: {fileID: 4230920813161270}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 1.6689194, y: 12.35678, z: -10.792925}
+--- !u!65 &4608081140062547090
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1738986965219230}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 0.28509802, y: 0.22911708, z: 0.41249412}
+  m_Center: {x: 0.017841514, y: 0.11294686, z: 0.0013672983}
+--- !u!65 &1876985196844414730
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1738986965219230}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 0.30300468, y: 0.11308688, z: 0.40565783}
+  m_Center: {x: -0.16817756, y: -0.048510987, z: -0.000000007100775}
+--- !u!114 &4565363142431436143
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1738986965219230}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 33ab0299a00bc3340ac1fbd9370a030d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  CurrentArmorRating: 0
+  Character: {fileID: 4904765105591257009}
+  DamageMultiplier: 1
 --- !u!1 &1744429126559222
 GameObject:
   m_ObjectHideFlags: 0
@@ -1552,7 +2045,7 @@ MonoBehaviour:
   StaminaRegenTimer: 0
   StaminaRegenTime: 5
   NormalSpeed: 4
-  BackingOffSpeed: 2
+  BackingOffSpeed: 3
   SprintSpeed: 6
   IdleName: Idle
   RestingAnim: Resting
@@ -1568,13 +2061,11 @@ MonoBehaviour:
   - {fileID: 699922750987530746}
   Drops:
     Pairs: []
-  CurrentWeaponType: 0
   Agent: {fileID: 2582036066771152963}
   HeadConstraint: {fileID: 0}
-  Target: {fileID: 0}
   DodgeSpeed: 9
-  RotationSpeed: 3
-  AttackRange: 3
+  RotationSpeed: 160
+  AttackRange: 4
   AttackCooldown: 5
   Den: {fileID: 0}
 --- !u!95 &95605706055870404
@@ -1719,6 +2210,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4140538588012784}
+  - component: {fileID: 8729433838321577878}
+  - component: {fileID: 4924385638626659391}
   m_Layer: 13
   m_Name: RigBRLeg2
   m_TagString: Untagged
@@ -1742,6 +2235,34 @@ Transform:
   m_Father: {fileID: 4782287469994934}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 3.5234182, y: -2.1700084, z: 76.288635}
+--- !u!65 &8729433838321577878
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1850778376440950}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 0.2834825, y: 0.115527615, z: 0.1}
+  m_Center: {x: -0.09174124, y: -0.006047254, z: -0.00000023018191}
+--- !u!114 &4924385638626659391
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1850778376440950}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 33ab0299a00bc3340ac1fbd9370a030d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  CurrentArmorRating: 0
+  Character: {fileID: 4904765105591257009}
+  DamageMultiplier: 0.8
 --- !u!1 &1934176251570566
 GameObject:
   m_ObjectHideFlags: 0
@@ -1815,6 +2336,8 @@ GameObject:
   m_Component:
   - component: {fileID: 4686261789675184}
   - component: {fileID: 5347375722102824103}
+  - component: {fileID: 8309223262726571663}
+  - component: {fileID: 3897695624811104129}
   m_Layer: 13
   m_Name: RigHead
   m_TagString: Untagged
@@ -1892,6 +2415,34 @@ MonoBehaviour:
       x: 1
       y: 1
       z: 1
+--- !u!65 &8309223262726571663
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1938558493249972}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 0.41039035, y: 0.21023487, z: 0.12669201}
+  m_Center: {x: -0.044803835, y: 0.08522081, z: 0.0015175097}
+--- !u!114 &3897695624811104129
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1938558493249972}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 33ab0299a00bc3340ac1fbd9370a030d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  CurrentArmorRating: 0
+  Character: {fileID: 4904765105591257009}
+  DamageMultiplier: 2
 --- !u!1 &1971053421766010
 GameObject:
   m_ObjectHideFlags: 0
@@ -1932,6 +2483,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4688204644123184}
+  - component: {fileID: 8271631323139777396}
+  - component: {fileID: 8097962594233804360}
   m_Layer: 13
   m_Name: RigNeck2
   m_TagString: Untagged
@@ -1955,6 +2508,34 @@ Transform:
   m_Father: {fileID: 4354466377913512}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 2.033101, y: 19.63268, z: -25.086752}
+--- !u!65 &8271631323139777396
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1980222698256610}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 0.32658872, y: 0.278638, z: 0.2389879}
+  m_Center: {x: -0.0029023064, y: 0.07095789, z: 0.000000021642991}
+--- !u!114 &8097962594233804360
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1980222698256610}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 33ab0299a00bc3340ac1fbd9370a030d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  CurrentArmorRating: 0
+  Character: {fileID: 4904765105591257009}
+  DamageMultiplier: 1
 --- !u!1 &1998365729734212
 GameObject:
   m_ObjectHideFlags: 0
@@ -1964,6 +2545,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4782287469994934}
+  - component: {fileID: 2187514928070174399}
+  - component: {fileID: 6975790509649225312}
   m_Layer: 13
   m_Name: RigBRLeg1
   m_TagString: Untagged
@@ -1987,3 +2570,31 @@ Transform:
   m_Father: {fileID: 4833081250803438}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: -25.712353, y: 145.12553, z: -38.281643}
+--- !u!65 &2187514928070174399
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1998365729734212}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 0.35082603, y: 0.20003653, z: 0.1}
+  m_Center: {x: -0.12541296, y: -0.005765321, z: -0.00000023037924}
+--- !u!114 &6975790509649225312
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1998365729734212}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 33ab0299a00bc3340ac1fbd9370a030d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  CurrentArmorRating: 0
+  Character: {fileID: 4904765105591257009}
+  DamageMultiplier: 0.8

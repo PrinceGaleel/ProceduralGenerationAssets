@@ -5,9 +5,10 @@ using UnityEngine;
 public class CameraController : MonoBehaviour
 {
     public static CameraController Instance;
+
     public Camera MainCam;
-    public Transform ThirdPersonParent;
-    public Transform FirstPersonParent;
+    [SerializeField] private Transform ThirdPersonParent;
+    [SerializeField] private Transform FirstPersonParent;
 
     private CameraState CurrentState;
 
@@ -16,14 +17,14 @@ public class CameraController : MonoBehaviour
     private float ActualCamDist;
     public float MouseSensitivity;
 
-    public Transform SpineRotator;
-    public float InteractDistance = 5f;
+    [SerializeField] private Transform SpineRotator;
+    [SerializeField] private float InteractDistance = 5f;
 
     [Header("Camera Settigns")]
-    public float MaxCamDist = 4f;
-    public float MinCamDist = 2f;
-    public float MaxYAngle = 30;
-    public float MinYAngle = -55;
+    [SerializeField] private float MaxCamDist = 4f;
+    [SerializeField] private float MinCamDist = 2f;
+    [SerializeField] private float MaxYAngle = 30;
+    [SerializeField] private float MinYAngle = -55;
     private const float CollisionOffset = 0.4f;
     private const float MinCollisionDist = 0.2f;
 
@@ -53,12 +54,7 @@ public class CameraController : MonoBehaviour
             StartingSpineRotation = SpineRotator.eulerAngles;
             if (!MainCam)
             {
-                MainCam = transform.Find("Main Camera").GetComponent<Camera>();
-
-                if (!MainCam)
-                {
-                    enabled = false;
-                }
+                enabled = false;
             }
         }
     }
@@ -80,10 +76,8 @@ public class CameraController : MonoBehaviour
 
         if (Physics.Raycast(ThirdPersonParent.position, ThirdPersonParent.forward, out RaycastHit hit, InteractDistance, ~LayerMask.GetMask("Controller")))
         {
-            if (hit.transform.GetComponent<DropItem>())
+            if (hit.transform.TryGetComponent(out DropItem item))
             {
-                DropItem item = hit.transform.GetComponent<DropItem>();
-
                 CurrentOutline = item._Outline;
                 CurrentOutline.enabled = true;
 
@@ -96,20 +90,6 @@ public class CameraController : MonoBehaviour
                     hit.transform.gameObject.SetActive(false);
                 }
             }
-            else 
-            {
-                Harvestable harvestable = hit.transform.GetComponent<Harvestable>();
-
-                if (harvestable)
-                {
-                    UIController.Instance.InteractInfo.text = "Press F to pick up";
-
-                    if (Input.GetKeyDown(KeyCode.F))
-                    {
-                        harvestable.Harvest(PlayerStats.Instance._Inventory);
-                    }
-                }
-            }
         }
 
         transform.eulerAngles = new Vector3(0, Mathf.Repeat(transform.eulerAngles.y + Input.GetAxis("Mouse X") * MouseSensitivity, 360), 0);
@@ -118,8 +98,6 @@ public class CameraController : MonoBehaviour
 
         if (CurrentState == CameraState.First_Person)
         {
-            //SpineRotator.localEulerAngles = new Vector3(SpineRotator.localEulerAngles.x, SpineRotator.localEulerAngles.y, SpineRotator.localEulerAngles.z);
-
             if (Input.mouseScrollDelta.y < 0)
             {
                 GoThirdPerson();
@@ -130,7 +108,7 @@ public class CameraController : MonoBehaviour
             ThirdPersonParent.transform.localEulerAngles = new Vector3(XCamRotation, 0, 0);
             MainCam.transform.localPosition = Vector3.Lerp(MainCam.transform.localPosition, new Vector3(0, 0, -ActualCamDist), Time.deltaTime * 7f);
 
-            if (Physics.SphereCast(ThirdPersonParent.position, CollisionOffset, (MainCam.transform.position - ThirdPersonParent.position).normalized, out RaycastHit sphereHit, Vector3.Distance(MainCam.transform.position, ThirdPersonParent.position), ~LayerMask.GetMask("Border", "Ragdoll", "Player", "Attacker", "TriggerInteractable")))
+            if (Physics.SphereCast(ThirdPersonParent.position, CollisionOffset, (MainCam.transform.position - ThirdPersonParent.position).normalized, out RaycastHit sphereHit, Vector3.Distance(MainCam.transform.position, ThirdPersonParent.position), ~LayerMask.GetMask("Weapon", "Harvestable", "Controller", "Hitbox", "Resource")))
             {
                 ChangeCurrentCamDist(sphereHit, Vector3.zero);
             }

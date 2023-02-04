@@ -26,7 +26,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5505210058681038951}
   m_LocalRotation: {x: 0.7071068, y: 0, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: 0, y: 500, z: 0}
+  m_LocalPosition: {x: 0, y: 100, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -42,8 +42,8 @@ Camera:
   m_GameObject: {fileID: 5505210058681038951}
   m_Enabled: 1
   serializedVersion: 2
-  m_ClearFlags: 1
-  m_BackGroundColor: {r: 0.19215687, g: 0.3019608, b: 0.4745098, a: 0}
+  m_ClearFlags: 2
+  m_BackGroundColor: {r: 0.3679245, g: 0.3679245, b: 0.3679245, a: 0}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
   m_FOVAxisMode: 0
@@ -56,15 +56,15 @@ Camera:
     y: 0
     width: 1
     height: 1
-  near clip plane: 0.3
-  far clip plane: 1000
+  near clip plane: 0
+  far clip plane: 200
   field of view: 60
   orthographic: 1
   orthographic size: 10
   m_Depth: 0
   m_CullingMask:
     serializedVersion: 2
-    m_Bits: 32503
+    m_Bits: 24279
   m_RenderingPath: -1
   m_TargetTexture: {fileID: 8400000, guid: 5c6c6cf0b05afc54a9e73257751d9f54, type: 2}
   m_TargetDisplay: 0
@@ -96,7 +96,7 @@ MonoBehaviour:
   m_RendererIndex: -1
   m_VolumeLayerMask:
     serializedVersion: 2
-    m_Bits: 1
+    m_Bits: 24279
   m_VolumeTrigger: {fileID: 0}
   m_VolumeFrameworkUpdateModeOption: 2
   m_RenderPostProcessing: 0
@@ -330,7 +330,8 @@ MonoBehaviour:
   - {fileID: 6759646947338459726}
   - {fileID: 1578995255078826511}
   Drops:
-    Pairs: []
+  - Key: {fileID: 0}
+    Value: 0
   SpawnPoint: {x: 0, y: 0, z: 0}
   CanMove: 0
   JumpStrength: 2
@@ -638,21 +639,6 @@ PrefabInstance:
       propertyPath: Character
       value: 
       objectReference: {fileID: 4682128580813140961}
-    - target: {fileID: 2653009873112644395, guid: 6d627a30e5300e94ca674c2fc2ceb262,
-        type: 3}
-      propertyPath: m_Layer
-      value: 13
-      objectReference: {fileID: 0}
-    - target: {fileID: 2653044128395241269, guid: 6d627a30e5300e94ca674c2fc2ceb262,
-        type: 3}
-      propertyPath: m_Layer
-      value: 13
-      objectReference: {fileID: 0}
-    - target: {fileID: 2653348289288587353, guid: 6d627a30e5300e94ca674c2fc2ceb262,
-        type: 3}
-      propertyPath: m_Layer
-      value: 13
-      objectReference: {fileID: 0}
     - target: {fileID: 2653382725882202893, guid: 6d627a30e5300e94ca674c2fc2ceb262,
         type: 3}
       propertyPath: m_Name

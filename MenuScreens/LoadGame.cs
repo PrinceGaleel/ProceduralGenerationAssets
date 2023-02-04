@@ -12,12 +12,7 @@ public class LoadGame : MonoBehaviour
     [Header("Main")]
     public GameObject SaveDisplayPrefab;
     public Transform SaveContainer;
-    public SaveInfoContainer Selected;
-    private bool IsConfirmating;
-
-    [Header("Raycast Info")]
-    public GraphicRaycaster GR;
-    public EventSystem EV;
+    private SaveInfoContainer Selected;
 
     [Header("Confirmation Screens")]
     public GameObject LoadConfirmationScreen;
@@ -27,7 +22,6 @@ public class LoadGame : MonoBehaviour
     {
         DeleteConfirmationScreen.SetActive(false);
         LoadConfirmationScreen.SetActive(false);
-        IsConfirmating = false;
 
         string path = Application.persistentDataPath;
         string[] dirs = Directory.GetDirectories(path);
@@ -59,49 +53,7 @@ public class LoadGame : MonoBehaviour
         {
             for (int i = 0; i < saves.Count; i++)
             {
-                Instantiate(SaveDisplayPrefab, SaveContainer).GetComponent<SaveInfoContainer>().Initialize(saves[i]);
-            }
-        }
-    }
-
-    private void Update()
-    {
-        if (Input.GetMouseButtonDown(0) && IsConfirmating == false)
-        {
-            List<RaycastResult> results = new();
-            PointerEventData pointerEventData = new(EV);
-            pointerEventData.position = Input.mousePosition;
-            GR.Raycast(pointerEventData, results);
-
-            bool deselectSave = true;
-            SaveInfoContainer temp = null;
-
-            foreach (RaycastResult result in results)
-            {
-                if (result.gameObject.GetComponent<SaveInfoContainer>())
-                {
-                    temp = result.gameObject.GetComponent<SaveInfoContainer>();
-                    break;
-                }
-                else if (result.gameObject.GetComponent<Button>())
-                {
-                    deselectSave = false;
-                    break;
-                }
-            }
-
-            if (deselectSave)
-            {
-                if (Selected)
-                {
-                    Selected.SelectionImage.SetActive(false);
-                }
-
-                if (temp)
-                {
-                    Selected = temp;
-                    Selected.SelectionImage.SetActive(true);
-                }
+                Instantiate(SaveDisplayPrefab, SaveContainer).GetComponent<SaveInfoContainer>().Initialize(saves[i], this);
             }
         }
     }
@@ -115,8 +67,6 @@ public class LoadGame : MonoBehaviour
     {
         if(Selected)
         {
-            ShowDeleteConfirmation(false);
-
             string path = Application.persistentDataPath + "/" + Selected.SaveName;
 
             if (Directory.Exists(path))
@@ -125,32 +75,53 @@ public class LoadGame : MonoBehaviour
             }
 
             Destroy(Selected.gameObject);
+            CancelDelete();
         }
     }
 
     public void LoadSave()
     {
-        if (Selected)
+        if(Selected)
         {
-            ShowLoadConfirmation(false);
+            string path = Application.persistentDataPath + "/" + Selected.SaveName;
+
+            if (Directory.Exists(path))
+            {
+                World.InitializeWorldData(SaveData.LoadData(Selected.SaveName));
+                SceneTransitioner.LoadScene("GameWorld", true);
+            }
+
+            CancelLoad();
         }
     }
 
-    public void ShowLoadConfirmation(bool isActive)
+    public void ToggleLoadConfirmation(SaveInfoContainer saveInfo)
     {
-        if (Selected)
+        if (!Selected)
         {
-            IsConfirmating = isActive;
-            LoadConfirmationScreen.SetActive(isActive);
+            Selected = saveInfo;
+            LoadConfirmationScreen.SetActive(true);
         }
     }
 
-    public void ShowDeleteConfirmation(bool isActive)
+    public void ToggleDeleteConfirmation(SaveInfoContainer saveInfo)
     {
-        if (Selected)
+        if (!Selected)
         {
-            IsConfirmating = isActive;
-            DeleteConfirmationScreen.SetActive(isActive);
+            Selected = saveInfo;
+            DeleteConfirmationScreen.SetActive(true);
         }
+    }
+
+    public void CancelDelete()
+    {
+        Selected = null;
+        DeleteConfirmationScreen.SetActive(false);
+    }
+
+    public void CancelLoad()
+    {
+        Selected = null;
+        LoadConfirmationScreen.SetActive(false);
     }
 }

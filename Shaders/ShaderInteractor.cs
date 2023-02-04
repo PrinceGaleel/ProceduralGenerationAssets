@@ -4,7 +4,7 @@ public class ShaderInteractor : MonoBehaviour
 {
     private void Start()
     {
-        World.ShaderInteractors.Add(this);
+        GrassManager.ShaderInteractors.Add(this);
     }
 
     private void Update()
@@ -14,11 +14,11 @@ public class ShaderInteractor : MonoBehaviour
 
     private void OnDestroy()
     {
-        if (World.ShaderInteractors != null)
+        if (GrassManager.ShaderInteractors != null)
         {
-            if (World.ShaderInteractors.Contains(this))
+            if (GrassManager.ShaderInteractors.Contains(this))
             {
-                World.ShaderInteractors.Remove(this);
+                GrassManager.ShaderInteractors.Remove(this);
             }
         }
     }

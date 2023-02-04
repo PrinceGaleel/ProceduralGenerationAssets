@@ -5,15 +5,16 @@ using UnityEngine;
 public class RenderTerrainMap : MonoBehaviour
 {
     public static RenderTerrainMap Instance;
+    private static Transform MyTransform;
 
     public Transform Focus;
-    private Camera CamToDrawWidth;
+    private static Camera CamToDrawWidth;
     public LayerMask Layer;
 
     public const int Resolution = 512;
     public const float AdjustScaling = 2.5f;
 
-    private RenderTexture TempTexture;
+    private static RenderTexture TempTexture;
 
     private void Awake()
     {
@@ -26,7 +27,8 @@ public class RenderTerrainMap : MonoBehaviour
         else
         {
             Instance = this;
-            
+            MyTransform = transform;
+
             gameObject.layer = LayerMask.NameToLayer("Terrain");
             CamToDrawWidth = GetComponent<Camera>();
 
@@ -34,8 +36,8 @@ public class RenderTerrainMap : MonoBehaviour
             CamToDrawWidth.farClipPlane = SaveData.HeightMultipler * 2;
             CamToDrawWidth.nearClipPlane = 0;
 
-            Bounds bounds = new(transform.position, new(World.GrassRenderDistance, SaveData.HeightMultipler * 2, World.GrassRenderDistance));
-            CamToDrawWidth.cullingMask = Layer;
+            Bounds bounds = new(transform.position, new(World.LODOneDistance * Chunk.DefaultChunkSize, SaveData.HeightMultipler * 2, World.LODOneDistance * Chunk.DefaultChunkSize));
+            CamToDrawWidth.cullingMask = LayerMask.GetMask("Terrain");
             CamToDrawWidth.orthographicSize = bounds.size.magnitude / AdjustScaling;
 
             TempTexture = new(Resolution, Resolution, 24);
@@ -51,17 +53,20 @@ public class RenderTerrainMap : MonoBehaviour
             Focus = PlayerStats.PlayerTransform;
         }
 
-        enabled = false;
+        ReloadBlending();
+        CamToDrawWidth.enabled = false;
     }
 
-    public void ReloadBlending()
+    public static void ReloadBlending()
     {
-        transform.position = new(Focus.position.x, transform.position.y, Focus.position.z);
+        CamToDrawWidth.enabled = true;
+        MyTransform.position = new(Instance.Focus.position.x, MyTransform.position.y, Instance.Focus.position.z);
 
         CamToDrawWidth.Render();
 
         Shader.SetGlobalFloat("_OrthographicCamSize", CamToDrawWidth.orthographicSize);
-        Shader.SetGlobalVector("_OrthographicCamPos", transform.position);
+        Shader.SetGlobalVector("_OrthographicCamPos", MyTransform.position);
         Shader.SetGlobalTexture("_TerrainDiffuse", TempTexture);
+        CamToDrawWidth.enabled = false;
     }
 }

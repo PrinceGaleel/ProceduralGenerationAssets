@@ -77,7 +77,7 @@ public class SettingsMenu : MonoBehaviour
 
     public void InitializeSettings()
     {
-        MusicSlider.value = GlobalSettings.CurrentSettings.MusicVolume * 100;
+        MusicSlider.value = GlobalSettings.CurrentSettings.MusicVolume * 100; 
 
         FPSSlider.minValue = MinFPS / FPSIncremenet;
         FPSSlider.maxValue = MaxFPS / FPSIncremenet;

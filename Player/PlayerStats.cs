@@ -5,8 +5,7 @@ using UnityEngine;
 
 public class PlayerStats : CharacterStats
 {
-    [Header("Player Specific")]
-    public static PlayerStats Instance;
+    public static PlayerStats Instance { get; private set; }
     public static Transform PlayerTransform { get; private set; }
     public Vector3 SpawnPoint;
 
@@ -82,10 +81,10 @@ public class PlayerStats : CharacterStats
             IsGroundedPhysics = true;
             IsGroundedState = true;
 
-            transform.position = Chunk.GetPerlinPosition(transform.position.x, transform.position.z) + new Vector3(0, 5, 0);
-
             GravityMask = ~LayerMask.GetMask("Water", "Grass", "Controller", "Weapon", "Arms", "Harvestable", "Hitbox", "Resource");
         }
+
+        gameObject.SetActive(false);
     }
 
     private void Start()
@@ -101,7 +100,6 @@ public class PlayerStats : CharacterStats
             Anim.SetBool(IdleName, true);
             EndLastMovement = () => Anim.SetBool(IdleName, false);
         }
-        gameObject.SetActive(false);
     }
 
     private void Update()
@@ -110,7 +108,7 @@ public class PlayerStats : CharacterStats
 
         if (CanMove)
         {
-            Velocity = (Input.GetAxis("Vertical") * new Vector2(transform.forward.x, transform.forward.z)) + (Input.GetAxis("Horizontal") * new Vector2(transform.right.x, transform.right.z));
+            Velocity = (Input.GetAxis("Vertical") * new Vector2(PlayerTransform.forward.x, PlayerTransform.forward.z)) + (Input.GetAxis("Horizontal") * new Vector2(PlayerTransform.right.x, transform.right.z));
 
             if (Input.GetKey(KeyCode.W))
             {
@@ -223,7 +221,7 @@ public class PlayerStats : CharacterStats
 
     private void FixedUpdate()
     {
-        if (Physics.BoxCast(GroundChecker.transform.position, new Vector3(0.2f, 0.1f, 0.125f), -GroundChecker.transform.up, transform.rotation, MaxGroundDist, GravityMask))
+        if (Physics.BoxCast(GroundChecker.transform.position, new Vector3(0.2f, 0.1f, 0.125f), -GroundChecker.transform.up, PlayerTransform.rotation, MaxGroundDist, GravityMask))
         {
             VerticalAcceleration = Mathf.Clamp(VerticalAcceleration + (Physics.gravity.y * Time.deltaTime), Physics.gravity.y, 50);
             VerticalSpeed = Mathf.Clamp(VerticalSpeed + (VerticalAcceleration * Time.deltaTime), Physics.gravity.y, 50);
@@ -296,7 +294,7 @@ public class PlayerStats : CharacterStats
         _CharacterController.enabled = false;
         VerticalSpeed = 0;
         Velocity = new();
-        transform.position = SpawnPoint;
+        PlayerTransform.position = SpawnPoint;
         CurrentHealth = MaxHealth;
         CurrentStamina = MaxStamina;
         CurrentMana = MaxMana;

@@ -3,26 +3,29 @@ using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
+using Photon.Pun;
 
-public class FirstSceneInitializer : MonoBehaviour
+public class FirstSceneInitializer : MonoBehaviourPunCallbacks
 {
+    public GameObject ChunkPrefab;
     public BiomeData[] Biomes;
 
     public Material MeshMaterial;
     public Material GrassMaterial;
     public ComputeShader GrassShader;
 
-    public CustomDictionary<GameObject, Vector2> CenterBuildings;
-    public CustomDictionary<GameObject, Vector2> EssentialBuildings;
-    public CustomDictionary<GameObject, Vector2> Houses;
-    public CustomDictionary<GameObject, Vector2> OptionalBuilding;
-    public CustomDictionary<GameObject, Vector2> Extras;
+    public DictList<GameObject, Vector2> CenterBuildings;
+    public DictList<GameObject, Vector2> EssentialBuildings;
+    public DictList<GameObject, Vector2> Houses;
+    public DictList<GameObject, Vector2> OptionalBuilding;
+    public DictList<GameObject, Vector2> Extras;
 
     private void Awake()
     {
-        World.MeshMaterial = MeshMaterial;
-        World.GrassMaterial = GrassMaterial;
-        World.GrassShader = GrassShader;
+        World.ChunkPrefab = ChunkPrefab;
+
+        GrassManager.GrassMaterial = Instantiate(GrassMaterial);
+        GrassManager.GrassShader = Instantiate(GrassShader);
 
         StructureCreator.CenterBuildings = CenterBuildings;
         StructureCreator.EssentialBuildings = EssentialBuildings;
@@ -45,24 +48,13 @@ public class FirstSceneInitializer : MonoBehaviour
 
         World.SetMasks();
         World.Biomes = Biomes;
-        SetTerrainGradient();
+        TerrainGradient.SetColorKeys();
+        PhotonNetwork.ConnectUsingSettings();
+        Chunk.InitializeTriangles();
     }
 
-    private void Start()
+    public override void OnConnectedToMaster()
     {
-        GlobalSettings.LoadSettings();
-        SceneTransitioner.LoadScene("MainMenu");
-    }
-
-    private static void SetTerrainGradient()
-    {
-        TerrainGradient.Gradient2DColorKey[] colorKeys = new TerrainGradient.Gradient2DColorKey[World.Biomes.Length];
-
-        for (int i = 0; i < colorKeys.Length; i++)
-        {
-            colorKeys[i] = new(World.Biomes[i].TerrainColor, World.Biomes[i].LowestPoint, World.Biomes[i].HighestPoint, World.Biomes[i].LowestTemperature, World.Biomes[i].HighestTemperature);
-        }
-
-        TerrainGradient.ColorKeys = colorKeys;
+        PhotonNetwork.JoinLobby();
     }
 }

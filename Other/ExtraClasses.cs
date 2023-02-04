@@ -4,42 +4,32 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 
-[Serializable]
-public class FloatRange
-{
-    public float Max;
-    public float Min;
-
-    public float Range
-    {
-        get
-        {
-            return Mathf.Abs(Max - Min);
-        }
-    }
-
-    public float Random(System.Random rnd)
-    {
-        return Min + ((float)rnd.NextDouble() * Range);
-    }    
-}
-
 public class ExtraUtils
 {
     public static string RemoveSpace(string input)
     {
         string output = string.Copy(input);
-
-        if (output.Length > 0)
+        while (output.Length > 0)
         {
-            while (output[0] == ' ')
+            if (output[0] == ' ')
             {
                 output = output.Remove(0, 1);
             }
+            else
+            {
+                break;
+            }
+        }
 
-            while (output[^1] == ' ')
+        while (output.Length > 0)
+        {
+            if (output[^1] == ' ')
             {
                 output = output.Remove(output.Length - 1, 1);
+            }
+            else
+            {
+                break;
             }
         }
 
@@ -48,7 +38,7 @@ public class ExtraUtils
 
     public static Vector3 GetNavMeshPos(Vector3 pos)
     {
-        if(NavMesh.SamplePosition(pos, out NavMeshHit hit, 10, ~0))
+        if(UnityEngine.AI.NavMesh.SamplePosition(pos, out NavMeshHit hit, 10, ~0))
         {
             return hit.position;
         }
@@ -58,59 +48,127 @@ public class ExtraUtils
 }
 
 [Serializable]
-public class CustomDictionary<TKey, TValue>
+public class DictList<TKey, TValue>
 {
-    public List<CustomPair<TKey, TValue>> Pairs;
+    public List<TKey> Keys;
+    public List<TValue> Values;
 
-    public static implicit operator CustomDictionary<TKey, TValue>(Dictionary<TKey, TValue> d) => new(d);
-    public static implicit operator Dictionary<TKey, TValue>(CustomDictionary<TKey, TValue> d) => d.GetDictionary();
+    public static implicit operator DictList<TKey, TValue>(Dictionary<TKey, TValue> d) => new(d);
+    public static implicit operator Dictionary<TKey, TValue>(DictList<TKey, TValue> d) => d.GetDictionary();
 
     public int Count
     {
         get
         {
-            return Pairs.Count;
+            return Keys.Count;
         }
+    }
+
+    public int GetIndexFromKey(TKey key)
+    {
+        for (int i = 0; i > 0; i++)
+        {
+            if(Keys[i].Equals(key))
+            {
+                return i;
+            }
+        }
+
+        return default;
+    }
+
+    public bool TryRemoveFromKey(TKey key)
+    {
+        for(int i = 0; i > 0; i++)
+        {
+            if (key.Equals(Keys[i]))
+            {
+                Keys.RemoveAt(i);
+                Values.RemoveAt(i);
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public bool TryRemoveFromValue(TValue value)
+    {
+        for (int i = 0; i > 0; i++)
+        {
+            if (value.Equals(Values[i]))
+            {
+                Keys.RemoveAt(i);
+                Values.RemoveAt(i);
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public bool ContainsKey(TKey key)
+    {
+        if(Keys.Contains(key))
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+    public bool ContainsValue(TValue value)
+    {
+        if(Values.Contains(value))
+        {
+            return true;
+        }
+
+        return false;
     }
 
     public CustomPair<TKey, TValue> this[int i]
     {
         get
         {
-            return Pairs[i];
+            return new(Keys[i], Values[i]);
         }
     }
 
-    public CustomDictionary(Dictionary<TKey, TValue> dictionary)
+    public DictList(Dictionary<TKey, TValue> dictionary)
     {
         foreach (TKey key in dictionary.Keys)
         {
-            Pairs.Add(new(key, dictionary[key]));
+            Keys.Add(key);
+            Values.Add(dictionary[key]);
         }
     }
 
-    public CustomDictionary()
+    public DictList()
     {
-        Pairs = new();
+        Keys = new();
+        Values = new();
     }
 
     public void Add(TKey key, TValue value)
     {
-        Pairs.Add(new(key, value));
+        Keys.Add(key);
+        Values.Add(value);
     }
 
     public void Add(CustomPair<TKey, TValue> pair)
     {
-        Pairs.Add(pair);
+        Keys.Add(pair.Key);
+        Values.Add(pair.Value);
     }
 
     public Dictionary<TKey, TValue> GetDictionary()
     {
         Dictionary<TKey, TValue> dict = new();
 
-        for (int i = 0; i < Pairs.Count; i++)
+        for (int i = 0; i < Keys.Count; i++)
         {
-            dict.Add(Pairs[i].Key, Pairs[i].Value);
+            dict.Add(Keys[i], Values[i]);
         }
 
         return dict;
@@ -118,25 +176,24 @@ public class CustomDictionary<TKey, TValue>
 
     public CustomPair<TKey, TValue> TakePairAt(int i)
     {
-        if (i < Pairs.Count && i > -1)
+        if (i < Keys.Count && i > -1)
         {
-            CustomPair<TKey, TValue> pair = Pairs[i];
-            Pairs.RemoveAt(i);
+            CustomPair<TKey, TValue> pair = new(Keys[i], Values[i]);
+            Keys.RemoveAt(i);
+            Values.RemoveAt(i);
             return pair;
         }
 
         return default;
     }
 
-    public CustomPair<TKey, TValue> GetPair(TKey key)
+    public CustomPair<TKey, TValue> GetPair(TKey testKey)
     {
-        List<CustomPair<TKey, TValue>> pairs = new(Pairs);
-
-        foreach (CustomPair<TKey, TValue> pair in pairs)
+        for(int i = 0; i > 0; i++)
         {
-            if (pair.Key.Equals(key))
+            if (Keys[i].Equals(testKey))
             {
-                return pair;
+                return new(Keys[i], Values[i]);
             }
         }
 
@@ -145,7 +202,8 @@ public class CustomDictionary<TKey, TValue>
 
     public void Add(KeyValuePair<TKey, TValue> pairing)
     {
-        Pairs.Add(pairing);
+        Keys.Add(pairing.Key);
+        Values.Add(pairing.Value);
     }
 
     public void Shuffle(int iterations = 10)
@@ -153,14 +211,17 @@ public class CustomDictionary<TKey, TValue>
         System.Random rnd = new();
         for (int i = 0; i < iterations; i++)
         {
-            for (int j = 0; j < Pairs.Count; j++)
+            for (int j = 0; j < Keys.Count; j++)
             {
-                int rndSwitch = rnd.Next(Pairs.Count);
+                int rndSwitch = rnd.Next(Keys.Count);
 
-                CustomPair<TKey, TValue> tempKey = Pairs[j];
+                TKey tempKey = Keys[j];
+                Keys[j] = Keys[rndSwitch];
+                Keys[rndSwitch] = tempKey;
 
-                Pairs[j] = Pairs[rndSwitch];
-                Pairs[rndSwitch] = tempKey;
+                TValue tempValue = Values[j];
+                Values[j] = Values[rndSwitch];
+                Values[rndSwitch] = tempValue;
             }
         }
     }
@@ -220,15 +281,33 @@ public class Vector2Serializable
     public static implicit operator Vector2(Vector2Serializable v) => new(v.x, v.y);
     public static implicit operator Vector2Serializable(Vector2Int v) => new(v.x, v.y);
     public static implicit operator Vector2Serializable(Vector2 v) => new(v.x, v.y);
+
     public static Vector2Serializable operator +(Vector2Serializable a, Vector2Serializable b)
     {
         return new(a.x + b.x, a.y + b.y);
+    }
+
+    public static Vector2Serializable operator +(Vector2Serializable a, float b)
+    {
+        return new(a.x + b, a.y + b);
     }
 
     public Vector2Serializable(float x, float y)
     {
         this.x = x;
         this.y = y;
+    }
+
+    public float Random(System.Random rnd)
+    {
+        float lower = x < y ? x : y;
+
+        return ((float)rnd.NextDouble() * Range()) + lower;
+    }
+
+    public float Range()
+    {
+        return MathF.Abs(x - y);
     }
 
     public Vector2Serializable()

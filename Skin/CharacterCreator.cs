@@ -21,7 +21,7 @@ public class CharacterCreator : MonoBehaviour
 
     private void Awake()
     {
-        World.ShaderInteractors = new();
+        GrassManager.ShaderInteractors = new();
 
         if (Random.Range(0, 2) > 0)
         {

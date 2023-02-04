@@ -31,11 +31,11 @@ public class StructureCreator : MonoBehaviour
     public const int SideRoadThickness = 2;
     public const int BuildingPadding = 3;
 
-    public static CustomDictionary<GameObject, Vector2> CenterBuildings;
-    public static CustomDictionary<GameObject, Vector2> EssentialBuildings;
-    public static CustomDictionary<GameObject, Vector2> Houses;
-    public static CustomDictionary<GameObject, Vector2> OptionalBuilding;
-    public static CustomDictionary<GameObject, Vector2> Extras;
+    public static DictList<GameObject, Vector2> CenterBuildings;
+    public static DictList<GameObject, Vector2> EssentialBuildings;
+    public static DictList<GameObject, Vector2> Houses;
+    public static DictList<GameObject, Vector2> OptionalBuilding;
+    public static DictList<GameObject, Vector2> Extras;
 
     private static Thread VillageInfoThread;
     private static System.Random Rnd;
@@ -73,7 +73,8 @@ public class StructureCreator : MonoBehaviour
 
     private void Start()
     {
-        VillageInfoThread.Start();
+        //VillageInfoThread.Start();
+        enabled = false;
     }
 
     private void Update()
@@ -86,7 +87,7 @@ public class StructureCreator : MonoBehaviour
                     Transform chunk = StructureParents.Dequeue();
                     foreach (KeyValuePair<Vector2, GameObject> pair in buildings)
                     {
-                        Instantiate(pair.Value, new(pair.Key.x, Chunk.GetPerlinNoise(pair.Key.x + (Chunk.ChunkSize / 2), pair.Key.y + (Chunk.ChunkSize / 2), World.CurrentSaveData.HeightPerlin) * SaveData.HeightMultipler, pair.Key.y), Quaternion.identity, chunk);
+                        Instantiate(pair.Value, Chunk.GetPerlinPosition(pair.Key), Quaternion.identity, chunk);
                     }
                 }
             }
@@ -112,11 +113,11 @@ public class StructureCreator : MonoBehaviour
                     chunk = VillagesToPrepare.Dequeue();
                 }
 
-                CustomDictionary<Vector2, GameObject> buildings = new();
+                DictList<Vector2, GameObject> buildings = new();
                 int whichCenter = Rnd.Next(CenterBuildings.Count);
-                buildings.Add(chunk.WorldPosition, CenterBuildings.Pairs[whichCenter].Key);
+                buildings.Add(chunk.WorldPosition, CenterBuildings.Keys[whichCenter]);
 
-                CustomDictionary<GameObject, Vector2> buildingOrder = new();
+                DictList<GameObject, Vector2> buildingOrder = new();
                 for (int i = 0; i < EssentialBuildings.Count; i++)
                 {
                     buildingOrder.Add(EssentialBuildings[i]);
@@ -138,7 +139,7 @@ public class StructureCreator : MonoBehaviour
                 for (int i = 0; i < 4; i++)
                 {
                     CustomPair<GameObject, Vector2> pair = buildingOrder.TakePairAt(0);
-                    buildings.Add(buildings[0].Key + ((CenterBuildings.Pairs[whichCenter].Value + pair.Value) * StartingQuadrants[i]) + (0.5f * MainRoadThickness * StartingQuadrants[i]), pair.Key);
+                    buildings.Add(buildings[0].Key + ((CenterBuildings.Values[whichCenter] + pair.Value) * StartingQuadrants[i]) + (0.5f * MainRoadThickness * StartingQuadrants[i]), pair.Key);
 
                     Vector2 halfExtents = pair.Value;
 
@@ -190,7 +191,7 @@ public class StructureCreator : MonoBehaviour
                 lock (VillagesToCreate) lock (StructureParents)
                     {
                         VillagesToCreate.Enqueue(buildings);
-                        StructureParents.Enqueue(chunk.StructureParent);
+                        StructureParents.Enqueue(chunk.MyTransform);
                     }
 
 

@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -27,7 +28,8 @@ public class MobDen : MonoBehaviour
     public enum DenStates
     {
         Patrolling,
-        Attacking
+        Attacking,
+        Empty
     }
 
     private void Awake()
@@ -39,28 +41,24 @@ public class MobDen : MonoBehaviour
 
         FoliageManager.AddTreesToRemove(Lowest + new Vector2(transform.position.x, transform.position.z), Highest + new Vector2(transform.position.x, transform.position.z));
 
-        if (!NavMesh.SamplePosition(transform.position, out _, 10, ~0))
+        if (!UnityEngine.AI.NavMesh.SamplePosition(transform.position, out _, 10, ~0))
         {
+            NavMeshManager.AddUnreadyToEnable(Chunk.GetChunkPosition(transform.position.x, transform.position.z), this);
             enabled = false;
-            NavMeshManager.AddUnreadyToEnable(Chunk.GetChunkPosition(new(transform.position.x, transform.position.z)), this);
         }
     }
 
     private void Start()
     {
-        if (!NavMesh.SamplePosition(transform.position, out _, 10, ~0))
+        if (!UnityEngine.AI.NavMesh.SamplePosition(transform.position, out _, 10, ~0))
         {
             enabled = false;
             return;
         }
 
         MyTeamID = TeamsManager.AddTeam("Mob Den", true);
-        lock (TeamsManager.MobDens)
-        {
-            TeamsManager.MobDens.Add(this);
-        }
 
-        if (NavMesh.SamplePosition(SpawnTransform.position, out NavMeshHit hit, 10, ~0))
+        if (UnityEngine.AI.NavMesh.SamplePosition(SpawnTransform.position, out NavMeshHit hit, 10, ~0))
         {
             SpawnPoint = hit.position;
         }
@@ -89,6 +87,8 @@ public class MobDen : MonoBehaviour
 
     private void Update()
     {
+        Enemies = TeamsManager.GetEnemies(this);
+
         if (CurrentState == DenStates.Patrolling)
         {
             if (Enemies.Count > 0)
@@ -126,10 +126,10 @@ public class MobDen : MonoBehaviour
 
         for (int j = 0; j < 3; j++)
         {
-            float x = (((float)World.Rnd.NextDouble() * (TerritoryRadius * 0.7f) * 2) - (TerritoryRadius * 0.7f)) + transform.position.x;
-            float z = (((float)World.Rnd.NextDouble() * (TerritoryRadius * 0.7f) * 2) - (TerritoryRadius * 0.7f)) + transform.position.z;
+            float x = ((float)World.Rnd.NextDouble() * (TerritoryRadius * 0.7f)) - (TerritoryRadius * 0.7f) + transform.position.x;
+            float z = ((float)World.Rnd.NextDouble() * (TerritoryRadius * 0.7f)) - (TerritoryRadius * 0.7f) + transform.position.z;
 
-            if(NavMesh.SamplePosition(Chunk.GetPerlinPosition(x,z), out NavMeshHit hit, 10, ~0))
+            if(UnityEngine.AI.NavMesh.SamplePosition(Chunk.GetPerlinPosition(x,z), out NavMeshHit hit, 10, ~0))
             {
                 patrolPoints.Add(hit.position);
             }
@@ -152,17 +152,17 @@ public class MobDen : MonoBehaviour
     {
         if (Enemies.Count > 0)
         {
-            mob.Target = Enemies[0];
+            CharacterStats target = Enemies[0];
 
             for (int j = 1; j < Enemies.Count; j++)
             {
-                if (Vector3.Distance(mob.transform.position, mob.Target.transform.position) > Vector3.Distance(mob.transform.position, Enemies[j].transform.position))
+                if (Vector3.Distance(mob.transform.position, target.transform.position) > Vector3.Distance(mob.transform.position, Enemies[j].transform.position))
                 {
-                    mob.Target = Enemies[j];
+                    target = Enemies[j];
                 }
             }
 
-            mob.SetAttacking();
+            mob.SetAttacking(target);
         }
         else
         {
@@ -191,6 +191,11 @@ public class MobDen : MonoBehaviour
 
     private void OnDestroy()
     {
+        for (int i = Mobs.Count - 1; i > -1; i--)
+        {
+            Destroy(Mobs[i].gameObject, i);
+        }
+
         TeamsManager.RemoveTeam(MyTeamID);
     }
 }

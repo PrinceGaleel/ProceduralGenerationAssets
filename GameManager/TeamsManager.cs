@@ -1,7 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using System.Threading;
+using Unity.Jobs;
+using UnityEngine.Jobs;
 
 public class TeamsManager : MonoBehaviour
 {
@@ -9,9 +10,6 @@ public class TeamsManager : MonoBehaviour
 
     public static int TeamCounter { private set; get; }
     public static Dictionary<int, Team> Teams { get; private set; }
-
-    public static Thread EnemySearchThread;
-    public static List<MobDen> MobDens;
 
     private void Awake()
     {
@@ -24,26 +22,43 @@ public class TeamsManager : MonoBehaviour
         else
         {
             Instance = this;
-            EnemySearchThread = new(new ThreadStart(EnemySearchUpdate));
-            MobDens = new();
         }
-    }
-
-    private void Start()
-    {
-        EnemySearchThread.Start();
     }
 
     private void Update()
     {
-        lock (MobDens)
+        PopulateAllEnemies();
+    }
+
+    private static void PopulateAllEnemies()
+    {
+        Dictionary<int, Team> teams = new(Teams);
+
+        foreach (int teamID in teams.Keys)
         {
-            foreach (MobDen den in MobDens)
+            List<CharacterStats> enemies = new();
+
+            foreach (int enemyTeamID in teams[teamID].Enemies)
             {
-                lock (den.Enemies)
+                if (enemyTeamID != teamID)
                 {
-                    den.Enemies = GetEnemies(den.MyTeamID, den.SpawnTransform.position, den.TerritoryRadius);
+                    List<CharacterStats> members;
+
+                    lock (teams[enemyTeamID].Members)
+                    {
+                        members = new(teams[enemyTeamID].Members);
+                    }
+
+                    foreach (CharacterStats character in members)
+                    {
+                        enemies.Add(character);
+                    }
                 }
+            }
+
+            lock (Teams[teamID].AllEnemies)
+            {
+                Teams[teamID].AllEnemies = enemies;
             }
         }
     }
@@ -101,55 +116,7 @@ public class TeamsManager : MonoBehaviour
     {
         return Teams[characterOne.MyTeamID].Enemies.Contains(characterTwo.MyTeamID);
     }
-
-    private static void EnemySearchUpdate()
-    {
-        while (true)
-        {
-            PopulateAllEnemies();
-        }
-    }
-
-    private static void PopulateAllEnemies()
-    {
-        Dictionary<int, Team> teams = new(Teams);
-
-        foreach (int teamID in teams.Keys)
-        {
-            List<CharacterStats> enemies = new();
-
-            foreach (int enemyTeamID in teams[teamID].Enemies)
-            {
-                if (enemyTeamID != teamID)
-                {
-                    List<CharacterStats> members;
-
-                    lock(teams[enemyTeamID].Members)
-                    {
-                        members = new(teams[enemyTeamID].Members);
-                    }
-
-                    foreach (CharacterStats character in members)
-                    {
-                        enemies.Add(character);
-                    }
-                }
-            }
-
-            try
-            {
-                lock (Teams[teamID].AllEnemies)
-                {
-                    Teams[teamID].AllEnemies = enemies;
-                }
-            }
-            catch (KeyNotFoundException)
-            {
-
-            }
-        }
-    }
-
+        
     private static List<CharacterStats> GetEnemies(int myTeamID, Vector3 position, float searchDistance)
     {
         List<CharacterStats> enemies = new();
@@ -168,9 +135,9 @@ public class TeamsManager : MonoBehaviour
         return enemies;
     }
 
-    private void OnDestroy()
+    public static List<CharacterStats> GetEnemies(MobDen den)
     {
-        EnemySearchThread.Abort();
+        return GetEnemies(den.MyTeamID, den.transform.position, den.TerritoryRadius);
     }
 
     public class Team

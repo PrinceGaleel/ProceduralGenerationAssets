@@ -12,26 +12,27 @@ public class MeleeWeapon : MonoBehaviour
     public Vector3 HalfExtents;
 
     public bool CanPierce;
-    private List<Collider> ColliderHits;
+    private List<Transform> TransformHits;
+    private readonly Collider[] ColliderHits = new Collider[10];
     private List<CharacterStats> CharacterHits;
 
     private void Awake()
     {
-        ColliderHits = new();
+        TransformHits = new();
         CharacterHits = new();
     }
 
-    private void Update()
+    private void FixedUpdate()
     {
         if (Character.Anim.GetInteger("WeaponNum") == WeaponNum)
         {
-            Collider[] colliders = Physics.OverlapBox(Center + transform.position, HalfExtents, transform.rotation, World.WeaponMask);
+            int numHits = Physics.OverlapBoxNonAlloc(Center + transform.position, HalfExtents, ColliderHits, transform.rotation, World.WeaponMask);
 
-            foreach (Collider collider in colliders)
+            for(int i = 0; i < numHits; i++)
             {
-                if (!ColliderHits.Contains(collider))
+                if (!TransformHits.Contains(ColliderHits[i].transform))
                 {
-                    HitBox hitBox = collider.GetComponent<HitBox>();
+                    HitBox hitBox = ColliderHits[i].GetComponent<HitBox>();
 
                     if (CanPierce)
                     {
@@ -50,13 +51,14 @@ public class MeleeWeapon : MonoBehaviour
                 }
                 else
                 {
-                    ColliderHits.Add(collider);
+                    TransformHits.Add(ColliderHits[i].transform);
                 }
+
             }
         }
         else
         {
-            ColliderHits = new();
+            TransformHits = new();
             CharacterHits = new();
             enabled = false;
         }

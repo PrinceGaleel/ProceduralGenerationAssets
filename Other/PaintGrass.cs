@@ -21,27 +21,27 @@ public class PaintGrass : MonoBehaviour
 
     private void Awake()
     {
-        InstantiatedComputeShader = Instantiate(World.GrassShader);
-        InstantiatedMaterial = Instantiate(World.GrassMaterial);
+        InstantiatedComputeShader = Instantiate(GrassManager.GrassShader);
+        InstantiatedMaterial = Instantiate(GrassManager.GrassMaterial);
 
         IdGrassKernel = InstantiatedComputeShader.FindKernel("Main");
 
-        InstantiatedComputeShader.SetFloat("_WindSpeed", GrassChunk.WindSpeed);
-        InstantiatedComputeShader.SetFloat("_WindStrength", GrassChunk.WindStrength);
+        InstantiatedComputeShader.SetFloat("_WindSpeed", GrassManager.WindSpeed);
+        InstantiatedComputeShader.SetFloat("_WindStrength", GrassManager.WindStrength);
 
         InstantiatedComputeShader.SetMatrix("_LocalToWorld", transform.localToWorldMatrix);
         InstantiatedComputeShader.SetFloat("_Time", Time.time);
 
         InstantiatedComputeShader.SetFloat("_GrassRandomHeight", 0.5f);
 
-        InstantiatedComputeShader.SetInt("_MaxBladesPerVertex", GrassChunk.BladesPerVertex);
-        InstantiatedComputeShader.SetInt("_MaxSegmentsPerBlade", GrassChunk.SegmentsPerBlade);
+        InstantiatedComputeShader.SetInt("_MaxBladesPerVertex", GrassManager.BladesPerVertex);
+        InstantiatedComputeShader.SetInt("_MaxSegmentsPerBlade", GrassManager.SegmentsPerBlade);
 
-        InstantiatedComputeShader.SetFloat("_InteractorRadius", GrassChunk.GrassAffectRadius);
-        InstantiatedComputeShader.SetFloat("_InteractorStrength", GrassChunk.GrassAffectStrength);
+        InstantiatedComputeShader.SetFloat("_InteractorRadius", GrassManager.GrassAffectRadius);
+        InstantiatedComputeShader.SetFloat("_InteractorStrength", GrassManager.GrassAffectStrength);
 
-        InstantiatedComputeShader.SetFloat("_MinFadeDist", GrassChunk.MinFadeDistance);
-        InstantiatedComputeShader.SetFloat("_MaxFadeDist", GrassChunk.MaxFadeDistance);
+        InstantiatedComputeShader.SetFloat("_MinFadeDist", 50);
+        InstantiatedComputeShader.SetFloat("_MaxFadeDist", 100);
 
         InstantiatedComputeShader.SetFloat("_BladeForward", 0.2f);
         InstantiatedComputeShader.SetFloat("_BladeCurve", 3);
@@ -52,23 +52,23 @@ public class PaintGrass : MonoBehaviour
 
         System.Random random = new();
 
-        List<GrassChunk.SourceVertex> vertices = new();
+        List<GrassManager.SourceVertex> vertices = new();
         for (int i = 0, z = 0; z <= _Bounds.extents.x + _Bounds.center.x; z++)
         {
             for (int x = 0; x <= _Bounds.extents.z + _Bounds.center.z; x++)
             {
-                for (int j = 0; j < GrassChunk.GrassDensity; j++)
+                for (int j = 0; j < GrassManager.GrassDensity; j++)
                 {
-                    float randX = ((float)random.NextDouble() * 2 * GrassChunk.BrushSize) - GrassChunk.BrushSize + x + transform.position.x;
-                    float randZ = ((float)random.NextDouble() * 2 * GrassChunk.BrushSize) - GrassChunk.BrushSize + z + transform.position.z;
+                    float randX = ((float)random.NextDouble() * 2 * GrassManager.BrushSize) - GrassManager.BrushSize + x + transform.position.x;
+                    float randZ = ((float)random.NextDouble() * 2 * GrassManager.BrushSize) - GrassManager.BrushSize + z + transform.position.z;
 
                     if (Physics.Raycast(new(randX, 100, randZ), Vector3.down, out RaycastHit hit, 1000, LayerMask.GetMask("Terrain")))
                     {
-                        vertices.Add(new GrassChunk.SourceVertex()
+                        vertices.Add(new GrassManager.SourceVertex()
                         {
                             Position = hit.point,
                             Normal = Vector3.up,
-                            UV = new(GrassChunk.GrassWidth, GrassChunk.GrassHeight),
+                            UV = new(GrassManager.GrassWidth, GrassManager.GrassHeight),
                             Color = new(Biome.TerrainColor.r, Biome.TerrainColor.g, Biome.TerrainColor.b)
                         });
                     }
@@ -84,7 +84,7 @@ public class PaintGrass : MonoBehaviour
             SourceVertBuffer = new ComputeBuffer(vertices.Count, sizeof(float) * (3 + 3 + 2 + 3), ComputeBufferType.Structured, ComputeBufferMode.Immutable);
             SourceVertBuffer.SetData(vertices);
 
-            DrawBuffer = new ComputeBuffer(vertices.Count * GrassChunk.BladesPerVertex * ((GrassChunk.SegmentsPerBlade - 1) * 2 + 1), sizeof(float) * (3 + (3 + 2 + 3) * 3), ComputeBufferType.Append);
+            DrawBuffer = new ComputeBuffer(vertices.Count * GrassManager.BladesPerVertex * ((GrassManager.SegmentsPerBlade - 1) * 2 + 1), sizeof(float) * (3 + (3 + 2 + 3) * 3), ComputeBufferType.Append);
             DrawBuffer.SetCounterValue(0);
 
             ArgsBuffer = new ComputeBuffer(1, sizeof(int) * 4, ComputeBufferType.IndirectArguments);
@@ -107,31 +107,25 @@ public class PaintGrass : MonoBehaviour
 
     private void Start()
     {
-        RenderTerrainMap.Instance.ReloadBlending();
+        RenderTerrainMap.ReloadBlending();
     }
 
     private void LateUpdate()
     {
-        // Clear the draw and indirect args buffers of last frame's data
         DrawBuffer.SetCounterValue(0);
         ArgsBuffer.SetData(new int[4] { 0, 1, 0, 0 });
 
         InstantiatedComputeShader.SetFloat("_Time", Time.time);
         InstantiatedComputeShader.SetVector("_CameraPositionWS", Cam.transform.position);
-
-        // Dispatch the grass shader. It will run on the GPU
         InstantiatedComputeShader.Dispatch(IdGrassKernel, DispatchSize, 1, 1);
 
-        // DrawProceduralIndirect queues a draw call up for our generated mesh
         Graphics.DrawProceduralIndirect(InstantiatedMaterial, _Bounds, MeshTopology.Triangles, ArgsBuffer, 0, Cam, null, UnityEngine.Rendering.ShadowCastingMode.Off, true, gameObject.layer);
     }
 
     private void OnDestroy()
     {
         Destroy(InstantiatedComputeShader);
-        InstantiatedComputeShader = Instantiate(World.GrassShader);
 
-        // Release each buffer
         SourceVertBuffer?.Release();
         DrawBuffer?.Release();
         ArgsBuffer?.Release();

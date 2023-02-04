@@ -12,6 +12,7 @@ public class HitBox : MonoBehaviour
 {
     public float CurrentArmorRating;
     public CharacterStats Character;
+    public float DamageMultiplier = 1;
 
     private void Awake()
     {
@@ -47,7 +48,7 @@ public class HitBox : MonoBehaviour
     {
         if (TeamsManager.IsEnemy(Character, hitData.From))
         {
-            Character.DecreaseHealth(-hitData.Amount);
+            Character.DecreaseHealth(-hitData.Amount * DamageMultiplier);
         }
     }
 

@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class Inventory : MonoBehaviour
 {
-    public Dictionary<Item, int> Items = new();
+    private readonly Dictionary<Item, int> Items = new();
     public int Gold;
 
     public void AddItem(Item item, int amount)
@@ -17,6 +17,24 @@ public class Inventory : MonoBehaviour
         {
             Items[item] = amount;
         }
+    }
+
+    public void AddItems(DictList<Item, int> items)
+    {
+        for (int i = 0; i < items.Count; i++)
+        {
+            items.Add(items[i].Key, items[i].Value);
+        }
+    }
+
+    public List<Item> GetItems()
+    {
+        return new(Items.Keys);
+    }
+
+    public List<int> GetItemAmounts()
+    {
+        return new(Items.Values);
     }
 
     public bool RemoveItem(Item item, int amount)

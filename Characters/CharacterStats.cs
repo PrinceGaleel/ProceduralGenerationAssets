@@ -68,7 +68,7 @@ public abstract class CharacterStats : MonoBehaviour
     public Animator Anim;
     public Inventory _Inventory;
     public MeleeWeapon[] Fists;
-    public CustomDictionary<Item, int> Drops;
+    public List<CustomPair<Item, int>> Drops;
 
     private void Awake()
     {
@@ -137,7 +137,7 @@ public abstract class CharacterStats : MonoBehaviour
 
     public void DropLoot()
     {
-        foreach(CustomPair<Item, int> pair in Drops.Pairs)
+        foreach (CustomPair<Item, int> pair in Drops)
         {
             Transform drop = Instantiate(pair.Key.DropPrefab, new Vector3(transform.position.x, transform.position.y + 3, transform.position.z), Quaternion.identity).transform;
             drop.gameObject.AddComponent<DropItem>().Initialize(pair.Key, pair.Value, true);

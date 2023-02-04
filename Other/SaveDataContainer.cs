@@ -56,7 +56,7 @@ public class SaveData
         System.Random random = new();
         Vector2Serializable offset = new(((float)random.NextDouble() * MaxPerlinOffset) + 10000, ((float)random.NextDouble() * MaxPerlinOffset) + 10000);
 
-        SaveData saveData = new(characterName, charSkin, saveNum.ToString(), new(offset, 0.1f), new(offset + new Vector2Serializable(10000, 10000), 0.2f));
+        SaveData saveData = new(characterName, charSkin, saveNum.ToString(), new(offset, 0.025f), new(offset + new Vector2Serializable(10000, 10000), 0.05f));
 
         if (!Directory.Exists(savePath))
         {

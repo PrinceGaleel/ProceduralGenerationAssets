@@ -9,17 +9,18 @@ public enum MainAIStates
 {
     Idling,
     Patrolling,
-    Attacking,
-    BackingOff
+    Attacking
 }
 
 public enum SecondaryAIStates
 {
     Waiting,
-    Moving,
+    Walking,
+    BackingOff,
     Rotating,
     Sprinting,
     Encircling,
+    FollowThrough,
     Null
 }
 
@@ -28,7 +29,7 @@ public abstract class BasicAI : CharacterStats
     public NavMeshAgent Agent;
     public MultiAimConstraint HeadConstraint;
     
-    public CharacterStats Target;
+    protected CharacterStats Target;
 
     [Header("Speeds")]
     public float DodgeSpeed;
@@ -39,12 +40,13 @@ public abstract class BasicAI : CharacterStats
     protected float AttackTimer;
     public float AttackCooldown;
 
-    protected float GenericTimer;
-    protected float GenericTime;
+    protected float WaitingTimer;
+    protected float WaitingTime;
     protected int PatrolNum = 0;
 
     protected MainAIStates MainState;
     protected SecondaryAIStates SecondaryState;
+    protected Action CurrentStateAction;
     protected Vector3 CurrentDestination;
     protected string CurrentAnimation;
 
@@ -52,33 +54,9 @@ public abstract class BasicAI : CharacterStats
 
     protected float TargetDistance { get { return Vector3.Distance(transform.position, Target.transform.position); } }
     protected float DestinationDistance { get { return Vector3.Distance(CurrentDestination, transform.position); } }
-    protected float DestinationTargetDistance { get { return Vector3.Distance(CurrentDestination, ExtraUtils.GetNavMeshPos(Target.transform.position)); } }
-
-    protected void SetWalking(Vector3 destination, float maxDistance = 10)
-    {
-        ChangeAnimation(WalkingAnim);
-        Agent.speed = NormalSpeed;
-        SecondaryState = SecondaryAIStates.Moving;
-        SetDestination(destination, maxDistance);
-    }
-
-    protected void SetRunning(Vector3 destination, float maxDistance = 10)
-    {
-        ChangeAnimation(RunningAnim);
-        Agent.speed = SprintSpeed;
-        SecondaryState = SecondaryAIStates.Moving;
-        SetDestination(destination, maxDistance);
-    }
-
-    private void SetDestination(Vector3 destination, float maxDistance)
-    {
-        if (NavMesh.SamplePosition(destination, out NavMeshHit hit, maxDistance, ~0))
-        {
-            CurrentDestination = hit.position;
-            Agent.SetDestination(CurrentDestination);
-            Agent.isStopped = false;
-        }
-    }
+    protected float DestinationTargetDistance { get { return Vector3.Distance(CurrentDestination, GetNavMeshPos()); } }
+    protected float MaxBackOffDistance { get { return AttackRange * 3; } }
+    protected float MinBackOffDistance { get { return AttackRange * 2; } }
 
     protected void AIAwake()
     {
@@ -116,29 +94,77 @@ public abstract class BasicAI : CharacterStats
         SetIdling();
     }
 
+    protected void SetDestination(Vector3 destination, float maxDistance = 10)
+    {
+        if (UnityEngine.AI.NavMesh.SamplePosition(destination, out NavMeshHit hit, maxDistance, ~0))
+        {
+            CurrentDestination = hit.position;
+            Agent.SetDestination(CurrentDestination);
+            Agent.isStopped = false;
+        }
+    }
+
+    protected void SetWalking(Vector3 destination)
+    {
+        ChangeAnimation(WalkingAnim);
+        Agent.speed = NormalSpeed;
+        SecondaryState = SecondaryAIStates.Walking;
+        Agent.isStopped = false;
+        SetDestination(destination);
+    }
+
+    protected Vector3 GetNavMeshPos()
+    {
+        if (UnityEngine.AI.NavMesh.SamplePosition(transform.position, out NavMeshHit hit, 10, ~0))
+        {
+            return hit.position;
+        }
+
+        return transform.position;
+    }
+
+    protected void SetRunning(Vector3 destination)
+    {
+        ChangeAnimation(RunningAnim);
+        Agent.speed = SprintSpeed;
+        SecondaryState = SecondaryAIStates.Walking;
+        Agent.isStopped = false;
+        SetDestination(destination);
+    }
+
     protected void Attack()
     {
         Anim.SetInteger("WeaponNum", 0);
         Anim.SetTrigger("AttackOne");
-        GenericTimer = 0;
+        WaitingTimer = 0; 
+        AttackTimer = 0;
         Fists[0].enabled = true;
     }
 
-    public void FollowThroughAttack(Vector3 target, float maxDistance = 10)
+    public void FollowThroughAttack()
     {
-        MainState = MainAIStates.BackingOff;
-        SecondaryState = SecondaryAIStates.Null;
-        SetDestination(target, maxDistance);
+        SecondaryState = SecondaryAIStates.FollowThrough;
+        Agent.ResetPath();
+        WaitingTimer = 0;
+        WaitingTime = 1;
     }
 
-    public void SetRotatingTowardsTarget()
+    public void SetRotating()
     {
         SecondaryState = SecondaryAIStates.Rotating;
         ChangeAnimation(IdleName);
+        Agent.isStopped = true;
     }
+
+    protected abstract void IdleAction();
+
+    protected abstract void PatrolAction();
+
+    protected abstract void AttackAction();
 
     public void SetIdling()
     {
+        CurrentStateAction = IdleAction;
         MainState = MainAIStates.Idling;
         SecondaryState = SecondaryAIStates.Waiting;
         ChangeAnimation(IdleName);
@@ -147,8 +173,9 @@ public abstract class BasicAI : CharacterStats
 
     public void SetIdling(Vector3 destination)
     {
+        CurrentStateAction = IdleAction;
         MainState = MainAIStates.Idling;
-        SecondaryState = SecondaryAIStates.Moving;
+        SecondaryState = SecondaryAIStates.Walking;
         SetWalking(destination);
     }
 
@@ -159,26 +186,25 @@ public abstract class BasicAI : CharacterStats
         Anim.SetBool(CurrentAnimation, true);
     }
 
-    public void SetBackingOff(Vector3 target, float maxDistance = 10)
+    public void SetBackingOff()
     {
-        if (NavMesh.SamplePosition(target - (3 * AttackRange * (target - transform.position).normalized), out NavMeshHit hit, maxDistance, ~0))
-        {
-            ChangeAnimation(BackwardAnim);
-            MainState = MainAIStates.BackingOff;
+        ChangeAnimation(BackwardAnim);
+        SecondaryState = SecondaryAIStates.BackingOff;
+        Agent.ResetPath();
+        Agent.isStopped = false;
+        Agent.speed = BackingOffSpeed;
+    }
 
-            CurrentDestination = hit.position;
-            Agent.SetDestination(CurrentDestination);
-
-            SecondaryState = SecondaryAIStates.Moving;
-            Agent.isStopped = false;
-            Agent.speed = BackingOffSpeed;
-        }
+    protected void BackOff()
+    {
+        RotateTowardsTarget();
+        Agent.Move(BackingOffSpeed * Time.deltaTime * (transform.position - Target.transform.position).normalized);
     }
 
     protected bool RotateTowardsTarget()
     {
         float yRotation = Quaternion.LookRotation(Target.transform.position - transform.position).eulerAngles.y;
-        transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.Euler(transform.eulerAngles.x, yRotation, transform.eulerAngles.z), Mathf.Min(Time.deltaTime * RotationSpeed, MathF.Abs(yRotation - transform.eulerAngles.y)));
+        transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.Euler(transform.eulerAngles.x, yRotation, transform.eulerAngles.z), Mathf.Min(Time.deltaTime * RotationSpeed, MathF.Abs(yRotation - transform.eulerAngles.y)));
         return true && Mathf.Abs(yRotation - transform.eulerAngles.y) < 5f;
     }
 
@@ -195,7 +221,7 @@ public abstract class BasicAI : CharacterStats
 
         for (int i = 0; i < patrolPoints.Length; i++)
         {
-            if (NavMesh.SamplePosition(patrolPoints[i], out NavMeshHit hit, 10, 1))
+            if (UnityEngine.AI.NavMesh.SamplePosition(patrolPoints[i], out NavMeshHit hit, 10, 1))
             {
                 points.Add(hit.position);
             }
@@ -212,9 +238,10 @@ public abstract class BasicAI : CharacterStats
             if (PatrolPoints.Length > 1)
             {
                 PatrolNum = 0;
-                GenericTime = 2;
-                GenericTimer = 0;
+                WaitingTime = 2;
+                WaitingTimer = 0;
 
+                CurrentStateAction = PatrolAction;
                 MainState = MainAIStates.Patrolling;
 
                 SetWalking(PatrolPoints[0]);
@@ -245,34 +272,16 @@ public abstract class BasicAI : CharacterStats
                 yRotation = Quaternion.LookRotation(Agent.destination - transform.position).eulerAngles.y;
             }
 
-            transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.Euler(transform.eulerAngles.x, yRotation, transform.eulerAngles.z), Mathf.Min(Time.deltaTime * RotationSpeed, MathF.Abs(yRotation - transform.eulerAngles.y)));
+            transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.Euler(transform.eulerAngles.x, yRotation, transform.eulerAngles.z), Mathf.Min(Time.deltaTime * RotationSpeed, MathF.Abs(yRotation - transform.eulerAngles.y)));
         }
     }
 
-    protected void RotateAwayFromPath()
-    {
-        if (Agent.path.corners.Length > 0)
-        {
-            float yRotation;
-
-            if (Agent.path.corners.Length > 1)
-            {
-                yRotation = Quaternion.LookRotation(transform.position - Agent.path.corners[1]).eulerAngles.y;
-            }
-            else
-            {
-                yRotation = Quaternion.LookRotation(transform.position - Agent.destination).eulerAngles.y;
-            }
-
-            transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.Euler(transform.eulerAngles.x, yRotation, transform.eulerAngles.z), Mathf.Min(Time.deltaTime * RotationSpeed, MathF.Abs(yRotation - transform.eulerAngles.y)));
-        }
-    }
-
-    public void SetAttacking()
+    public void SetAttacking(CharacterStats target)
     {        
-        AttackTimer = 0;
+        AttackTimer = AttackCooldown + 1;
         MainState = MainAIStates.Attacking;
-        SecondaryState = SecondaryAIStates.Moving;
+        CurrentStateAction = AttackAction;
+        Target = target;
         SetRunning(Target.transform.position);
     }
 }

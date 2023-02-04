@@ -18,9 +18,8 @@ public class SceneTransitioner : MonoBehaviour
 
     private static readonly string[] Tips = new string[2] { "Tea > Coffee", "This is a tip!" };
 
-    private static bool IsLoading;
     private static bool IsManualLoad;
-
+    private static AsyncOperation LoadProgress;
     private static string CurrentScene;
 
     private void Awake()
@@ -35,7 +34,6 @@ public class SceneTransitioner : MonoBehaviour
         {
             Instance = this;
 
-            IsLoading = false;
             IsManualLoad = false;
 
             Animator[] anims = GetComponentsInChildren<Animator>();
@@ -48,38 +46,50 @@ public class SceneTransitioner : MonoBehaviour
         }
     }
 
+    private void Start()
+    {
+        GlobalSettings.LoadSettings();
+        CurrentScene = "MainMenu";
+        IsManualLoad = false;
+        LoadScene();
+    }
+
     public static void LoadScene(string sceneName, bool isManual = false)
     {
-        if (!IsLoading)
+        if (LoadProgress.isDone)
         {
-            ToggleScreen(true);
             CurrentScene = sceneName;
             IsManualLoad = isManual;
-
-            IsLoading = true;
-            Time.timeScale = 0;
-
-            Instance.Bar.value = 0;
-            Instance.ProgressText.text = "0%";
-            
-            if (Tips.Length > 0)
-            {
-                Instance.TipText.text = Tips[Random.Range(0, Tips.Length)];
-            }
-            else
-            {
-                Instance.TipText.text = "";
-            }
-
-            Instance.StartCoroutine(Instance.SetSceneLoadProgress());
+            LoadScene();
         }
+    }
+
+    private static void LoadScene()
+    {
+        ToggleScreen(true);
+
+        Time.timeScale = 0;
+
+        Instance.Bar.value = 0;
+        Instance.ProgressText.text = "0%";
+
+        if (Tips.Length > 0)
+        {
+            Instance.TipText.text = Tips[Random.Range(0, Tips.Length)];
+        }
+        else
+        {
+            Instance.TipText.text = "";
+        }
+
+        Instance.StartCoroutine(Instance.SetSceneLoadProgress());
     }
 
     private IEnumerator SetSceneLoadProgress()
     {
         yield return new WaitForEndOfFrame();
 
-        AsyncOperation sceneLoading = SceneManager.LoadSceneAsync(CurrentScene);
+        LoadProgress = SceneManager.LoadSceneAsync(CurrentScene);
 
         float laggingTotal = 0;
         float actualTotal;
@@ -91,9 +101,9 @@ public class SceneTransitioner : MonoBehaviour
             numStages += 1;
         }
 
-        while (!sceneLoading.isDone)
+        while (!LoadProgress.isDone)
         {
-            actualTotal = sceneLoading.progress / numStages;
+            actualTotal = LoadProgress.progress / numStages;
             laggingTotal = Mathf.Clamp(laggingTotal + (Time.unscaledDeltaTime * LerpAmount), 0, actualTotal);
             ProgressText.text = Mathf.Ceil(laggingTotal * 100) + "%";
             Bar.value = laggingTotal;
@@ -120,7 +130,6 @@ public class SceneTransitioner : MonoBehaviour
     public static void ToggleScreen(bool isEnabled)
     {
         Time.timeScale = 1;
-        IsLoading = isEnabled;
         Instance.gameObject.SetActive(isEnabled);
     }
 }

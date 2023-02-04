@@ -17,6 +17,8 @@ public class UIInventory : MonoBehaviour
     private int MaxPage;
 
     private List<Item> CurrentItems;
+    private List<int> ItemAmounts;
+
     private SimpleInventorySlot CurrentlySelected;
     public GameObject InvSlotPrefab;
     public Transform ItemsContainer;
@@ -111,12 +113,15 @@ public class UIInventory : MonoBehaviour
         {
             CurrentType = itemType;
             ClearInventorySlots();
-            CurrentItems = new(PlayerStats.Instance._Inventory.Items.Keys);
+            
+            CurrentItems = PlayerStats.Instance._Inventory.GetItems();
+            ItemAmounts = PlayerStats.Instance._Inventory.GetItemAmounts();
+
             if (itemType == ItemTypes.Misc)
             {
                 for (int i = 0; i < CurrentItems.Count; i++)
                 {
-                    Instantiate(InvSlotPrefab).GetComponent<SimpleInventorySlot>().Intialize(CurrentItems[i], PlayerStats.Instance._Inventory.Items[CurrentItems[i]], ItemsContainer, PlayerStats.Instance._Inventory);
+                    Instantiate(InvSlotPrefab).GetComponent<SimpleInventorySlot>().Intialize(CurrentItems[i], ItemAmounts[i], ItemsContainer, PlayerStats.Instance._Inventory);
                 }
             }
             else
@@ -129,11 +134,11 @@ public class UIInventory : MonoBehaviour
                     }
                 }
 
-                for (int i = 0; i < PlayerStats.Instance._Inventory.Items.Count; i++)
+                for (int i = 0; i < CurrentItems.Count; i++)
                 {
                     if (CurrentItems[i]._ItemType == CurrentType)
                     {
-                        Instantiate(InvSlotPrefab).GetComponent<SimpleInventorySlot>().Intialize(CurrentItems[i], PlayerStats.Instance._Inventory.Items[CurrentItems[i]], ItemsContainer, PlayerStats.Instance._Inventory);
+                        Instantiate(InvSlotPrefab).GetComponent<SimpleInventorySlot>().Intialize(CurrentItems[i], ItemAmounts[i], ItemsContainer, PlayerStats.Instance._Inventory);
                     }
                 }
             }
