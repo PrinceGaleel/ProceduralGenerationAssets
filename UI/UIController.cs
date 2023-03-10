@@ -6,7 +6,7 @@ using TMPro;
 
 public class UIController : MonoBehaviour
 {
-    public static UIController Instance;
+    public static UIController Instance { get; private set; }
 
     [Header("Panels")]
     public GameObject HUD;
@@ -15,9 +15,9 @@ public class UIController : MonoBehaviour
     private bool IsOccupied;
 
     [Header("HUD")]
-    public RectTransform HealthBar;
-    public RectTransform ManaBar;
-    public RectTransform StaminaBar;
+    public MySlider HealthBar;
+    public MySlider ManaBar;
+    public MySlider StaminaBar;
 
     public RectTransform NorthRotator;
 
@@ -113,19 +113,19 @@ public class UIController : MonoBehaviour
         }
     }
 
-    public static void SetHealthBar(float percentage)
+    public static void UpdateHealthBar(float min, float max)
     {
-        Instance.HealthBar.localScale = new(percentage, 1, 1);
+        Instance.HealthBar.UpdateSlider(min, max);
     }
 
-    public static void SetManaBar(float percentage)
+    public static void UpdateManaBar(float min, float max)
     {
-        Instance.ManaBar.localScale = new(percentage, 1, 1);
+        Instance.ManaBar.UpdateSlider(min, max);
     }
 
-    public static void SetStaminaBar(float percentage)
+    public static void UpdateStaminaBar(float min, float max)
     {
-        Instance.StaminaBar.localScale = new(percentage, 1, 1);
+        Instance.StaminaBar.UpdateSlider(min, max);
     }
 
     public void SetMessageInfo(float activatedTime, string message)

@@ -58,8 +58,7 @@ public class SkinnedMeshCopier : CharacterOrganizer
         PlayerStats.Instance.GenderParts.LegRight = CopySkinnedMeshRenderer(genderParts.LegRight.GetChild(0), PlayerStats.Instance.SkinnedMeshParent);
         PlayerStats.Instance.GenderParts.LegLeft = CopySkinnedMeshRenderer(genderParts.LegLeft.GetChild(0), PlayerStats.Instance.SkinnedMeshParent);
 
-        CameraController.Instance.FirstPersonDisable = new() { PlayerStats.Instance.AllGenderParts.AllHair, PlayerStats.Instance.GenderParts.Eyebrow,
-                PlayerStats.Instance.GenderParts.HeadAllElements };
+        CameraController.Instance.FirstPersonDisable = new() { PlayerStats.Instance.AllGenderParts.AllHair, PlayerStats.Instance.GenderParts.Eyebrow, PlayerStats.Instance.GenderParts.HeadAllElements };
         
         if (World.CurrentSaveData.CharSkin.IsMale)
         {

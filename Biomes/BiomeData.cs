@@ -8,7 +8,10 @@ public class BiomeData : ScriptableObject
 {
     public string BiomeName;
 
+    public Color TintColor;
     public Color TerrainColor;
+    public Color DirtColor = new(0.3137255f, 0.1960784f, 0.07843138f);
+    public Gradient TerrainGradient;
     public FoliageSettings _FoliageSettings;
 
     [Header("Height & Temperature Ranges")]
@@ -16,6 +19,15 @@ public class BiomeData : ScriptableObject
     public float HighestPoint;
     public float LowestTemperature;
     public float HighestTemperature;
+
+#if UNITY_EDITOR
+    private void OnValidate()
+    {
+        if (TerrainGradient == null) TerrainGradient = new();
+
+        TerrainGradient.colorKeys = new GradientColorKey[3] { new(DirtColor, 0.1f), new(TerrainColor, 0.5f), new(TintColor, 1) };
+    }
+#endif
 }
 
 [Serializable]
@@ -30,21 +42,6 @@ public class FoliageSettings
 public struct FoliageInfo
 {
     public GameObject Prefab;
-    public float MinFoliageScale;
     public float MaxExtensionHeight;
     public float ChanceOfSpawning;
-}
-
-[Serializable]
-public class PerlinData
-{
-    private const float DefaultPerlinScale = 0.05f;
-    public Vector2Serializable Offset;
-    public float PerlinScale;
-
-    public PerlinData(Vector2Serializable perlinOffset, float perlinScale = DefaultPerlinScale)
-    {
-        Offset = perlinOffset;
-        PerlinScale = perlinScale;
-    }
 }

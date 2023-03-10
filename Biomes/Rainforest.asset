@@ -13,24 +13,46 @@ MonoBehaviour:
   m_Name: Rainforest
   m_EditorClassIdentifier: 
   BiomeName: Rainforest
+  TintColor: {r: 0, g: 0.47058824, b: 0, a: 1}
   TerrainColor: {r: 0, g: 0.4716981, b: 0, a: 1}
+  DirtColor: {r: 0.3137255, g: 0.19607843, b: 0.078431375, a: 1}
+  TerrainGradient:
+    serializedVersion: 2
+    key0: {r: 0.3137255, g: 0.19607843, b: 0.078431375, a: 1}
+    key1: {r: 0, g: 0.4716981, b: 0, a: 1}
+    key2: {r: 0, g: 0.47058824, b: 0, a: 0}
+    key3: {r: 0, g: 0, b: 0, a: 0}
+    key4: {r: 0, g: 0, b: 0, a: 0}
+    key5: {r: 0, g: 0, b: 0, a: 0}
+    key6: {r: 0, g: 0, b: 0, a: 0}
+    key7: {r: 0, g: 0, b: 0, a: 0}
+    ctime0: 0
+    ctime1: 32768
+    ctime2: 65535
+    ctime3: 0
+    ctime4: 0
+    ctime5: 0
+    ctime6: 0
+    ctime7: 0
+    atime0: 0
+    atime1: 65535
+    atime2: 0
+    atime3: 0
+    atime4: 0
+    atime5: 0
+    atime6: 0
+    atime7: 0
+    m_Mode: 0
+    m_NumColorKeys: 3
+    m_NumAlphaKeys: 2
   _FoliageSettings:
     FoliageInfos:
     - Prefab: {fileID: 1131937550485510, guid: ec0f40c29e23c9642a58a3d6f3b7cb17, type: 3}
-      MinFoliageScale: 1.5
       MaxExtensionHeight: 1
       ChanceOfSpawning: 0.8
     - Prefab: {fileID: 1500899924992442, guid: 91f7f901f0c424840be6764209a2484f, type: 3}
-      MinFoliageScale: 1.5
       MaxExtensionHeight: 1
       ChanceOfSpawning: 0.2
-    _PerlinData:
-      Offset:
-        x: 0
-        y: 0
-      PerlinScale: 0.2
-    PlacementThreshold: 0.3
-    SquareCheckSize: 5
     ChanceOfTree: 0.4
   LowestPoint: 0.2
   HighestPoint: 0.4

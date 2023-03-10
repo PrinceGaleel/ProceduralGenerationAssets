@@ -8,12 +8,6 @@ public class SettingsMenu : MonoBehaviour
 {
     public static SettingsMenu Instance;
 
-    [Header("Panel")]
-    public GameObject GraphicsPanel;
-    public GameObject AudioPanel;
-
-    private GameObject NextToDisable;
-
     [Header("FPS")]
     private readonly static FullScreenMode[] ScreenModes = new FullScreenMode[3] { FullScreenMode.ExclusiveFullScreen, FullScreenMode.FullScreenWindow, FullScreenMode.Windowed };
 
@@ -44,9 +38,6 @@ public class SettingsMenu : MonoBehaviour
         {
             Instance = this;
             InitializeSettings();
-            GraphicsPanel.SetActive(true);
-            AudioPanel.SetActive(false);
-            NextToDisable = GraphicsPanel;
         }
     }
 
@@ -72,7 +63,6 @@ public class SettingsMenu : MonoBehaviour
         GlobalSettings.CurrentSettings.MusicVolume = MusicSlider.value / 100;
 
         GlobalSettings.SaveSettings();
-        EnableGraphicsPanel();
     }
 
     public void InitializeSettings()
@@ -120,20 +110,6 @@ public class SettingsMenu : MonoBehaviour
         }
         ResolutionsDropdown.options = optionsData;
         ResolutionsDropdown.value = toSet;
-    }
-
-    public void EnableGraphicsPanel()
-    {
-        NextToDisable.SetActive(false);
-        GraphicsPanel.SetActive(true);
-        NextToDisable = GraphicsPanel;
-    }
-
-    public void EnableAudioPanel()
-    {
-        NextToDisable.SetActive(false);
-        AudioPanel.SetActive(true);
-        NextToDisable = AudioPanel;
     }
 
     public void ChangeMusicVolume()

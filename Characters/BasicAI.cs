@@ -24,16 +24,13 @@ public enum SecondaryAIStates
     Null
 }
 
+[RequireComponent(typeof(NavMeshAgent))]
 public abstract class BasicAI : CharacterStats
 {
     public NavMeshAgent Agent;
     public MultiAimConstraint HeadConstraint;
     
     protected CharacterStats Target;
-
-    [Header("Speeds")]
-    public float DodgeSpeed;
-    public float RotationSpeed;
 
     [Header("Timer Variables")]
     public float AttackRange;
@@ -62,16 +59,6 @@ public abstract class BasicAI : CharacterStats
     {
         CurrentAnimation = RestingAnim;
 
-        if (!Agent)
-        {
-            Agent = GetComponent<NavMeshAgent>();
-
-            if (!Agent)
-            {
-                Agent = gameObject.AddComponent<NavMeshAgent>();
-            }
-        }
-
         if (!Anim)
         {
             Anim = GetComponent<Animator>();
@@ -96,7 +83,7 @@ public abstract class BasicAI : CharacterStats
 
     protected void SetDestination(Vector3 destination, float maxDistance = 10)
     {
-        if (UnityEngine.AI.NavMesh.SamplePosition(destination, out NavMeshHit hit, maxDistance, ~0))
+        if (NavMesh.SamplePosition(destination, out NavMeshHit hit, maxDistance, ~0))
         {
             CurrentDestination = hit.position;
             Agent.SetDestination(CurrentDestination);
@@ -115,7 +102,7 @@ public abstract class BasicAI : CharacterStats
 
     protected Vector3 GetNavMeshPos()
     {
-        if (UnityEngine.AI.NavMesh.SamplePosition(transform.position, out NavMeshHit hit, 10, ~0))
+        if (NavMesh.SamplePosition(transform.position, out NavMeshHit hit, 10, ~0))
         {
             return hit.position;
         }
@@ -134,11 +121,11 @@ public abstract class BasicAI : CharacterStats
 
     protected void Attack()
     {
-        Anim.SetInteger("WeaponNum", 0);
+        Anim.SetInteger(WeaponNumber, 0);
         Anim.SetTrigger("AttackOne");
         WaitingTimer = 0; 
         AttackTimer = 0;
-        Fists[0].enabled = true;
+        Fists[0].ToggleFist(true);
     }
 
     public void FollowThroughAttack()
@@ -284,4 +271,12 @@ public abstract class BasicAI : CharacterStats
         Target = target;
         SetRunning(Target.transform.position);
     }
+
+#if UNITY_EDITOR
+    protected override void OnValidate()
+    {
+        base.OnValidate();
+        Agent = GetComponent<NavMeshAgent>();
+    }
+#endif
 }

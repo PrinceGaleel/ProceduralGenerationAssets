@@ -1,5 +1,36 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!1 &3039953543479103417
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5215886375388807753}
+  m_Layer: 0
+  m_Name: GroundChecker
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5215886375388807753
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3039953543479103417}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0.1, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 5600692888165502627}
+  m_RootOrder: 3
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &5505210058681038951
 GameObject:
   m_ObjectHideFlags: 0
@@ -266,6 +297,7 @@ Transform:
   - {fileID: 5600105305920660739}
   - {fileID: 526352907148343570}
   - {fileID: 5600692889977562041}
+  - {fileID: 5215886375388807753}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -310,30 +342,31 @@ MonoBehaviour:
   ExpToLevelUp: 0
   Level: 0
   SkillPoints: 0
+  StaminaRegenState: 1
   StaminaRegen: 7
   StaminaRegenTimer: 0
   StaminaRegenTime: 5
   NormalSpeed: 6
-  BackingOffSpeed: 4
   SprintSpeed: 9
-  IdleName: Idle
-  RestingAnim: Resting
-  WalkingAnim: Walk Forward
-  RunningAnim: Run Forward
-  BackwardAnim: Walk Backward
-  WaitingAnim: Idle
-  Race: 1
+  BackingOffSpeed: 4
+  StrafeSpeed: 5
+  DodgeSpeed: 10
+  RotationSpeed: 120
+  MyRace: 0
   MyTeamID: 0
   Anim: {fileID: 5542794824981686775}
-  _Inventory: {fileID: 0}
+  _Inventory: {fileID: 9162514053089913598}
   Fists:
   - {fileID: 6759646947338459726}
   - {fileID: 1578995255078826511}
   Drops:
   - Key: {fileID: 0}
     Value: 0
+  MyTransform: {fileID: 5600692888165502627}
   SpawnPoint: {x: 0, y: 0, z: 0}
   CanMove: 0
+  Controller: {fileID: 5600692888165502631}
+  GroundChecker: {fileID: 5215886375388807753}
   JumpStrength: 2
   SkinnedMeshParent: {fileID: 5600105305920660739}
   GenderParts:
@@ -368,10 +401,6 @@ MonoBehaviour:
     KneeAttachmentLeft: {fileID: 0}
     Ears: {fileID: 0}
     ElfEars: {fileID: 0}
-  RightStrafeAnim: Right Strafe
-  LeftStrafeAnim: Left Strafe
-  FallingAnim: Fall
-  StrafeSpeed: 5
 --- !u!114 &5600692888165502616
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -420,6 +449,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 19c8a127549cbdb438461c150c34fc75, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  Owner: {fileID: 4682128580813140961}
+  MyEquipmentContainer: {fileID: 7834006860939807496}
   Gold: 0
 --- !u!114 &7834006860939807496
 MonoBehaviour:
@@ -433,6 +464,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f8a6de7320f539e4c826d2a9d5a0c809, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  Character: {fileID: 4682128580813140961}
+  Inventory: {fileID: 9162514053089913598}
   RightHand: {fileID: 0}
   LeftHand: {fileID: 0}
   Helmet:
@@ -649,6 +682,11 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 2653404882595285951, guid: 6d627a30e5300e94ca674c2fc2ceb262,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 2654921530578374469, guid: 6d627a30e5300e94ca674c2fc2ceb262,
         type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -689,6 +727,21 @@ PrefabInstance:
       propertyPath: Character
       value: 
       objectReference: {fileID: 4682128580813140961}
+    - target: {fileID: 3792504808142918554, guid: 6d627a30e5300e94ca674c2fc2ceb262,
+        type: 3}
+      propertyPath: Damage
+      value: 20
+      objectReference: {fileID: 0}
+    - target: {fileID: 3792504808142918554, guid: 6d627a30e5300e94ca674c2fc2ceb262,
+        type: 3}
+      propertyPath: Character
+      value: 
+      objectReference: {fileID: 4682128580813140961}
+    - target: {fileID: 3792504808142918554, guid: 6d627a30e5300e94ca674c2fc2ceb262,
+        type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 4082907376781880487, guid: 6d627a30e5300e94ca674c2fc2ceb262,
         type: 3}
       propertyPath: Character
@@ -734,6 +787,21 @@ PrefabInstance:
       propertyPath: Character
       value: 
       objectReference: {fileID: 4682128580813140961}
+    - target: {fileID: 8973158114974530523, guid: 6d627a30e5300e94ca674c2fc2ceb262,
+        type: 3}
+      propertyPath: Damage
+      value: 20
+      objectReference: {fileID: 0}
+    - target: {fileID: 8973158114974530523, guid: 6d627a30e5300e94ca674c2fc2ceb262,
+        type: 3}
+      propertyPath: Character
+      value: 
+      objectReference: {fileID: 4682128580813140961}
+    - target: {fileID: 8973158114974530523, guid: 6d627a30e5300e94ca674c2fc2ceb262,
+        type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 6d627a30e5300e94ca674c2fc2ceb262, type: 3}
 --- !u!114 &725466950463882461 stripped

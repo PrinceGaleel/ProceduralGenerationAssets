@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class Inventory : MonoBehaviour
 {
+    [SerializeField] private CharacterStats Owner;
+    [SerializeField] private EquipmentContainer MyEquipmentContainer;
     private readonly Dictionary<Item, int> Items = new();
     public int Gold;
 
@@ -19,7 +21,7 @@ public class Inventory : MonoBehaviour
         }
     }
 
-    public void AddItems(DictList<Item, int> items)
+    public void AddItems(PairList<Item, int> items)
     {
         for (int i = 0; i < items.Count; i++)
         {
@@ -71,4 +73,12 @@ public class Inventory : MonoBehaviour
 
         return false;
     }
+
+#if UNITY_EDITOR
+    protected virtual void OnValidate()
+    {
+        if (GetComponent<EquipmentContainer>()) MyEquipmentContainer = GetComponent<EquipmentContainer>();
+        if (!Owner) Owner = GetComponent<CharacterStats>();
+    }
+#endif
 }

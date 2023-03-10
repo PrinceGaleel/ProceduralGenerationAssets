@@ -41,7 +41,7 @@ public class MobDen : MonoBehaviour
 
         FoliageManager.AddTreesToRemove(Lowest + new Vector2(transform.position.x, transform.position.z), Highest + new Vector2(transform.position.x, transform.position.z));
 
-        if (!UnityEngine.AI.NavMesh.SamplePosition(transform.position, out _, 10, ~0))
+        if (!NavMesh.SamplePosition(transform.position, out _, 10, ~0))
         {
             NavMeshManager.AddUnreadyToEnable(Chunk.GetChunkPosition(transform.position.x, transform.position.z), this);
             enabled = false;
@@ -50,15 +50,15 @@ public class MobDen : MonoBehaviour
 
     private void Start()
     {
-        if (!UnityEngine.AI.NavMesh.SamplePosition(transform.position, out _, 10, ~0))
+        if (!NavMesh.SamplePosition(transform.position, out _, 10, ~0))
         {
             enabled = false;
             return;
         }
 
-        MyTeamID = TeamsManager.AddTeam("Mob Den", true);
+        MyTeamID = TeamsManager.AddTeam("Mob Den", true, new());
 
-        if (UnityEngine.AI.NavMesh.SamplePosition(SpawnTransform.position, out NavMeshHit hit, 10, ~0))
+        if (NavMesh.SamplePosition(SpawnTransform.position, out NavMeshHit hit, 10, ~0))
         {
             SpawnPoint = hit.position;
         }
@@ -68,7 +68,6 @@ public class MobDen : MonoBehaviour
         }
 
         Initialize();
-        TeamsManager.Teams[MyTeamID].Members.AddRange(Mobs);
     }
 
     public void Initialize()
@@ -118,6 +117,7 @@ public class MobDen : MonoBehaviour
         mob.MyTeamID = MyTeamID;
         mob.transform.SetParent(transform);
         AssignPatrolPoints(mob);
+        TeamsManager.AddMember(MyTeamID, mob);
     }
 
     public void AssignPatrolPoints(DenMob mob)
@@ -129,7 +129,7 @@ public class MobDen : MonoBehaviour
             float x = ((float)World.Rnd.NextDouble() * (TerritoryRadius * 0.7f)) - (TerritoryRadius * 0.7f) + transform.position.x;
             float z = ((float)World.Rnd.NextDouble() * (TerritoryRadius * 0.7f)) - (TerritoryRadius * 0.7f) + transform.position.z;
 
-            if(UnityEngine.AI.NavMesh.SamplePosition(Chunk.GetPerlinPosition(x,z), out NavMeshHit hit, 10, ~0))
+            if(NavMesh.SamplePosition(Chunk.GetPerlinPosition(x,z), out NavMeshHit hit, 10, ~0))
             {
                 patrolPoints.Add(hit.position);
             }

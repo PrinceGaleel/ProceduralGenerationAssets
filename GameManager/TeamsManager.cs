@@ -6,10 +6,11 @@ using UnityEngine.Jobs;
 
 public class TeamsManager : MonoBehaviour
 {
-    public static TeamsManager Instance;
+    private static TeamsManager Instance;
 
-    public static int TeamCounter { private set; get; }
-    public static Dictionary<int, Team> Teams { get; private set; }
+    private PopulateEnemiesJob PopulateEnemiesCheck;
+    private static int TeamCounter;
+    private static Dictionary<int, Team> Teams;
 
     private void Awake()
     {
@@ -22,48 +23,74 @@ public class TeamsManager : MonoBehaviour
         else
         {
             Instance = this;
+            PopulateEnemiesCheck = new();
+            PopulateEnemiesCheck.Schedule();
         }
     }
 
     private void Update()
     {
-        PopulateAllEnemies();
-    }
-
-    private static void PopulateAllEnemies()
-    {
-        Dictionary<int, Team> teams = new(Teams);
-
-        foreach (int teamID in teams.Keys)
+        if(PopulateEnemiesCheck.IsCompleted)
         {
-            List<CharacterStats> enemies = new();
-
-            foreach (int enemyTeamID in teams[teamID].Enemies)
-            {
-                if (enemyTeamID != teamID)
-                {
-                    List<CharacterStats> members;
-
-                    lock (teams[enemyTeamID].Members)
-                    {
-                        members = new(teams[enemyTeamID].Members);
-                    }
-
-                    foreach (CharacterStats character in members)
-                    {
-                        enemies.Add(character);
-                    }
-                }
-            }
-
-            lock (Teams[teamID].AllEnemies)
-            {
-                Teams[teamID].AllEnemies = enemies;
-            }
+            PopulateEnemiesCheck = new();
+            PopulateEnemiesCheck.Schedule();
         }
     }
 
-    public static void Initialize()
+    public static void AddMember(int teamID, CharacterStats member)
+    {
+        lock (Teams)
+        {
+            Teams[teamID].Members.Add(member);
+        }
+    }
+
+    public class PopulateEnemiesJob : SecondaryThreadJob
+    {
+        public bool IsCompleted { get; private set; }
+
+        public PopulateEnemiesJob()
+        {
+            IsCompleted = false;
+        }
+
+        public override void Execute()
+        {
+            Dictionary<int, Team> teams = new(Teams);
+
+            foreach (int teamID in teams.Keys)
+            {
+                List<CharacterStats> enemies = new();
+
+                foreach (int enemyTeamID in teams[teamID].Enemies)
+                {
+                    if (enemyTeamID != teamID)
+                    {
+                        List<CharacterStats> members;
+
+                        lock (teams[enemyTeamID].Members)
+                        {
+                            members = new(teams[enemyTeamID].Members);
+                        }
+
+                        foreach (CharacterStats character in members)
+                        {
+                            enemies.Add(character);
+                        }
+                    }
+                }
+
+                lock (Teams[teamID].AllEnemies)
+                {
+                    Teams[teamID].AllEnemies = enemies;
+                }
+            }
+
+            IsCompleted = true;
+        }
+    }
+
+    public static void InitializeStatics()
     {
         Teams = new();
         TeamCounter = 0;
@@ -82,10 +109,10 @@ public class TeamsManager : MonoBehaviour
         Teams.Remove(teamID);
     }
 
-    public static int AddTeam(string factionName, bool isAutoHostile)
+    public static int AddTeam(string factionName, bool isAutoHostile, List<CharacterStats> members)
     {
         List<int> keys = new(Teams.Keys);
-        Teams.Add(TeamCounter, new(factionName, isAutoHostile));
+        Teams.Add(TeamCounter, new(factionName, isAutoHostile, members));
 
         if (isAutoHostile)
         {
@@ -150,10 +177,10 @@ public class TeamsManager : MonoBehaviour
         public List<int> Enemies;
         public List<int> Allies;
 
-        public Team(string factionName, bool isAutoHostile)
+        public Team(string factionName, bool isAutoHostile, List<CharacterStats> members)
         {
             FactionName = factionName;
-            Members = new();
+            Members = members;
             IsAutoHostile = isAutoHostile;
             Enemies = new();
             Allies = new();

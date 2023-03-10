@@ -9,7 +9,6 @@ public class RenderTerrainMap : MonoBehaviour
 
     public Transform Focus;
     private static Camera CamToDrawWidth;
-    public LayerMask Layer;
 
     public const int Resolution = 512;
     public const float AdjustScaling = 2.5f;
@@ -32,11 +31,11 @@ public class RenderTerrainMap : MonoBehaviour
             gameObject.layer = LayerMask.NameToLayer("Terrain");
             CamToDrawWidth = GetComponent<Camera>();
 
-            transform.position = new(transform.position.x, SaveData.HeightMultipler * 1.5f, transform.position.z);
-            CamToDrawWidth.farClipPlane = SaveData.HeightMultipler * 2;
+            transform.position = new(transform.position.x, Chunk.HeightMultipler * 1.5f, transform.position.z);
+            CamToDrawWidth.farClipPlane = Chunk.HeightMultipler * 2;
             CamToDrawWidth.nearClipPlane = 0;
 
-            Bounds bounds = new(transform.position, new(World.LODOneDistance * Chunk.DefaultChunkSize, SaveData.HeightMultipler * 2, World.LODOneDistance * Chunk.DefaultChunkSize));
+            Bounds bounds = new(transform.position, new(World.LODOneDistance * Chunk.DefaultChunkSize, Chunk.HeightMultipler * 2, World.LODOneDistance * Chunk.DefaultChunkSize));
             CamToDrawWidth.cullingMask = LayerMask.GetMask("Terrain");
             CamToDrawWidth.orthographicSize = bounds.size.magnitude / AdjustScaling;
 

@@ -9,12 +9,10 @@ using System.Runtime.Serialization.Formatters.Binary;
 public class SaveData
 {
     public int SaveNum;
-    public const float HeightMultipler = 100;
-    private const float MaxPerlinOffset = 100000;
+    private const float MaxSeedNum = 100000;
 
     [Header("Base Perlin Settings")]
-    public PerlinData HeightPerlin;
-    public PerlinData TemperaturePerlin;
+    public int Seed;
 
     [Header("World Data")]
     public Vector3Serializable LastPosition;
@@ -34,16 +32,25 @@ public class SaveData
         }
     }
 
-    public SaveData(string characterName, CharacterSkin charSkin, string saveName, PerlinData heightPerlin, PerlinData temperaturePerlin)
+    public SaveData(string characterName, CharacterSkin charSkin, string saveName, int seed = -1)
     {
-        HeightPerlin = heightPerlin;
-        TemperaturePerlin = temperaturePerlin;
         CharSkin = charSkin;
         LastPosition = new();
         SaveName = saveName;
         CharacterName = characterName;
         TimeInSeconds = 0;
         LastPosition = new();
+
+        if (seed == -1)
+        {
+            Seed = (int)UnityEngine.Random.Range(0, MaxSeedNum);
+        }
+        else
+        {
+            Seed = seed;
+        }
+
+        Seed += 10000;
     }
 
     public static string SaveMap(string characterName, CharacterSkin charSkin)
@@ -53,10 +60,7 @@ public class SaveData
         int saveNum = GetFreeSaveNum();
         string savePath = Application.persistentDataPath + "/" + saveNum;
 
-        System.Random random = new();
-        Vector2Serializable offset = new(((float)random.NextDouble() * MaxPerlinOffset) + 10000, ((float)random.NextDouble() * MaxPerlinOffset) + 10000);
-
-        SaveData saveData = new(characterName, charSkin, saveNum.ToString(), new(offset, 0.025f), new(offset + new Vector2Serializable(10000, 10000), 0.05f));
+        SaveData saveData = new(characterName, charSkin, saveNum.ToString());
 
         if (!Directory.Exists(savePath))
         {

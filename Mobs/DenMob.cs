@@ -10,12 +10,10 @@ public class DenMob : BasicAI
 
     protected float TargetDenDistance { get { return Vector3.Distance(Target.transform.position, Den.transform.position); } }
 
-    private void Awake()
+    protected override void Awake()
     {
-        CharStandardAwake();
+        base.Awake();
         AIAwake();
-        SetRequiredXP();
-        CurrentExp = 0;
     }
 
     private void Start()
@@ -46,7 +44,7 @@ public class DenMob : BasicAI
             if (DestinationDistance < 1)
             {
                 WaitingTimer = 0;
-                SetWaiting(WaitingAnim);
+                SetWaiting(IdleName);
             }
         }
         else if (SecondaryState == SecondaryAIStates.Waiting)
@@ -89,7 +87,7 @@ public class DenMob : BasicAI
                 }
                 else if (DestinationDistance < 1)
                 {
-                    SetWaiting(WaitingAnim);
+                    SetWaiting(IdleName);
                 }
             }
             else if (SecondaryState == SecondaryAIStates.Rotating)
@@ -153,37 +151,36 @@ public class DenMob : BasicAI
 
     protected override void Death()
     {
-        Anim.SetTrigger("Die");
-        StandardDeath();
-    }
-
-    public override void DecreaseHealth(float amount)
-    {
-        DefaultDecreaseHealth(amount);
+        base.Death();
     }
 
     public override void IncreaseHealth(float amount)
     {
-        DefaultIncreaseHealth(amount);
+        base.IncreaseHealth(amount);
     }
 
-    public override void DecreaseStamina(float amount)
+    public override void DecreaseHealth(float amount)
     {
-        DefaultDecreaseHealth(amount);
+        base.DecreaseHealth(amount);
     }
 
     public override void IncreaseStamina(float amount)
     {
-        DefaultIncreaseHealth(amount);
+        base.IncreaseStamina(amount);
     }
 
-    public override void DecreaseMana(float amount)
+    public override void DecreaseStamina(float amount)
     {
-        DefaultDecreaseHealth(amount);
+        base.DecreaseStamina(amount);
     }
 
     public override void IncreaseMana(float amount)
     {
-        DefaultIncreaseHealth(amount);
+        base.IncreaseMana(amount);
+    }
+
+    public override void DecreaseMana(float amount)
+    {
+        base.DecreaseMana(amount);
     }
 }

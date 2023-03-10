@@ -7,7 +7,7 @@ public class PaintGrass : MonoBehaviour
     public BiomeData Biome;
     public Camera Cam;
 
-    private ComputeShader InstantiatedComputeShader;
+    private ComputeShader MyComputeShader;
     private Material InstantiatedMaterial;
 
     private ComputeBuffer SourceVertBuffer;
@@ -21,54 +21,61 @@ public class PaintGrass : MonoBehaviour
 
     private void Awake()
     {
-        InstantiatedComputeShader = Instantiate(GrassManager.GrassShader);
+        if(!Cam)
+        {
+            Cam = Camera.main;
+        }
+
+        GrassChunk.ShaderInteractors = new();
+
+        MyComputeShader = Instantiate(GrassManager.GrassShader);
         InstantiatedMaterial = Instantiate(GrassManager.GrassMaterial);
 
-        IdGrassKernel = InstantiatedComputeShader.FindKernel("Main");
+        IdGrassKernel = MyComputeShader.FindKernel("Main");
 
-        InstantiatedComputeShader.SetFloat("_WindSpeed", GrassManager.WindSpeed);
-        InstantiatedComputeShader.SetFloat("_WindStrength", GrassManager.WindStrength);
+        MyComputeShader.SetFloat("_WindSpeed", GrassChunk.WindSpeed);
+        MyComputeShader.SetFloat("_WindStrength", GrassChunk.WindStrength);
 
-        InstantiatedComputeShader.SetMatrix("_LocalToWorld", transform.localToWorldMatrix);
-        InstantiatedComputeShader.SetFloat("_Time", Time.time);
+        MyComputeShader.SetMatrix("_LocalToWorld", transform.localToWorldMatrix);
+        MyComputeShader.SetFloat("_Time", Time.time);
 
-        InstantiatedComputeShader.SetFloat("_GrassRandomHeight", 0.5f);
+        MyComputeShader.SetFloat("_GrassRandomHeight", 0.5f);
 
-        InstantiatedComputeShader.SetInt("_MaxBladesPerVertex", GrassManager.BladesPerVertex);
-        InstantiatedComputeShader.SetInt("_MaxSegmentsPerBlade", GrassManager.SegmentsPerBlade);
+        MyComputeShader.SetInt("_MaxBladesPerVertex", GrassChunk.BladesPerVertex);
+        MyComputeShader.SetInt("_MaxSegmentsPerBlade", GrassChunk.SegmentsPerBlade);
 
-        InstantiatedComputeShader.SetFloat("_InteractorRadius", GrassManager.GrassAffectRadius);
-        InstantiatedComputeShader.SetFloat("_InteractorStrength", GrassManager.GrassAffectStrength);
+        MyComputeShader.SetFloat("_InteractorRadius", GrassChunk.GrassAffectRadius);
+        MyComputeShader.SetFloat("_InteractorStrength", GrassChunk.GrassAffectStrength);
 
-        InstantiatedComputeShader.SetFloat("_MinFadeDist", 50);
-        InstantiatedComputeShader.SetFloat("_MaxFadeDist", 100);
+        MyComputeShader.SetFloat("_MinFadeDist", 50);
+        MyComputeShader.SetFloat("_MaxFadeDist", 100);
 
-        InstantiatedComputeShader.SetFloat("_BladeForward", 0.2f);
-        InstantiatedComputeShader.SetFloat("_BladeCurve", 3);
-        InstantiatedComputeShader.SetFloat("_BottomWidth", 1);
+        MyComputeShader.SetFloat("_BladeForward", 0.2f);
+        MyComputeShader.SetFloat("_BladeCurve", 3);
+        MyComputeShader.SetFloat("_BottomWidth", 1);
 
         InstantiatedMaterial.SetColor("_TopTint", new Color(1, 1, 1));
         InstantiatedMaterial.SetColor("_BottomTint", new Color(0, 0, 1));
 
         System.Random random = new();
 
-        List<GrassManager.SourceVertex> vertices = new();
+        List<GrassChunk.SourceVertex> vertices = new();
         for (int i = 0, z = 0; z <= _Bounds.extents.x + _Bounds.center.x; z++)
         {
             for (int x = 0; x <= _Bounds.extents.z + _Bounds.center.z; x++)
             {
-                for (int j = 0; j < GrassManager.GrassDensity; j++)
+                for (int j = 0; j < GrassChunk.GrassDensity; j++)
                 {
-                    float randX = ((float)random.NextDouble() * 2 * GrassManager.BrushSize) - GrassManager.BrushSize + x + transform.position.x;
-                    float randZ = ((float)random.NextDouble() * 2 * GrassManager.BrushSize) - GrassManager.BrushSize + z + transform.position.z;
+                    float randX = ((float)random.NextDouble() * 2 * GrassChunk.BrushSize) - GrassChunk.BrushSize + x + transform.position.x;
+                    float randZ = ((float)random.NextDouble() * 2 * GrassChunk.BrushSize) - GrassChunk.BrushSize + z + transform.position.z;
 
                     if (Physics.Raycast(new(randX, 100, randZ), Vector3.down, out RaycastHit hit, 1000, LayerMask.GetMask("Terrain")))
                     {
-                        vertices.Add(new GrassManager.SourceVertex()
+                        vertices.Add(new GrassChunk.SourceVertex()
                         {
                             Position = hit.point,
                             Normal = Vector3.up,
-                            UV = new(GrassManager.GrassWidth, GrassManager.GrassHeight),
+                            UV = new(GrassChunk.GrassWidth, GrassChunk.GrassHeight),
                             Color = new(Biome.TerrainColor.r, Biome.TerrainColor.g, Biome.TerrainColor.b)
                         });
                     }
@@ -84,18 +91,18 @@ public class PaintGrass : MonoBehaviour
             SourceVertBuffer = new ComputeBuffer(vertices.Count, sizeof(float) * (3 + 3 + 2 + 3), ComputeBufferType.Structured, ComputeBufferMode.Immutable);
             SourceVertBuffer.SetData(vertices);
 
-            DrawBuffer = new ComputeBuffer(vertices.Count * GrassManager.BladesPerVertex * ((GrassManager.SegmentsPerBlade - 1) * 2 + 1), sizeof(float) * (3 + (3 + 2 + 3) * 3), ComputeBufferType.Append);
+            DrawBuffer = new ComputeBuffer(vertices.Count * GrassChunk.BladesPerVertex * ((GrassChunk.SegmentsPerBlade - 1) * 2 + 1), sizeof(float) * (3 + (3 + 2 + 3) * 3), ComputeBufferType.Append);
             DrawBuffer.SetCounterValue(0);
 
             ArgsBuffer = new ComputeBuffer(1, sizeof(int) * 4, ComputeBufferType.IndirectArguments);
-            InstantiatedComputeShader.SetBuffer(IdGrassKernel, "_SourceVertices", SourceVertBuffer);
-            InstantiatedComputeShader.SetBuffer(IdGrassKernel, "_DrawTriangles", DrawBuffer);
-            InstantiatedComputeShader.SetBuffer(IdGrassKernel, "_IndirectArgsBuffer", ArgsBuffer);
+            MyComputeShader.SetBuffer(IdGrassKernel, "_SourceVertices", SourceVertBuffer);
+            MyComputeShader.SetBuffer(IdGrassKernel, "_DrawTriangles", DrawBuffer);
+            MyComputeShader.SetBuffer(IdGrassKernel, "_IndirectArgsBuffer", ArgsBuffer);
 
-            InstantiatedComputeShader.SetInt("_NumSourceVertices", vertices.Count);
+            MyComputeShader.SetInt("_NumSourceVertices", vertices.Count);
             InstantiatedMaterial.SetBuffer("_DrawTriangles", DrawBuffer);
 
-            InstantiatedComputeShader.GetKernelThreadGroupSizes(IdGrassKernel, out uint threadGroupSize, out _, out _);
+            MyComputeShader.GetKernelThreadGroupSizes(IdGrassKernel, out uint threadGroupSize, out _, out _);
             DispatchSize = Mathf.CeilToInt((float)vertices.Count / threadGroupSize);
         }
         else
@@ -115,16 +122,16 @@ public class PaintGrass : MonoBehaviour
         DrawBuffer.SetCounterValue(0);
         ArgsBuffer.SetData(new int[4] { 0, 1, 0, 0 });
 
-        InstantiatedComputeShader.SetFloat("_Time", Time.time);
-        InstantiatedComputeShader.SetVector("_CameraPositionWS", Cam.transform.position);
-        InstantiatedComputeShader.Dispatch(IdGrassKernel, DispatchSize, 1, 1);
+        MyComputeShader.SetFloat("_Time", Time.time);
+        MyComputeShader.SetVector("_CameraPositionWS", Cam.transform.position);
+        MyComputeShader.Dispatch(IdGrassKernel, DispatchSize, 1, 1);
 
         Graphics.DrawProceduralIndirect(InstantiatedMaterial, _Bounds, MeshTopology.Triangles, ArgsBuffer, 0, Cam, null, UnityEngine.Rendering.ShadowCastingMode.Off, true, gameObject.layer);
     }
 
     private void OnDestroy()
     {
-        Destroy(InstantiatedComputeShader);
+        Destroy(MyComputeShader);
 
         SourceVertBuffer?.Release();
         DrawBuffer?.Release();

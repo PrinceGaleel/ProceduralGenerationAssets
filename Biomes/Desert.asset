@@ -13,18 +13,13 @@ MonoBehaviour:
   m_Name: Desert
   m_EditorClassIdentifier: 
   BiomeName: Hot Desert
-  TerrainColor: {r: 0.3773585, g: 0.2341962, b: 0.091033906, a: 1}
+  TintColor: {r: 0.5019608, g: 0.2784314, b: 0.050980393, a: 1}
+  TerrainColor: {r: 0.5, g: 0.2780157, b: 0.049865216, a: 1}
+  DirtColor: {r: 0.3137255, g: 0.19607843, b: 0.078431375, a: 1}
   _FoliageSettings:
     FoliageInfos: []
-    _PerlinData:
-      Offset:
-        x: 0
-        y: 0
-      PerlinScale: 0.05
-    PlacementThreshold: 0
-    SquareCheckSize: 0
     ChanceOfTree: 0
   LowestPoint: 0.8
   HighestPoint: 1
   LowestTemperature: 0.6
-  HighestTemperature: 0.9
+  HighestTemperature: 1

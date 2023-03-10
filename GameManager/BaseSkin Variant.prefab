@@ -1,0 +1,199 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1001 &284482011038303546
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 1588895830433058, guid: 9e6a196cc88c55d4db41fbf4731861ba, type: 3}
+      propertyPath: m_Name
+      value: BaseSkin
+      objectReference: {fileID: 0}
+    - target: {fileID: 4005077195242232, guid: 9e6a196cc88c55d4db41fbf4731861ba, type: 3}
+      propertyPath: m_RootOrder
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4005077195242232, guid: 9e6a196cc88c55d4db41fbf4731861ba, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4005077195242232, guid: 9e6a196cc88c55d4db41fbf4731861ba, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: -200
+      objectReference: {fileID: 0}
+    - target: {fileID: 4005077195242232, guid: 9e6a196cc88c55d4db41fbf4731861ba, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4005077195242232, guid: 9e6a196cc88c55d4db41fbf4731861ba, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4005077195242232, guid: 9e6a196cc88c55d4db41fbf4731861ba, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4005077195242232, guid: 9e6a196cc88c55d4db41fbf4731861ba, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4005077195242232, guid: 9e6a196cc88c55d4db41fbf4731861ba, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4005077195242232, guid: 9e6a196cc88c55d4db41fbf4731861ba, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4005077195242232, guid: 9e6a196cc88c55d4db41fbf4731861ba, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4005077195242232, guid: 9e6a196cc88c55d4db41fbf4731861ba, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents:
+    - {fileID: 6795172777378929962, guid: 9e6a196cc88c55d4db41fbf4731861ba, type: 3}
+    - {fileID: 5650365818672990453, guid: 9e6a196cc88c55d4db41fbf4731861ba, type: 3}
+    - {fileID: 95241917264262668, guid: 9e6a196cc88c55d4db41fbf4731861ba, type: 3}
+  m_SourcePrefab: {fileID: 100100000, guid: 9e6a196cc88c55d4db41fbf4731861ba, type: 3}
+--- !u!1 &285710253077796888 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 1588895830433058, guid: 9e6a196cc88c55d4db41fbf4731861ba,
+    type: 3}
+  m_PrefabInstance: {fileID: 284482011038303546}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1050862228
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 285710253077796888}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1789cc8803d9d234da51d7f2d8f131c9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _Material: {fileID: 0}
+  Primary:
+  - {r: 0.2862745, g: 0.4, b: 0.4941177, a: 1}
+  - {r: 0.4392157, g: 0.1960784, b: 0.172549, a: 1}
+  - {r: 0.3529412, g: 0.3803922, b: 0.2705882, a: 1}
+  - {r: 0.682353, g: 0.4392157, b: 0.2196079, a: 1}
+  - {r: 0.4313726, g: 0.2313726, b: 0.2705882, a: 1}
+  - {r: 0.5921569, g: 0.4941177, b: 0.2588235, a: 1}
+  - {r: 0.482353, g: 0.4156863, b: 0.3529412, a: 1}
+  - {r: 0.2352941, g: 0.2352941, b: 0.2352941, a: 1}
+  - {r: 0.2313726, g: 0.4313726, b: 0.4156863, a: 1}
+  Secondary:
+  - {r: 0.7019608, g: 0.6235294, b: 0.4666667, a: 1}
+  - {r: 0.7372549, g: 0.7372549, b: 0.7372549, a: 1}
+  - {r: 0.1647059, g: 0.1647059, b: 0.1647059, a: 1}
+  - {r: 0.2392157, g: 0.2509804, b: 0.1882353, a: 1}
+  MetalPrimary:
+  - {r: 0.6705883, g: 0.6705883, b: 0.6705883, a: 1}
+  - {r: 0.5568628, g: 0.5960785, b: 0.6392157, a: 1}
+  - {r: 0.5568628, g: 0.6235294, b: 0.6, a: 1}
+  - {r: 0.6313726, g: 0.6196079, b: 0.5568628, a: 1}
+  - {r: 0.6980392, g: 0.6509804, b: 0.6196079, a: 1}
+  MetalSecondary:
+  - {r: 0.3921569, g: 0.4039216, b: 0.4117647, a: 1}
+  - {r: 0.4784314, g: 0.5176471, b: 0.5450981, a: 1}
+  - {r: 0.3764706, g: 0.3607843, b: 0.3372549, a: 1}
+  - {r: 0.3254902, g: 0.3764706, b: 0.3372549, a: 1}
+  - {r: 0.4, g: 0.4039216, b: 0.3568628, a: 1}
+  WhiteSkin: {r: 1, g: 0.8000001, b: 0.682353, a: 1}
+  BrownSkin: {r: 0.8196079, g: 0.6352941, b: 0.4588236, a: 1}
+  BlackSkin: {r: 0.5647059, g: 0.4078432, b: 0.3137255, a: 1}
+  ElfSkin: {r: 0.9607844, g: 0.7843138, b: 0.7294118, a: 1}
+  WhiteHair:
+  - {r: 0.3098039, g: 0.254902, b: 0.1764706, a: 1}
+  - {r: 0.2196079, g: 0.2196079, b: 0.2196079, a: 1}
+  - {r: 0.8313726, g: 0.6235294, b: 0.3607843, a: 1}
+  - {r: 0.8901961, g: 0.7803922, b: 0.5490196, a: 1}
+  - {r: 0.8000001, g: 0.8196079, b: 0.8078432, a: 1}
+  - {r: 0.6862745, g: 0.4, b: 0.2352941, a: 1}
+  - {r: 0.5450981, g: 0.427451, b: 0.2156863, a: 1}
+  - {r: 0.8470589, g: 0.4666667, b: 0.2470588, a: 1}
+  WhiteStubble: {r: 0.8039216, g: 0.7019608, b: 0.6313726, a: 1}
+  BrownHair:
+  - {r: 0.3098039, g: 0.254902, b: 0.1764706, a: 1}
+  - {r: 0.1764706, g: 0.1686275, b: 0.1686275, a: 1}
+  - {r: 0.3843138, g: 0.2352941, b: 0.0509804, a: 1}
+  - {r: 0.6196079, g: 0.6196079, b: 0.6196079, a: 1}
+  - {r: 0.6196079, g: 0.6196079, b: 0.6196079, a: 1}
+  BrownStubble: {r: 0.6588235, g: 0.572549, b: 0.4627451, a: 1}
+  BlackHair:
+  - {r: 0.2431373, g: 0.2039216, b: 0.145098, a: 1}
+  - {r: 0.1764706, g: 0.1686275, b: 0.1686275, a: 1}
+  - {r: 0.1764706, g: 0.1686275, b: 0.1686275, a: 1}
+  BlackStubble: {r: 0.3882353, g: 0.2901961, b: 0.2470588, a: 1}
+  ElfHair:
+  - {r: 0.9764706, g: 0.9686275, b: 0.9568628, a: 1}
+  - {r: 0.1764706, g: 0.1686275, b: 0.1686275, a: 1}
+  - {r: 0.8980393, g: 0.7764707, b: 0.6196079, a: 1}
+  ElfStubble: {r: 0.8627452, g: 0.7294118, b: 0.6862745, a: 1}
+  WhiteScar: {r: 0.9294118, g: 0.6862745, b: 0.5921569, a: 1}
+  BrownScar: {r: 0.6980392, g: 0.5450981, b: 0.4, a: 1}
+  BlackScar: {r: 0.4235294, g: 0.3176471, b: 0.282353, a: 1}
+  ElfScar: {r: 0.8745099, g: 0.6588235, b: 0.6313726, a: 1}
+  BodyArt:
+  - {r: 0.0509804, g: 0.6745098, b: 0.9843138, a: 1}
+  - {r: 0.7215686, g: 0.2666667, b: 0.2666667, a: 1}
+  - {r: 0.3058824, g: 0.7215686, b: 0.6862745, a: 1}
+  - {r: 0.9254903, g: 0.882353, b: 0.8509805, a: 1}
+  - {r: 0.3098039, g: 0.7058824, b: 0.3137255, a: 1}
+  - {r: 0.5294118, g: 0.3098039, b: 0.6470588, a: 1}
+  - {r: 0.8666667, g: 0.7764707, b: 0.254902, a: 1}
+  - {r: 0.2392157, g: 0.4588236, b: 0.8156863, a: 1}
+  Male:
+    HeadAllElements: {fileID: 0}
+    Eyebrow: {fileID: 0}
+    FacialHair: {fileID: 0}
+    Torso: {fileID: 0}
+    ArmUpperRight: {fileID: 0}
+    ArmUpperLeft: {fileID: 0}
+    ArmLowerRight: {fileID: 0}
+    ArmlowerLeft: {fileID: 0}
+    HandRight: {fileID: 0}
+    HandLeft: {fileID: 0}
+    Hips: {fileID: 0}
+    LegRight: {fileID: 0}
+    LegLeft: {fileID: 0}
+    HeadNoElements: {fileID: 0}
+  Female:
+    HeadAllElements: {fileID: 0}
+    Eyebrow: {fileID: 0}
+    FacialHair: {fileID: 0}
+    Torso: {fileID: 0}
+    ArmUpperRight: {fileID: 0}
+    ArmUpperLeft: {fileID: 0}
+    ArmLowerRight: {fileID: 0}
+    ArmlowerLeft: {fileID: 0}
+    HandRight: {fileID: 0}
+    HandLeft: {fileID: 0}
+    Hips: {fileID: 0}
+    LegRight: {fileID: 0}
+    LegLeft: {fileID: 0}
+    HeadNoElements: {fileID: 0}
+  AllGender:
+    AllHair: {fileID: 0}
+    HeadCoveringsBaseHair: {fileID: 0}
+    HeadCoveringsNoFacialHair: {fileID: 0}
+    HeadCoveringsNoHair: {fileID: 0}
+    AllHeadAttachment: {fileID: 0}
+    ChestAttachment: {fileID: 0}
+    BackAttachment: {fileID: 0}
+    ShoulderAttachmentRight: {fileID: 0}
+    SHoulderAttachmentLeft: {fileID: 0}
+    ElbowAttachmentRight: {fileID: 0}
+    ElbowAttachmentLeft: {fileID: 0}
+    HipsAttachment: {fileID: 0}
+    KneeAttachmentRight: {fileID: 0}
+    KneeAttachmentLeft: {fileID: 0}
+    Ears: {fileID: 0}
+    ElfEars: {fileID: 0}

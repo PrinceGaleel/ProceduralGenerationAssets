@@ -2,10 +2,11 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+[RequireComponent(typeof(Inventory))]
 public class EquipmentContainer : MonoBehaviour
 {
-    private CharacterStats Character;
-    private Inventory Inventory;
+    [SerializeField] private CharacterStats Character;
+    [SerializeField] private Inventory Inventory;
 
     public WeaponEquippable RightHand;
     public WeaponEquippable LeftHand;
@@ -18,9 +19,6 @@ public class EquipmentContainer : MonoBehaviour
 
     private void Awake()
     {
-        Character = GetComponent<CharacterStats>();
-        Inventory = GetComponent<Inventory>();
-
         if(!Character)
         {
             Destroy(this);
@@ -109,4 +107,12 @@ public class EquipmentContainer : MonoBehaviour
 
         return false;
     }
+
+#if UNITY_EDITOR
+    protected virtual void OnValidate()
+    {
+        if(!Character) Character = GetComponent<CharacterStats>();
+        if(!Inventory) Inventory = GetComponent<Inventory>();
+    }
+#endif
 }

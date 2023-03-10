@@ -5,162 +5,54 @@ using TMPro;
 using UnityEngine.UI;
 using Photon.Pun;
 
-public class MainMenuManager : MonoBehaviourPunCallbacks
+public class MainMenuManager : MonoBehaviour
 {
-    public GameObject Main;
-    public GameObject Multiplayer;
-    public GameObject CreateLoad;
-    public GameObject CharacterCreator;
+    [SerializeField] private GameObject MainPanel, CreateLoad, CharacterCreator, SettingsPanel, CreditsPanel, LoadPanel;
 
-    [Header("Main Panels")]
-    public GameObject MainMainPanel;
-    public GameObject SettingsPanel;
-    public GameObject CreditsPanel;
-
-    [Header("Create Load Panels")]
-    public GameObject MainCreateLoadPanel;
-    public GameObject LoadPanel;
-
-    [Header("Multiplayer")]
-    public GameObject MainCreateJoinPanel;
-    public GameObject CreateGamePanel;
-    public GameObject JoinGamePanel;
-    public TMP_InputField JoinGameInput;
-    public TMP_InputField CreateGameInput;
-    public Toggle IsPublic;
+    private GameObject LastToEnable;
 
     private void Awake()
     {
-        Main.SetActive(true);
+        MainPanel.SetActive(true);
         CreateLoad.SetActive(false);
-        Multiplayer.SetActive(false);
         CharacterCreator.SetActive(false);
-
-        ToggleLoadPanel(false);
-
-        MainMainPanel.SetActive(true);
         SettingsPanel.SetActive(false);
         CreditsPanel.SetActive(false);
-
-        MainCreateLoadPanel.SetActive(true);
         LoadPanel.SetActive(false);
 
-        MainCreateJoinPanel.SetActive(true);
-        CreateGamePanel.SetActive(false);
-        JoinGamePanel.SetActive(false);
+        LastToEnable = MainPanel;
     }
 
-    public void OpenMainPanel()
+    public void EnableMain()
     {
-        MainMainPanel.SetActive(true);
-        SettingsPanel.SetActive(false);
-
-        if (CreditsPanel)
-        {
-            CreditsPanel.SetActive(false);
-        }
+        TogglePanel(MainPanel);
     }
 
-    public void ToggleSettings(bool isEnabled)
+    public void EnableSettings()
     {
-        SettingsPanel.SetActive(isEnabled);
-        MainMainPanel.SetActive(!isEnabled);
+        TogglePanel(SettingsPanel);
     }
 
-    public void ToggleCredits(bool isEnabled)
+    public void EnableCredits()
     {
-        MainMainPanel.SetActive(!isEnabled);
-        CreditsPanel.SetActive(isEnabled);
+        TogglePanel(CreditsPanel);
     }
 
-    public void ToggleLoadPanel(bool isEnabled)
+    public void EnableLoadPanel()
     {
-        LoadPanel.SetActive(isEnabled);
-        MainCreateLoadPanel.SetActive(!isEnabled);
+        TogglePanel(LoadPanel);
     }
 
-    public void OpenSingleplayer()
+    public void EnableCharacterCreator()
     {
-        MultiplayerSettings.IsMultiplayer = false;
-        Main.SetActive(false);
-        CreateLoad.SetActive(true);
+        TogglePanel(CharacterCreator);
     }
 
-    public void ToggleMultiplayer(bool isEnabled)
+    private void TogglePanel(GameObject panel)
     {
-        MultiplayerSettings.IsMultiplayer = isEnabled;
-        Main.SetActive(!isEnabled);
-        Multiplayer.SetActive(isEnabled);
-    }
-
-    public void ToggleCharacterCreator(bool isEnabled)
-    {
-        CharacterCreator.SetActive(isEnabled);
-        CreateLoad.SetActive(!isEnabled);
-    }
-
-    public void ToggleCreateLoad(bool isEnabled)
-    {
-        CreateLoad.SetActive(isEnabled);
-
-        if (MultiplayerSettings.IsMultiplayer)
-        {
-            Multiplayer.SetActive(!isEnabled);
-
-            if (!isEnabled)
-            {
-
-            }
-        }
-        else
-        {
-            Main.SetActive(!isEnabled);
-
-            if (!isEnabled)
-            {
-
-            }
-        }
-    }
-
-    public void ToggleJoinGame(bool isEnabled)
-    {
-        MainCreateJoinPanel.SetActive(!isEnabled);
-        JoinGamePanel.SetActive(isEnabled);
-    }
-
-    public void ToggleCreateGame(bool isEnabled)
-    {
-        MainCreateJoinPanel.SetActive(!isEnabled);
-        CreateGamePanel.SetActive(isEnabled);
-    }
-
-    public void JoinGame()
-    {
-        if (PhotonNetwork.JoinRoom(JoinGameInput.text))
-        {
-
-        }
-    }
-
-    public void CreateGame()
-    {
-        if (ExtraUtils.RemoveSpace(CreateGameInput.text) != "")
-        {
-            Photon.Realtime.RoomOptions options = new();
-            options.IsVisible = false;
-            options.IsOpen = true;
-
-            if (PhotonNetwork.InRoom)
-            {
-                PhotonNetwork.LeaveRoom();
-            }
-
-            if (PhotonNetwork.CreateRoom(ExtraUtils.RemoveSpace(CreateGameInput.text), options))
-            {
-                ToggleCreateLoad(true);
-            }
-        }
+        LastToEnable.SetActive(false);
+        LastToEnable = panel;
+        LastToEnable.SetActive(true);
     }
 
     public void ToScene(string sceneName)

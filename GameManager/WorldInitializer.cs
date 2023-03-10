@@ -1,71 +1,63 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Unity.Jobs;
 
 public class WorldInitializer : MonoBehaviour
 {
+    private List<Vector2Int> ChunksToCreate;
+
     private void Start()
     {
-        PlayerStats.PlayerTransform.position = Chunk.GetPerlinPosition(World.CurrentSaveData.LastPosition.x, World.CurrentSaveData.LastPosition.z) + new Vector3(0, 50, 0);
-        Vector2Int currentPlayerChunkPos = new(Mathf.RoundToInt(PlayerStats.PlayerTransform.position.x / Chunk.DefaultChunkSize), Mathf.RoundToInt(PlayerStats.PlayerTransform.position.z / Chunk.DefaultChunkSize));
-
-        for (int x = -World.LODFiveDistance; x <= World.LODFiveDistance; x++)
+        PlayerStats.Instance.gameObject.SetActive(false);
+        ChunksToCreate = new();
+        for (int i = 0, x = -World.LODThreeDistance; x <= World.LODThreeDistance; x++)
         {
-            for (int z = -World.LODFiveDistance; z <= World.LODFiveDistance; z++)
+            for (int z = -World.LODThreeDistance; z <= World.LODThreeDistance; z++)
             {
-                Vector2Int chunkPos = new(x + currentPlayerChunkPos.x, z + currentPlayerChunkPos.y);
-                Vector2Int absDistance = new(Mathf.Abs(currentPlayerChunkPos.x - chunkPos.x), Mathf.Abs(currentPlayerChunkPos.y - chunkPos.y));
+                Vector2Int chunkPos = new(World.CurrentPlayerChunkPos.x + x, World.CurrentPlayerChunkPos.y + z);
 
-                if (World.ActiveTerrain.TryAdd(chunkPos, Instantiate(World.ChunkPrefab, World.WorldTransform).GetComponent<Chunk>()))
+                if (World.ActiveTerrain.TryAdd(chunkPos, Instantiate(World.ChunkPrefab, new(chunkPos.x * Chunk.DefaultChunkSize, 0, chunkPos.y * Chunk.DefaultChunkSize), Quaternion.identity, World.WorldTransform).GetComponent<Chunk>()))
                 {
+                    ChunksToCreate.Add(chunkPos);
                     World.ActiveTerrain[chunkPos].SetPositions(chunkPos);
-                    World.ActiveTerrain[chunkPos].MoveTransform();
+                    new World.InitializeChunk(chunkPos).Schedule();
+                }
 
-                    if (absDistance.x <= World.LODOneDistance && absDistance.y <= World.LODOneDistance)
-                    {
-                        World.ActiveTerrain[chunkPos].AssignLODOne();
-                    }
-                    else if (absDistance.x <= World.LODTwoDistance && absDistance.y <= World.LODTwoDistance)
-                    {
-                        World.ActiveTerrain[chunkPos].AssignLODTwo();
-                    }
-                    else if (absDistance.x <= World.LODThreeDistance && absDistance.y <= World.LODThreeDistance)
-                    {
-                        World.ActiveTerrain[chunkPos].AssignLODThree();
-                    }
-                    else if (absDistance.x <= World.LODFourDistance && absDistance.y <= World.LODFourDistance)
-                    {
-                        World.ActiveTerrain[chunkPos].AssignLODFour();
-                    }
-                    else
-                    {
-                        World.ActiveTerrain[chunkPos].AssignLODFive();
-                    }
+                i++;
+            }
+        }
+    }
 
-                    World.ActiveTerrain[chunkPos].AssignMesh();
+    private void Update()
+    {
+        if (ChunksToCreate.Count == 0)
+        {
+            FoliageManager.PopulateAllFoliage();
+            NavMeshManager.AddPOI(World.CurrentPlayerChunkPos, 1);
+            World.Instance.enabled = true;
+            FoliageManager.Instance.enabled = true;
+            PlayerStats.Instance.gameObject.SetActive(true);
+
+            SceneTransitioner.ToggleScreen(false);
+            RenderTerrainMap.ReloadBlending();
+
+            Destroy(this);
+            enabled = false;
+        }
+        else if (World.ActiveTerrain[ChunksToCreate[0]])
+        {
+            while (ChunksToCreate.Count > 0)
+            {
+                if (World.ActiveTerrain[ChunksToCreate[0]].HasTerrain)
+                {
+                    ChunksToCreate.RemoveAt(0);
+                }
+                else
+                {
+                    break;
                 }
             }
         }
-
-        while (FoliageManager.FoliagesToAdd.Count > 0)
-        {
-            FoliageManager.Nextoliage();
-        }
-
-        NavMeshManager.Initialize();
-        FoliageManager.Instance.enabled = true;
-        World.Instance.enabled = true;
-        PlayerStats.Instance.gameObject.SetActive(true);
-
-        StartCoroutine(Initializer());
-    }
-
-    private IEnumerator Initializer()
-    {
-        yield return new WaitForSecondsRealtime(5);
-        SceneTransitioner.ToggleScreen(false);
-        RenderTerrainMap.ReloadBlending();
-        Destroy(this);
-        enabled = false;
     }
 }

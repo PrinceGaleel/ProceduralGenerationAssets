@@ -5,46 +5,24 @@ using Unity.Jobs;
 using UnityEngine.Jobs;
 using System.Collections.Concurrent;
 using System.Linq;
+using UnityEditor;
 
 public class FoliageManager : MonoBehaviour
 {
-    private struct MovedFoliageInfo
-    {
-        public Transform FoliageTransform;
-        public int BiomeNum;
-        public int FoliageNum;
-
-        public MovedFoliageInfo(FoliageInfoToMove info)
-        {
-            BiomeNum = info.BiomeNum;
-            FoliageNum = info.FoliageNum;
-
-            FoliageTransform = FoliageStorage[BiomeNum][FoliageNum].Dequeue();
-
-            FoliageTransform.SetPositionAndRotation(info.Position, info.Rotation);
-            FoliageTransform.localScale = info.Scale;
-            FoliageTransform.gameObject.SetActive(true);
-        }
-
-        public void ReturnToStorage()
-        {
-            FoliageTransform.gameObject.SetActive(false);
-            FoliageStorage[BiomeNum][FoliageNum].Enqueue(FoliageTransform);
-        }
-    }
-
     public static FoliageManager Instance;
     public static Transform MyTransform { get; private set; }
 
     public static Dictionary<int, float[]> FoliageThresholds { private set; get; }
-    public static Queue<Transform>[][] FoliageStorage { get; private set; }
 
-    private static Dictionary<Vector2Int, List<MovedFoliageInfo>> CurrentFoliage;
-    private static Dictionary<Vector2Int, List<MovedFoliageInfo>> FoliagesToClear;
-    public static Dictionary<Vector2Int, List<FoliageInfoToMove>> FoliagesToAdd { get; private set; }
+    public static ConcurrentQueue<Vector2Int> FutureFoliagesToClear;
+
+    private static Dictionary<Vector2Int, Queue<Transform>> CurrentFoliage;
+    private static Dictionary<Vector2Int, Queue<Transform>> FoliagesToClear;
+    private static Dictionary<Vector2Int, Queue<FoliageInfoToMove>> FoliagesToAdd;
     private static Dictionary<Vector2Int, Bounds> FoliageToRemove;
 
-    [SerializeField] private bool PreInitialized = false;
+    private static Queue<GameObject> ToDestroy;
+
     public static bool HasTrees(Vector2Int chunkPos) { return CurrentFoliage.ContainsKey(chunkPos); }
 
     private void Awake()
@@ -58,42 +36,32 @@ public class FoliageManager : MonoBehaviour
         {
             Instance = this;
             MyTransform = transform;
-
-            if (!PreInitialized)
-            {
-                int foliagePerBiome = (((Chunk.DefaultChunkSize + 1) * (Chunk.DefaultChunkSize + 1)) / Chunk.FoliageSquareCheckSize) * ((2 * World.LODTwoDistance) * (2 * World.LODTwoDistance));
-
-                foreach (int biomeNum in FoliageThresholds.Keys)
-                {
-                    for (int foliageNum = FoliageThresholds[biomeNum].Length - 1; foliageNum > -1; foliageNum--)
-                    {
-                        FoliageInfo foliageInfo = World.Biomes[biomeNum]._FoliageSettings.FoliageInfos[foliageNum];
-
-                        for (int j = Mathf.FloorToInt(FoliageThresholds[biomeNum][foliageNum] * foliagePerBiome) - 1; j > -1; j--)
-                        {
-                            GameObject treeTransform = Instantiate(foliageInfo.Prefab, Vector3.zero, Quaternion.Euler(0, Random.Range(-180, 180), 0), MyTransform);
-                            treeTransform.SetActive(false);
-                            treeTransform.layer = LayerMask.NameToLayer("Tree");
-
-                            FoliageStorage[biomeNum][foliageNum].Enqueue(treeTransform.transform);
-                        }
-                    }
-                }
-            }
         }
 
         enabled = false;
     }
 
+    private void Start()
+    {
+        enabled = false;
+    }
+
     private void Update()
     {
-        if(FoliagesToClear.Count > 0)
+        if (FutureFoliagesToClear.Count > 0)
+        {
+            if (FutureFoliagesToClear.TryDequeue(out Vector2Int chunkPos))
+            {
+                ClearFoliage(chunkPos);
+            }
+        }
+
+        if (FoliagesToClear.Count > 0)
         {
             Vector2Int key = FoliagesToClear.First().Key;
             if (FoliagesToClear[key].Count > 0)
             {
-                FoliagesToClear[key][0].ReturnToStorage();
-                FoliagesToClear[key].RemoveAt(0);
+                ToDestroy.Enqueue(FoliagesToClear[key].Dequeue().gameObject);
             }
             else
             {
@@ -101,9 +69,17 @@ public class FoliageManager : MonoBehaviour
             }
         }
 
+        if(ToDestroy.Count > 0)
+        {
+            if(ToDestroy.TryDequeue(out GameObject foliage))
+            {
+                Destroy(foliage, 1);
+            }
+        }
+
         if (FoliagesToAdd.Count > 0)
         {
-            Nextoliage();
+            //Nextoliage();
         }
     }
 
@@ -112,38 +88,50 @@ public class FoliageManager : MonoBehaviour
         Vector2Int chunkPos = FoliagesToAdd.First().Key;
         if (FoliagesToAdd[chunkPos].Count > 0)
         {
-            CurrentFoliage[chunkPos].Add(new(FoliagesToAdd[chunkPos][0]));
-            FoliagesToAdd[chunkPos].RemoveAt(0);
+            FoliageInfoToMove info = FoliagesToAdd[chunkPos].Dequeue();
+            CurrentFoliage[chunkPos].Enqueue(Instantiate(info.Prefab, info.Position, info.Rotation, MyTransform).transform);
         }
         else
         {
-            World.ActiveTerrain[chunkPos].HasTrees = true;
-            NavMeshManager.AddChunk(chunkPos);
+            NavMeshManager.CheckAwaiting(chunkPos);
             FoliagesToAdd.Remove(chunkPos);
+        }
+    }
+
+    public static void PopulateAllFoliage()
+    {
+        while (FoliagesToAdd.Count > 0)
+        {
+            Nextoliage();
         }
     }
 
     public static void ClearFoliage(Vector2Int chunkPos)
     {
-        if(CurrentFoliage.ContainsKey(chunkPos) && !FoliagesToClear.ContainsKey(chunkPos))
+        FutureFoliagesToClear.Enqueue(chunkPos);
+    }
+
+    private static void AddClearFoliage(Vector2Int chunkPos)
+    {
+        if (CurrentFoliage.ContainsKey(chunkPos) && !FoliagesToClear.ContainsKey(chunkPos))
         {
-            if(FoliagesToAdd.ContainsKey(chunkPos))
+            if (FoliagesToAdd.ContainsKey(chunkPos))
             {
                 FoliagesToAdd.Remove(chunkPos);
             }
-
-            World.ActiveTerrain[chunkPos].HasTrees = false;
-            NavMeshManager.RemoveChunk(chunkPos);
 
             FoliagesToClear.Add(chunkPos, CurrentFoliage[chunkPos]);
             CurrentFoliage.Remove(chunkPos);
         }
     }
 
-    public static void AddFoliage(Vector2Int chunkPos, List<FoliageInfoToMove> foliages)
+    public static void AddFoliage(Vector2Int chunkPos, Queue<FoliageInfoToMove> foliages)
     {
-        CurrentFoliage.Add(chunkPos, new());
-        FoliagesToAdd.Add(chunkPos, foliages);
+        lock (CurrentFoliage) lock(FoliagesToAdd)
+        {
+            CurrentFoliage.Add(chunkPos, new());
+            FoliagesToAdd.Add(chunkPos, foliages);
+        }
     }
 
     public static void AddTreesToRemove(Vector2 lowest, Vector2 highest)
@@ -161,54 +149,41 @@ public class FoliageManager : MonoBehaviour
         Vector2 centre = new((lowest.x + highest.x) / 2, (lowest.y + highest.y) / 2);
         Vector2 extents = new(Mathf.Abs(lowest.x - highest.x), Mathf.Abs(lowest.y - highest.y));
 
-        lock (FoliageToRemove)
+        for (int i = lowestChunkY; i <= highestChunkY; i++)
         {
-            for (int i = lowestChunkY; i <= highestChunkY; i++)
+            for (int j = lowestChunkX; j <= highestChunkX; j++)
             {
-                for (int j = lowestChunkX; j <= highestChunkX; j++)
+                if (!FoliageToRemove.ContainsKey(new(i, j)))
                 {
-                    if (!FoliageToRemove.ContainsKey(new(i, j)))
-                    {
-                        FoliageToRemove.Add(new(i, j), new(new(centre.x, 0, centre.y), new(extents.x, 1000, extents.y)));
-                    }
+                    FoliageToRemove.Add(new(i, j), new(new(centre.x, 0, centre.y), new(extents.x, 1000, extents.y)));
                 }
             }
         }
     }
 
-    public static void Initialize()
+    public static void InitializeStatics()
     {
         FoliageThresholds = new();
         FoliagesToAdd = new();
         FoliageToRemove = new();
         FoliagesToClear = new();
         CurrentFoliage = new();
+        FutureFoliagesToClear = new();
+        ToDestroy = new();
 
-        FoliageStorage = new Queue<Transform>[World.Biomes.Length][];
-
-        for (int i = 0; i < World.Biomes.Length; i++)
+        for (int i = 0; i < TerrainGradient.BiomeDatas.Length; i++)
         {
-            FoliageStorage[i] = new Queue<Transform>[World.Biomes[i]._FoliageSettings.FoliageInfos.Length];
-
-            for (int j = 0; j < World.Biomes[i]._FoliageSettings.FoliageInfos.Length; j++)
+            if (TerrainGradient.BiomeDatas[i]._FoliageSettings.FoliageInfos != null)
             {
-                FoliageStorage[i][j] = new();
-            }
-        }
-
-        for (int i = 0; i < World.Biomes.Length; i++)
-        {
-            if (World.Biomes[i]._FoliageSettings.FoliageInfos != null)
-            {
-                if (World.Biomes[i]._FoliageSettings.FoliageInfos.Length > 0)
+                if (TerrainGradient.BiomeDatas[i]._FoliageSettings.FoliageInfos.Length > 0)
                 {
-                    FoliageThresholds.Add(i, new float[World.Biomes[i]._FoliageSettings.FoliageInfos.Length]);
+                    FoliageThresholds.Add(i, new float[TerrainGradient.BiomeDatas[i]._FoliageSettings.FoliageInfos.Length]);
 
-                    FoliageThresholds[i][0] = World.Biomes[i]._FoliageSettings.FoliageInfos[0].ChanceOfSpawning;
+                    FoliageThresholds[i][0] = TerrainGradient.BiomeDatas[i]._FoliageSettings.FoliageInfos[0].ChanceOfSpawning;
 
-                    for (int j = 1; j < World.Biomes[i]._FoliageSettings.FoliageInfos.Length; j++)
+                    for (int j = 1; j < TerrainGradient.BiomeDatas[i]._FoliageSettings.FoliageInfos.Length; j++)
                     {
-                        FoliageThresholds[i][j] = FoliageThresholds[i][j - 1] + World.Biomes[i]._FoliageSettings.FoliageInfos[j].ChanceOfSpawning;
+                        FoliageThresholds[i][j] = FoliageThresholds[i][j - 1] + TerrainGradient.BiomeDatas[i]._FoliageSettings.FoliageInfos[j].ChanceOfSpawning;
                     }
                 }
             }

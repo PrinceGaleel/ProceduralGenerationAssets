@@ -5,12 +5,15 @@ using UnityEngine.UI;
 
 public class RandomizeSprites : MonoBehaviour
 {
-    public Sprite[] Sprites;
-    private Image[] Images;
+    [SerializeField] private Sprite[] Sprites;
+    [SerializeField] private Image[] Images;
 
     private void Awake()
     {
-        Images = GetComponentsInChildren<Image>();
+        if (Images.Length == 0)
+        {
+            Images = GetComponentsInChildren<Image>();
+        }
 
         foreach (Image image in Images)
         {

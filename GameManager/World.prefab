@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4340184446588795274}
   - component: {fileID: 4340184446588795275}
-  - component: {fileID: 4340184446588795269}
+  - component: {fileID: 2238165899962002740}
   m_Layer: 0
   m_Name: World
   m_TagString: Untagged
@@ -45,12 +45,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6f894e181e9c84448a0b8b4fe9ea79ab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  MaleCharacterBase: {fileID: 0}
-  FemaleCharacterBase: {fileID: 0}
-  WaterDisplay: {fileID: 0}
-  UnlockedRecipes:
-  - {fileID: 11400000, guid: 25baffc1b67cb8d41a11d600bb4a2b46, type: 2}
---- !u!114 &4340184446588795269
+--- !u!114 &2238165899962002740
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}

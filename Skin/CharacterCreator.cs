@@ -6,39 +6,39 @@ using TMPro;
 
 public class CharacterCreator : MonoBehaviour
 {
-    public GameObject FacialHairCarousel;
-    public bool IsMale;
-    public CharacterOrganizer BaseCharacter;
+    [SerializeField] private GameObject FacialHairCarousel;
+    [SerializeField] private bool IsMale;
+    [SerializeField] private CharacterOrganizer BaseCharacter;
 
-    public CharacterSkin WhichInfo;
-    public CharacterObjectParents WhichGender;
+    [SerializeField] private CharacterSkin WhichInfo;
+    [SerializeField] private CharacterObjectParents WhichGender;
 
-    public CharacterSkin MaleInfo;
-    public CharacterSkin FemaleInfo;
+    [SerializeField] private CharacterSkin MaleInfo;
+    [SerializeField] private CharacterSkin FemaleInfo;
 
-    public TMP_InputField CharacterName;
-    public int SeedRange = 100000;
+    [SerializeField] private TMP_InputField CharacterName;
+
+    private System.Random Rnd;
 
     private void Awake()
     {
-        GrassManager.ShaderInteractors = new();
-
-        if (Random.Range(0, 2) > 0)
-        {
-            IsMale = false;
-        }
-        else
-        {
-            IsMale = true;
-        }
-
+        Rnd = new();
         MaleInfo = new(true);
         FemaleInfo = new(false);
     }
 
     private void Start()
     {
+        IsMale = false;
         ToggleGender();
+        Randomize();
+        ToggleGender();
+        Randomize();
+
+        if (Rnd.Next(0, 2) > 0)
+        {
+            ToggleGender();
+        }
     }
 
     public void NewGame()
@@ -90,7 +90,29 @@ public class CharacterCreator : MonoBehaviour
         ToggleGender(IsMale, true);
     }
 
-    public void ToggleGender(bool isMale, bool isEnabled)
+    private void Randomize()
+    {
+        WhichGender.HeadAllElements.GetChild(WhichInfo.HeadAllElements).gameObject.SetActive(false);
+        WhichInfo.HeadAllElements = Rnd.Next(0, WhichGender.HeadAllElements.childCount - 1);
+        WhichGender.HeadAllElements.GetChild(WhichInfo.HeadAllElements).gameObject.SetActive(true);
+
+        WhichGender.Eyebrow.GetChild(WhichInfo.Eyebrow).gameObject.SetActive(false);
+        WhichInfo.Eyebrow = Rnd.Next(0, WhichGender.Eyebrow.childCount - 1);
+        WhichGender.Eyebrow.GetChild(WhichInfo.Eyebrow).gameObject.SetActive(true);
+
+        BaseCharacter.AllGender.AllHair.GetChild(WhichInfo.Hair).gameObject.SetActive(false);
+        WhichInfo.Hair = Rnd.Next(0, BaseCharacter.AllGender.AllHair.childCount - 1);
+        BaseCharacter.AllGender.AllHair.GetChild(WhichInfo.Hair).gameObject.SetActive(true);
+
+        if (IsMale)
+        {
+            WhichGender.FacialHair.GetChild(WhichInfo.FacialHair).gameObject.SetActive(false);
+            WhichInfo.FacialHair = Rnd.Next(0, WhichGender.FacialHair.childCount - 1);
+            WhichGender.FacialHair.GetChild(WhichInfo.FacialHair).gameObject.SetActive(true);
+        }
+    }
+
+    private void ToggleGender(bool isMale, bool isEnabled)
     {
         BaseCharacter.AllGender.AllHair.GetChild(WhichInfo.Hair).gameObject.SetActive(false);
 

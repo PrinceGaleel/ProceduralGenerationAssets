@@ -3,41 +3,36 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Jobs;
 using Unity.Jobs;
+using UnityEngine.Rendering;
 using System.Collections.Concurrent;
 
 public class World : MonoBehaviour
 {
-    public static World Instance;
-    public static Transform WorldTransform;
-    public static GameObject ChunkPrefab;
+    public static World Instance { get; private set; }
+    public static Transform WorldTransform { get; private set; }
+    public static GameObject ChunkPrefab { get; private set; }
+    public static SaveData CurrentSaveData { get; private set; }
 
-    public static SaveData CurrentSaveData;
-    public static BiomeData[] Biomes;
-
-    public static Vector2Int LastPlayerChunkPos;
-    private static Vector2Int CurrentPlayerChunkPos;
-
-    [Header("Chunk Variables")]
-    private static Queue<Chunk> ChunksBuffer;
-    private static HashSet<Vector2Int> ChunksToInitialize;
+    public static Vector2Int LastPlayerChunkPos { get; private set; }
+    public static Vector2Int CurrentPlayerChunkPos { get; private set; }
 
     public static ConcurrentDictionary<Vector2Int, Chunk> ActiveTerrain { get; private set; }
-    private static ConcurrentQueue<Chunk> MeshesToAssign;
-    public static DictList<Chunk, StructureTypes> StructuresToCreate;
+    public static ConcurrentQueue<Vector2Int> ChunksToAdd;
+    public static ConcurrentQueue<Chunk> MeshesToAssign;
+    private static CheckChunksJob CheckChunksCheck;
+    private static ConcurrentQueue<GameObject> ToDestroy;
 
     [Header("Renderer Distances")]
-    public const int LODOneDistance = 2;
-    public const int LODTwoDistance = 5;
-    public const int LODThreeDistance = 10;
-    public const int LODFourDistance = 20;
-    public const int LODFiveDistance = 50;
+    public const int LODOneDistance = 3;
+    public const int LODTwoDistance = 7;
+    public const int LODThreeDistance = 15;
 
     [Header("Other")]
     public static System.Random Rnd;
 
-    [Header("Masks")]
-    public static int TerrainMask;
-    public static int WeaponMask;
+    public static int TerrainMask { get; private set; }
+    public static int MeleeWeaponMask { get; private set; }
+    public static int GravityMask { get; private set; }
 
     private void Awake()
     {
@@ -56,50 +51,57 @@ public class World : MonoBehaviour
         enabled = false;
     }
 
+    private void Start()
+    {
+        CurrentPlayerChunkPos = Chunk.GetChunkPosition(PlayerStats.PlayerTransform.position.x, PlayerStats.PlayerTransform.position.z);
+        CheckChunksCheck = new CheckChunksJob();
+        CheckChunksCheck.Schedule();
+    }
+
     private void Update()
     {
         CurrentPlayerChunkPos = Chunk.GetChunkPosition(PlayerStats.PlayerTransform.position.x, PlayerStats.PlayerTransform.position.z);
 
-        if (StructuresToCreate.Count > 0)
-        {
-            lock (StructuresToCreate)
-            {
-                CustomPair<Chunk, StructureTypes> pair = StructuresToCreate.TakePairAt(0);
-
-                if (pair.Value == StructureTypes.Village)
-                {
-                    StructureCreator.CreateVillage(pair.Key);
-                }
-                else if (pair.Value == StructureTypes.MobDen)
-                {
-                    Instantiate(StructureCreator.Instance.MobDenPrefabs[Random.Range(0, StructureCreator.Instance.MobDenPrefabs.Length)],
-                        Chunk.GetPerlinPosition(pair.Key.WorldPosition), Quaternion.identity).transform.SetParent(pair.Key.MyTransform);
-                }
-            }
-        }
-        else if (MeshesToAssign.Count > 0)
+        if (MeshesToAssign.Count > 0)
         {
             if (MeshesToAssign.TryDequeue(out Chunk chunk))
             {
                 if (ActiveTerrain.ContainsKey(chunk.ChunkPosition))
                 {
-                    if(ChunksToInitialize.Contains(chunk.ChunkPosition))
-                    {
-                        chunk.MoveTransform();
-                    }
-
-                    chunk.AssignMesh();
-                    RenderTerrainMap.ReloadBlending();
+                    chunk.CreateMesh();
                 }
             }
         }
 
-        if (LastPlayerChunkPos != CurrentPlayerChunkPos)
+        if (ChunksToAdd.Count > 0)
         {
-            new CheckChunksJob().Schedule();
-            LastPlayerChunkPos = CurrentPlayerChunkPos;
-            NavMeshManager.UpdateNavMesh();
-            RenderTerrainMap.ReloadBlending();
+            if (ChunksToAdd.TryDequeue(out Vector2Int chunkPos))
+            {
+                new CreateChunk(chunkPos).Schedule();
+            }
+        }
+        else if (ToDestroy.Count > 0)
+        {
+            if (ToDestroy.TryDequeue(out GameObject chunk))
+            {
+                Destroy(chunk, 1);
+            }
+        }
+
+        if (LastPlayerChunkPos != CurrentPlayerChunkPos)
+        { 
+            if (CheckChunksCheck.IsCompleted)
+            {
+                CheckChunksCheck = new CheckChunksJob();
+                CheckChunksCheck.Schedule();
+
+                NavMeshManager.AddPOI(CurrentPlayerChunkPos);
+                NavMeshManager.RemovePOI(LastPlayerChunkPos);
+
+                LastPlayerChunkPos = CurrentPlayerChunkPos;
+                RenderTerrainMap.ReloadBlending();
+                GrassManager.RemapGrass();
+            }
         }
     }
 
@@ -111,119 +113,197 @@ public class World : MonoBehaviour
         ActiveTerrain = new();
         MeshesToAssign = new();
 
-        StructuresToCreate = new();
-
         CurrentPlayerChunkPos = new(Mathf.RoundToInt(CurrentSaveData.LastPosition.x / Chunk.DefaultChunkSize), Mathf.RoundToInt(CurrentSaveData.LastPosition.z / Chunk.DefaultChunkSize));
-        LastPlayerChunkPos = CurrentPlayerChunkPos - new Vector2Int(1, 1);
-        ChunksToInitialize = new();
-        ChunksBuffer = new();
+        LastPlayerChunkPos = CurrentPlayerChunkPos;
+        ChunksToAdd = new();
+        ToDestroy = new();
 
-        TeamsManager.Initialize();
-        FoliageManager.Initialize();
+        GrassChunk.ShaderInteractors = new();
+        Chunk.InitializeStatics();
+        StructureCreator.InitializeStatics();
+        TeamsManager.InitializeStatics();
+        FoliageManager.InitializeStatics();
     }
 
-    public static void SetMasks()
+    public static void InitializeConstants(GameObject chunkPrefab)
     {
+        ChunkPrefab = chunkPrefab;
         TerrainMask = LayerMask.GetMask("Terrain");
-        WeaponMask = LayerMask.GetMask("Hitbox");
+        MeleeWeaponMask = LayerMask.GetMask("Controller", "Hitbox");
+        GravityMask = ~LayerMask.GetMask("Water", "Grass", "Controller", "Weapon", "Arms", "Harvestable", "Hitbox", "Resource");
+        GrassChunk.GrassLayer = LayerMask.NameToLayer("Grass");
     }
 
-    public struct CheckChunksJob : IJob
+    public class CreateChunk : MainThreadJob
     {
-        public void Execute()
+        private readonly Vector2Int ChunkPosition;
+
+        public CreateChunk(Vector2Int chunkPosition)
+        {
+            ChunkPosition = chunkPosition;
+        }
+
+        public override void Execute()
+        {
+            if (ActiveTerrain.ContainsKey(ChunkPosition))
+            {
+                ActiveTerrain[ChunkPosition] = Instantiate(ChunkPrefab, new(ChunkPosition.x * Chunk.DefaultChunkSize, 0, ChunkPosition.y * Chunk.DefaultChunkSize), Quaternion.identity, WorldTransform).GetComponent<Chunk>();
+                ActiveTerrain[ChunkPosition].SetPositions(ChunkPosition);
+                new InitializeChunk(ChunkPosition).Schedule();
+            }
+        }
+    }
+
+    public class InitializeChunk : SecondaryThreadJob
+    {
+        private readonly Vector2Int ChunkPosition;
+
+        public InitializeChunk(Vector2Int chunkPosition)
+        {
+            ChunkPosition = chunkPosition;
+        }
+
+        public override void Execute()
+        {
+            if (ActiveTerrain.ContainsKey(ChunkPosition))
+            {
+                Vector2Int absDistance = new(Mathf.Abs(CurrentPlayerChunkPos.x - ChunkPosition.x), Mathf.Abs(CurrentPlayerChunkPos.y - ChunkPosition.y));
+
+                if (absDistance.x <= LODOneDistance && absDistance.y <= LODOneDistance)
+                {
+                    ActiveTerrain[ChunkPosition].InitializeLODOne();
+                }
+                else if (absDistance.x <= LODTwoDistance && absDistance.y <= LODTwoDistance)
+                {
+                    ActiveTerrain[ChunkPosition].InitializeLODTwo();
+                }
+                else
+                {
+                    ActiveTerrain[ChunkPosition].InitializeLODThree();
+                }
+
+                new AssignChunkMeshJob(ChunkPosition).Schedule();
+            }
+        }
+    }
+
+    public class AssignChunkMeshJob: MainThreadJob
+    {
+        private readonly Vector2Int ChunkPosition;
+
+        public AssignChunkMeshJob(Vector2Int chunkPosition)
+        {
+            ChunkPosition = chunkPosition;
+        }
+
+        public override void Execute()
+        {
+            if (ActiveTerrain.ContainsKey(ChunkPosition))
+            {
+                if (ActiveTerrain[ChunkPosition] != null)
+                {
+                    ActiveTerrain[ChunkPosition].CreateMesh();
+                }
+            }
+        }
+    }
+
+    public class CheckChunksJob : SecondaryThreadJob
+    {
+        public bool IsCompleted = false;
+
+        public override void Execute()
         {
             List<Vector2Int> keys = new(ActiveTerrain.Keys);
-            foreach (Vector2Int item in keys)
+            foreach (Vector2Int key in keys)
             {
-                if (Mathf.Abs(CurrentPlayerChunkPos.x - ActiveTerrain[item].ChunkPosition.x) > LODFiveDistance || Mathf.Abs(CurrentPlayerChunkPos.y - ActiveTerrain[item].ChunkPosition.y) > LODFiveDistance)
+                if (Mathf.Abs(CurrentPlayerChunkPos.x - key.x) > LODThreeDistance || Mathf.Abs(CurrentPlayerChunkPos.y - key.y) > LODThreeDistance)
                 {
-                    if (ActiveTerrain.TryRemove(item, out Chunk chunk))
+                    if (ActiveTerrain.TryRemove(key, out Chunk chunk))
                     {
-                        ChunksBuffer.Enqueue(chunk);
+                        if (chunk)
+                        {
+                            ToDestroy.Enqueue(chunk.MyGameObject);
+                        }
+
+                        FoliageManager.ClearFoliage(key);
                     }
                 }
             }
 
-            for (int x = -LODFiveDistance; x <= LODFiveDistance; x++)
+            for (int x = -LODThreeDistance; x <= LODThreeDistance; x++)
             {
-                for (int z = -LODFiveDistance; z <= LODFiveDistance; z++)
+                for (int z = -LODThreeDistance; z <= LODThreeDistance; z++)
                 {
                     Vector2Int chunkPos = new(CurrentPlayerChunkPos.x + x, CurrentPlayerChunkPos.y + z);
-                    Vector2Int absDistance = new(Mathf.Abs(CurrentPlayerChunkPos.x - chunkPos.x), Mathf.Abs(CurrentPlayerChunkPos.y - chunkPos.y));
 
                     if (!ActiveTerrain.ContainsKey(chunkPos))
                     {
-                        if (ChunksBuffer.TryDequeue(out Chunk chunk))
+                        if (ActiveTerrain.TryAdd(chunkPos, null))
                         {
-                            if (ActiveTerrain.TryAdd(chunkPos, chunk))
-                            {
-                                chunk.SetPositions(chunkPos);
-                                ChunksToInitialize.Add(chunk.ChunkPosition);
-
-                                if (absDistance.x <= LODOneDistance && absDistance.y <= LODOneDistance)
-                                {
-                                    ActiveTerrain[chunkPos].AssignLODOne();
-                                }
-                                else if (absDistance.x <= LODTwoDistance && absDistance.y <= LODTwoDistance)
-                                {
-                                    ActiveTerrain[chunkPos].AssignLODTwo();
-                                }
-                                else if (absDistance.x <= LODThreeDistance && absDistance.y <= LODThreeDistance)
-                                {
-                                    ActiveTerrain[chunkPos].AssignLODThree();
-                                }
-                                else if (absDistance.x <= LODFourDistance && absDistance.y <= LODFourDistance)
-                                {
-                                    ActiveTerrain[chunkPos].AssignLODFour();
-                                }
-                                else
-                                {
-                                    ActiveTerrain[chunkPos].AssignLODFive();
-                                }
-                            }
-                            else
-                            {
-                                ChunksBuffer.Enqueue(chunk);
-                            }
+                            ChunksToAdd.Enqueue(chunkPos);
                         }
                     }
                     else if (ActiveTerrain.ContainsKey(chunkPos))
                     {
-                        if (absDistance.x <= LODOneDistance && absDistance.y <= LODOneDistance)
+                        if (ActiveTerrain[chunkPos])
                         {
-                            if (ActiveTerrain[chunkPos].CurrentLODState != TerrainLODStates.LODOne)
+                            Vector2Int absDistance = new(Mathf.Abs(CurrentPlayerChunkPos.x - chunkPos.x), Mathf.Abs(CurrentPlayerChunkPos.y - chunkPos.y));
+
+                            if (absDistance.x <= LODOneDistance && absDistance.y <= LODOneDistance)
                             {
-                                ActiveTerrain[chunkPos].AssignLODOne();
+                                if (ActiveTerrain[chunkPos].CurrentLODState != TerrainLODStates.LODOne)
+                                {
+                                    ActiveTerrain[chunkPos].InitializeLODOne();
+                                }
                             }
-                        }
-                        else if (absDistance.x <= LODTwoDistance && absDistance.y <= LODTwoDistance)
-                        {
-                            if (ActiveTerrain[chunkPos].CurrentLODState != TerrainLODStates.LODTwo)
+                            else if (absDistance.x <= LODTwoDistance && absDistance.y <= LODTwoDistance)
                             {
-                                ActiveTerrain[chunkPos].AssignLODTwo();
+                                if (ActiveTerrain[chunkPos].CurrentLODState != TerrainLODStates.LODTwo)
+                                {
+                                    ActiveTerrain[chunkPos].InitializeLODTwo();
+                                }
                             }
-                        }
-                        else if (absDistance.x <= LODThreeDistance && absDistance.y <= LODThreeDistance)
-                        {
-                            if (ActiveTerrain[chunkPos].CurrentLODState != TerrainLODStates.LODThree)
+                            else if (ActiveTerrain[chunkPos].CurrentLODState != TerrainLODStates.LODThree)
                             {
-                                ActiveTerrain[chunkPos].AssignLODThree();
+                                ActiveTerrain[chunkPos].InitializeLODThree();
                             }
-                        }
-                        else if (absDistance.x <= LODFourDistance && absDistance.y <= LODFourDistance)
-                        {
-                            if (ActiveTerrain[chunkPos].CurrentLODState != TerrainLODStates.LODFour)
-                            {
-                                ActiveTerrain[chunkPos].AssignLODFour();
-                            }
-                        }
-                        else if (ActiveTerrain[chunkPos].CurrentLODState != TerrainLODStates.LODFive)
-                        {
-                            ActiveTerrain[chunkPos].AssignLODFive();
                         }
                     }
                 }
             }
+
+            IsCompleted = true;
         }
+    }
+}
+
+public class ToDestroyJob : MainThreadJob
+{
+    private readonly GameObject ToDestroy;
+
+    public ToDestroyJob(GameObject toDestroy)
+    {
+        ToDestroy = toDestroy;
+    }
+
+    public override void Execute()
+    {
+        Object.Destroy(ToDestroy);
+    }
+}
+
+public class ToDisableJob : MainThreadJob
+{
+    private readonly GameObject ToDisable;
+
+    public ToDisableJob(GameObject toDisable)
+    {
+        ToDisable = toDisable;
+    }
+
+    public override void Execute()
+    {
+        ToDisable.SetActive(false);
     }
 }

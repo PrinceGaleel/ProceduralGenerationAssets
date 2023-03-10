@@ -35,26 +35,16 @@ public class ExtraUtils
 
         return output;
     }
-
-    public static Vector3 GetNavMeshPos(Vector3 pos)
-    {
-        if(UnityEngine.AI.NavMesh.SamplePosition(pos, out NavMeshHit hit, 10, ~0))
-        {
-            return hit.position;
-        }
-
-        return Vector3.zero;
-    }
 }
 
 [Serializable]
-public class DictList<TKey, TValue>
+public class PairList<TKey, TValue>
 {
     public List<TKey> Keys;
     public List<TValue> Values;
 
-    public static implicit operator DictList<TKey, TValue>(Dictionary<TKey, TValue> d) => new(d);
-    public static implicit operator Dictionary<TKey, TValue>(DictList<TKey, TValue> d) => d.GetDictionary();
+    public static implicit operator PairList<TKey, TValue>(Dictionary<TKey, TValue> d) => new(d);
+    public static implicit operator Dictionary<TKey, TValue>(PairList<TKey, TValue> d) => d.GetDictionary();
 
     public int Count
     {
@@ -135,7 +125,7 @@ public class DictList<TKey, TValue>
         }
     }
 
-    public DictList(Dictionary<TKey, TValue> dictionary)
+    public PairList(Dictionary<TKey, TValue> dictionary)
     {
         foreach (TKey key in dictionary.Keys)
         {
@@ -144,7 +134,7 @@ public class DictList<TKey, TValue>
         }
     }
 
-    public DictList()
+    public PairList()
     {
         Keys = new();
         Values = new();

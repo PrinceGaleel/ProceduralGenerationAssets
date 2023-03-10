@@ -2,94 +2,126 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
+using System.Runtime.CompilerServices;
+using Unity.Jobs;
+using UnityEngine.Rendering;
 
 public enum TerrainLODStates
 {
     Empty = 0,
     LODOne = 1,
-    LODTwo = 6,
-    LODThree = 12,
-    LODFour = 20,
-    LODFive = 30
+    LODTwo = 2,
+    LODThree = 3
 }
 
 public class Chunk : MonoBehaviour
 {
+    private const float HeightPerlinScale = 0.025f;
+    private const float TemperaturePerlinScale = 0.05f;
+    public const float HeightMultipler = 100;
+    private const float BaseOffset = 100000 + 0.1f;
+
+    private static Vector2 HeightPerlinOffset;
+    private static Vector2 TemperaturePerlinOffset;
+
+    public static void InitializeStatics()
+    {
+        HeightPerlinOffset = new(World.CurrentSaveData.Seed + BaseOffset, World.CurrentSaveData.Seed + BaseOffset);
+        TemperaturePerlinOffset = new(World.CurrentSaveData.Seed + 10000 + BaseOffset, World.CurrentSaveData.Seed + 10000 + BaseOffset);
+        OctaveOffsets = new Vector2[NumOctaves];
+        System.Random prng = new(World.CurrentSaveData.Seed);
+        for (int i = 0; i < NumOctaves; i++)
+        {
+            OctaveOffsets[i].x = prng.Next(100000) + HeightPerlinOffset.x;
+            OctaveOffsets[i].y = prng.Next(100000) + HeightPerlinOffset.y;
+        }
+    }
+
+    private static int Seed { get { return World.CurrentSaveData.Seed; } }
     public const int DefaultChunkSize = 60;
     public const int FoliageSquareCheckSize = 5;
 
     public Vector2Int WorldPosition;
     public Vector2Int ChunkPosition;
 
-    public MeshFilter ChunkMeshFilter;
+    public MeshFilter ChunkMeshFilter { get; private set; }
+    [SerializeField] private MeshRenderer _MeshRenderer;
     [SerializeField] private MeshCollider _MeshCollider;
-    public TerrainLODStates CurrentLODState;
-
+    public TerrainLODStates CurrentLODState { get; private set; }
     public Transform MyTransform;
     public GameObject MyGameObject;
 
-    public bool HasTrees = false;
-    private bool StructuresReady = false;
+    public bool HasTerrain { get; private set; }
+    private bool HasStructures = false;
+    public bool HasTrees { get { return FoliageManager.HasTrees(ChunkPosition); } }
 
     private Vector3[] Vertices;
     private static Dictionary<TerrainLODStates, int[]> Triangles;
-    private Color[] Colors;
+    private Color32[] Colors;
     private Vector2[] UVs;
+    private Vector3[] Normals;
 
-    public Mesh TerrainMesh { get; private set; }
-    public static PerlinData HeightPerlin { get { return World.CurrentSaveData.HeightPerlin; } }
-    public static PerlinData TemperaturePerlin { get { return World.CurrentSaveData.TemperaturePerlin; } }
+    private Mesh MyMesh;
+    private int MyMeshID;
+
+    private void Awake()
+    {
+        ChunkMeshFilter = GetComponent<MeshFilter>();
+    }
 
     public void SetPositions(Vector2Int chunkPos)
     {
         ChunkPosition = chunkPos;
         WorldPosition = chunkPos * DefaultChunkSize;
-        TerrainMesh = null;
-    }
-
-    public void MoveTransform()
-    {
-        MyTransform.position = new(WorldPosition.x, 0, WorldPosition.y);
+        HasTerrain = false;
+        CurrentLODState = TerrainLODStates.Empty;
         MyGameObject.name = "Chunk: " + (ChunkPosition.x) + ", " + (ChunkPosition.y);
     }
 
-    private const float BaseOffset = 1000000 + 0.1f;
-    private static Vector2Serializable FullHeightOffset { get { return HeightPerlin.Offset + BaseOffset; } }
-    public static float GetHeightPerlin(float x, float y)
+    private const int NumOctaves = 4;
+    private static Vector2[] OctaveOffsets;
+    private static float GetHeightPerlinValue(Vector2 pos)
+    {
+        return GetHeightPerlinValue(pos.x, pos.y);
+    }
+    public static float GetHeightPerlinValue(float x, float y)
     {
         float amplitude = 1;
         float frequency = 1;
-        float noiseHeight = 0;
+        float perlinNoise = 0;
 
-        for (int i = 0; i < 4; i++)
+        for (int i = 0; i < NumOctaves; i++)
         {
-            float sampleX = (x + FullHeightOffset.x) / DefaultChunkSize * HeightPerlin.PerlinScale * frequency;
-            float sampleY = (y + FullHeightOffset.y) / DefaultChunkSize * HeightPerlin.PerlinScale * frequency;
-
-            float perlinValue = Mathf.PerlinNoise(sampleX, sampleY) * 2 - 1;
-            noiseHeight += perlinValue * amplitude;
+            float sampleX = (x + OctaveOffsets[i].x) / DefaultChunkSize * HeightPerlinScale * frequency;
+            float sampleY = (y + OctaveOffsets[i].y) / DefaultChunkSize * HeightPerlinScale * frequency;
+            perlinNoise += (Mathf.PerlinNoise(sampleX, sampleY) * 2 - 1) * amplitude;
 
             amplitude *= 0.5f;
             frequency *= 2;
         }
 
-        return Mathf.Abs(noiseHeight); 
+        return Mathf.Abs(perlinNoise);
+    }
+    private const float DirtScale = 5;
+    public static float GetDirtPerlin(float x, float y)
+    {
+        return Mathf.PerlinNoise((x + OctaveOffsets[0].x) / DefaultChunkSize * DirtScale, (y + OctaveOffsets[0].y) / DefaultChunkSize * DirtScale);
     }
 
-    private static Vector2Serializable FullTemperatureOffset { get { return TemperaturePerlin.Offset + BaseOffset; } }
+    private static float GetTemperaturePerlin(Vector2Int pos) { return GetTemperaturePerlin(pos.x, pos.y); }
     public static float GetTemperaturePerlin(float x, float y)
     {
-        return Mathf.Abs(Mathf.PerlinNoise((x + FullTemperatureOffset.x) / DefaultChunkSize * TemperaturePerlin.PerlinScale, (y + FullTemperatureOffset.y) / DefaultChunkSize * TemperaturePerlin.PerlinScale));
+        return Mathf.Abs(Mathf.PerlinNoise((x + TemperaturePerlinOffset.x) / DefaultChunkSize * TemperaturePerlinScale, (y + TemperaturePerlinOffset.y) / DefaultChunkSize * TemperaturePerlinScale));
     }
 
     public static Vector3 GetPerlinPosition(Vector2 position)
     {
-        return new(position.x, GetHeightPerlin(position.x, position.y) * SaveData.HeightMultipler, position.y);
+        return GetPerlinPosition(position.x, position.y);
     }
 
     public static Vector3 GetPerlinPosition(float x, float y)
     {
-        return new(x, GetHeightPerlin(x, y) * SaveData.HeightMultipler, y);
+        return new(x, (GetHeightPerlinValue(x, y) * HeightMultipler) + (GetDirtPerlin(x, y) * 2), y);
     }
 
     public static Vector2Int GetChunkPosition(float x, float y)
@@ -97,29 +129,67 @@ public class Chunk : MonoBehaviour
         return new(Mathf.RoundToInt(x / DefaultChunkSize), Mathf.RoundToInt(y / DefaultChunkSize));
     }
 
-    private void AssignVerts(int lodNum)
+    public static Vector2Int GetChunkPosition(Vector3 position)
     {
-        Vertices = new Vector3[((DefaultChunkSize / lodNum) + 1) * ((DefaultChunkSize / lodNum) + 1)];
-        UVs = new Vector2[Vertices.Length];
-        Colors = new Color[Vertices.Length];
+        return GetChunkPosition(position.x, position.z);
+    }
 
-        for (int i = 0, z = 0; z <= DefaultChunkSize; z += lodNum)
+    private void AssignVerts(int lodDetail)
+    {
+        Vertices = new Vector3[((DefaultChunkSize / lodDetail) + 1) * ((DefaultChunkSize / lodDetail) + 1)];
+        UVs = new Vector2[Vertices.Length];
+        Normals = new Vector3[Vertices.Length];
+        Colors = new Color32[Vertices.Length];
+
+        for (int i = 0, y = 0; y <= DefaultChunkSize; y += lodDetail)
         {
-            for (int x = 0; x <= DefaultChunkSize; x += lodNum)
+            for (int x = 0; x <= DefaultChunkSize; x += lodDetail)
             {
-                float heightNoise = GetHeightPerlin(x + WorldPosition.x - (DefaultChunkSize / 2), z + WorldPosition.y - (DefaultChunkSize / 2));
-                Colors[i] = TerrainGradient.GetBiomeColor(heightNoise, GetTemperaturePerlin(x + WorldPosition.x, z + WorldPosition.y));
-                Vertices[i] = new(x - (DefaultChunkSize / 2), heightNoise * SaveData.HeightMultipler, z - (DefaultChunkSize / 2));
-                UVs[i] = new((float)x / DefaultChunkSize, (float)z / DefaultChunkSize);
+                Vector2Int pos = GetVertexPosition(x, y);
+                float heightNoise = GetHeightPerlinValue(pos.x, pos.y);
+                float temperatureNoise = GetTemperaturePerlin(pos.x, pos.y);
+                float dirtNoise = GetDirtPerlin(pos.x, pos.y);
+
+                Colors[i] = TerrainGradient.GetTerrainColor(heightNoise, temperatureNoise, dirtNoise);
+
+                Vertices[i] = new(x - (DefaultChunkSize / 2), (heightNoise * HeightMultipler) + (dirtNoise * 2), y - (DefaultChunkSize / 2));
+                UVs[i] = new((float)x / DefaultChunkSize, (float)y / DefaultChunkSize);
                 i++;
             }
         }
+
+        CalculateNormals();
+        World.MeshesToAssign.Enqueue(this);
     }
 
-    public void AssignLODOne()
+    private void CalculateNormals()
+    {
+        int triCount = Triangles[CurrentLODState].Length / 3;
+        for (int j = 0; j < triCount; j++)
+        {
+            int normalTriangeIndex = j * 3;
+            int vertexIndexA = Triangles[CurrentLODState][normalTriangeIndex];
+            int vertexIndexB = Triangles[CurrentLODState][normalTriangeIndex + 1];
+            int vertexIndexC = Triangles[CurrentLODState][normalTriangeIndex + 2];
+
+            Vector3 triangleNormal = Vector3.Cross(Vertices[vertexIndexB] - Vertices[vertexIndexA], Vertices[vertexIndexC] - Vertices[vertexIndexA]).normalized;
+
+            Normals[vertexIndexA] += triangleNormal;
+            Normals[vertexIndexB] += triangleNormal;
+            Normals[vertexIndexC] += triangleNormal;
+        }
+
+        for (int j = 0; j < Normals.Length; j++)
+        {
+            Normals[j].Normalize();
+        }
+    }
+
+    public void InitializeLODOne()
     {
         if (CurrentLODState != TerrainLODStates.LODOne)
         {
+            HasTerrain = false;
             CurrentLODState = TerrainLODStates.LODOne;
             AssignVerts((int)TerrainLODStates.LODOne);
             CheckForBuildings();
@@ -127,92 +197,74 @@ public class Chunk : MonoBehaviour
         }
     }
 
-    public void AssignLODTwo()
+    public void InitializeLODTwo()
     {
         if (CurrentLODState != TerrainLODStates.LODTwo)
         {
+            HasTerrain = false;
             CurrentLODState = TerrainLODStates.LODTwo;
             AssignVerts((int)TerrainLODStates.LODTwo);
             CheckForBuildings();
-            AssignTreeData();
         }
     }
 
-    public void AssignLODThree()
+    public void InitializeLODThree()
     {
         if (CurrentLODState != TerrainLODStates.LODThree)
         {
+            HasTerrain = false;
             CurrentLODState = TerrainLODStates.LODThree;
             AssignVerts((int)TerrainLODStates.LODThree);
         }
     }
 
-    public void AssignLODFour()
-    {
-        if (CurrentLODState != TerrainLODStates.LODFour)
-        {
-            CurrentLODState = TerrainLODStates.LODFour;
-            AssignVerts((int)TerrainLODStates.LODFour);
-        }
-    }
-
-    public void AssignLODFive()
-    {
-        if (CurrentLODState != TerrainLODStates.LODFive)
-        {
-            CurrentLODState = TerrainLODStates.LODFive;
-            AssignVerts((int)TerrainLODStates.LODFive);
-        }
-    }
-
     private void CheckForBuildings()
     {
-        if (!StructuresReady)
+        if (!HasStructures)
         {
-            StructuresReady = true;
+            HasStructures = true;
             if (StructureCreator.VillageChunks.Contains(ChunkPosition))
             {
-                lock (World.StructuresToCreate)
-                {
-                    World.StructuresToCreate.Add(this, StructureTypes.Village);
-                }
+                new StructureCreator.PrepareVillage(ChunkPosition, WorldPosition).Schedule();
             }
-            else if (StructureCreator.MobDensToCreate.Contains(ChunkPosition))
+            else if (StructureCreator.MobDenPositions.Contains(ChunkPosition))
             {
-                lock (World.StructuresToCreate)
-                {
-                    World.StructuresToCreate.Add(this, StructureTypes.MobDen);
-                }
+                StructureCreator.MobDensToCreate.Enqueue(ChunkPosition);
             }
         }
+    }
+
+    private Vector2Int GetVertexPosition(int x, int y)
+    {
+        return new Vector2Int(x + WorldPosition.x - (DefaultChunkSize / 2), y + WorldPosition.y - (DefaultChunkSize / 2));
     }
 
     public void AssignTreeData()
     {
-        if (!FoliageManager.HasTrees(ChunkPosition))
+        if (!HasTrees)
         {
             System.Random random = new(Mathf.Abs(WorldPosition.x * WorldPosition.y));
-            List<FoliageInfoToMove> foliages = new();
+            Queue<FoliageInfoToMove> foliages = new();
 
-            for (int z = 0; z < DefaultChunkSize - 5; z += FoliageSquareCheckSize)
+            for (int y = 0; y < DefaultChunkSize - FoliageSquareCheckSize; y += FoliageSquareCheckSize)
             {
-                for (int x = 0; x < DefaultChunkSize - 5; x += FoliageSquareCheckSize)
+                for (int x = 0; x < DefaultChunkSize - FoliageSquareCheckSize; x += FoliageSquareCheckSize)
                 {
-                    int biomeNum = TerrainGradient.GetBiomeNum(GetHeightPerlin(x + WorldPosition.x, z + WorldPosition.y),
-                         GetTemperaturePerlin(x + WorldPosition.x, z + WorldPosition.y));
+                    BiomeData biome = TerrainGradient.GetBiomeData(GetHeightPerlinValue(GetVertexPosition(x, y)), GetTemperaturePerlin(GetVertexPosition(x, y)));
 
-                    if (World.Biomes[biomeNum]._FoliageSettings.ChanceOfTree > random.NextDouble())
+                    if (biome._FoliageSettings.ChanceOfTree > random.NextDouble())
                     {
-                        int randX = Mathf.FloorToInt((float)random.NextDouble() * FoliageSquareCheckSize) + x + WorldPosition.x - (DefaultChunkSize / 2);
-                        int randZ = Mathf.FloorToInt((float)random.NextDouble() * FoliageSquareCheckSize) + z + WorldPosition.y - (DefaultChunkSize / 2);
+                        int randX = Mathf.FloorToInt((float)random.NextDouble() * FoliageSquareCheckSize) + x;
+                        int randZ = Mathf.FloorToInt((float)random.NextDouble() * FoliageSquareCheckSize) + y;
 
-                        float whichFoliage = (float)random.NextDouble() * FoliageManager.FoliageThresholds[biomeNum][^1];
+                        float whichFoliage = (float)random.NextDouble() * FoliageManager.FoliageThresholds[TerrainGradient.GetBiomeNum(biome)][^1];
 
-                        for (int foliageNum = 0; foliageNum < FoliageManager.FoliageThresholds[biomeNum].Length; foliageNum++)
+                        for (int foliageNum = 0; foliageNum < FoliageManager.FoliageThresholds[TerrainGradient.GetBiomeNum(biome)].Length; foliageNum++)
                         {
-                            if (FoliageManager.FoliageThresholds[biomeNum][foliageNum] > whichFoliage)
+                            if (FoliageManager.FoliageThresholds[TerrainGradient.GetBiomeNum(biome)][foliageNum] > whichFoliage)
                             {
-                                foliages.Add(new(biomeNum, foliageNum, GetPerlinPosition(randX, randZ), (float)random.NextDouble(), (float)random.NextDouble()));
+                                Vector3 newRot = Quaternion.FromToRotation(Vector3.up, Normals[randX + (DefaultChunkSize * randZ)]).eulerAngles + new Vector3(0, (float)random.NextDouble(), 0);
+                                foliages.Enqueue(new(TerrainGradient.GetBiomeNum(biome), foliageNum, GetPerlinPosition(GetVertexPosition(randX, randZ)), Quaternion.Euler(newRot)));
 
                                 break;
                             }
@@ -225,45 +277,92 @@ public class Chunk : MonoBehaviour
         }
     }
 
-    public void AssignMesh()
+    public void CreateMesh()
     {
-        Mesh mesh = new();
+        if (ChunkMeshFilter)
+        {
+            MyMesh = new();
 
-        mesh.vertices = Vertices;
-        mesh.triangles = Triangles[CurrentLODState];
-        mesh.colors = Colors;
-        mesh.uv = UVs;
+            MyMesh.SetVertices(Vertices);
+            MyMesh.SetTriangles(Triangles[CurrentLODState], 0);
+            MyMesh.SetUVs(0, UVs);
+            MyMesh.SetNormals(Normals);
+            MyMesh.SetColors(Colors);
 
-        mesh.RecalculateNormals();
+            MyMeshID = MyMesh.GetInstanceID();
+            new BakePhysicsJob(this, MyMesh.GetInstanceID()).Schedule();
+        }
+    }
 
-        ChunkMeshFilter.sharedMesh = mesh;
-        _MeshCollider.sharedMesh = mesh;
-        TerrainMesh = mesh;
+    private void ApplyMesh()
+    {
+        ChunkMeshFilter.sharedMesh = MyMesh;
+        _MeshCollider.sharedMesh = MyMesh;
+        HasTerrain = true;
+    }
+
+    public class BakePhysicsJob : SecondaryThreadJob
+    {
+        private readonly Chunk MyChunk;
+        private readonly int MeshID;
+
+        public BakePhysicsJob(Chunk chunk, int meshID)
+        {
+            MyChunk = chunk;
+            MeshID = meshID;
+        }
+
+        public override void Execute()
+        {
+            if (MeshID == MyChunk.MyMeshID)
+            {
+                Physics.BakeMesh(MeshID, false);
+                new ApplyMeshJob(MyChunk, MeshID).Schedule();
+            }
+        }
+    }
+
+    public class ApplyMeshJob : MainThreadJob
+    {
+        private readonly Chunk MyChunk;
+        private readonly int MyMeshID;
+
+        public ApplyMeshJob(Chunk chunk, int meshID)
+        {
+            MyChunk = chunk;
+            MyMeshID = meshID;
+        }
+
+        public override void Execute()
+        {
+            if (MyChunk.MyMeshID == MyMeshID) MyChunk.ApplyMesh();
+        }
     }
 
     public static void InitializeTriangles()
     {
         Triangles = new();
-        AssignTriangles(TerrainLODStates.LODFive, (int)TerrainLODStates.LODFive);
-        AssignTriangles(TerrainLODStates.LODFour, (int)TerrainLODStates.LODFour);
         AssignTriangles(TerrainLODStates.LODThree, (int)TerrainLODStates.LODThree);
         AssignTriangles(TerrainLODStates.LODTwo, (int)TerrainLODStates.LODTwo);
         AssignTriangles(TerrainLODStates.LODOne, (int)TerrainLODStates.LODOne);
     }
 
-    private static void AssignTriangles(TerrainLODStates lodState, int lodNum)
+    private static void AssignTriangles(TerrainLODStates lodState, float lodDetail)
     {
-        Triangles.Add(lodState, new int[(DefaultChunkSize / lodNum) * (DefaultChunkSize / lodNum) * 6]);
-        for (int y = 0, tris = 0, vertexIndex = 0; y < DefaultChunkSize / lodNum; y++)
+        int num = Mathf.CeilToInt(DefaultChunkSize / lodDetail);
+
+        Triangles.Add(lodState, new int[num * num * 6]);
+        int tris = 0, vertexIndex = 0;
+        for (int y = 0; y < num; y++)
         {
-            for (int x = 0; x < DefaultChunkSize / lodNum; x++)
+            for (int x = 0; x < num; x++)
             {
                 Triangles[lodState][tris] = vertexIndex;
-                Triangles[lodState][tris + 1] = vertexIndex + (DefaultChunkSize / lodNum) + 1;
+                Triangles[lodState][tris + 1] = vertexIndex + num + 1;
                 Triangles[lodState][tris + 2] = vertexIndex + 1;
                 Triangles[lodState][tris + 3] = vertexIndex + 1;
-                Triangles[lodState][tris + 4] = vertexIndex + (DefaultChunkSize / lodNum) + 1;
-                Triangles[lodState][tris + 5] = vertexIndex + (DefaultChunkSize / lodNum) + 2;
+                Triangles[lodState][tris + 4] = vertexIndex + num + 1;
+                Triangles[lodState][tris + 5] = vertexIndex + num + 2;
 
                 vertexIndex++;
                 tris += 6;
@@ -278,18 +377,13 @@ public class Chunk : MonoBehaviour
 public struct FoliageInfoToMove
 {
     public Quaternion Rotation;
-    public Vector3 Scale;
-    public int BiomeNum;
-    public int FoliageNum;
+    public GameObject Prefab;
     public Vector3 Position;
 
-    public FoliageInfoToMove(int biomeNum, int foliageNum, Vector3 position, float scaleIncrease, float randomRotation)
+    public FoliageInfoToMove(int biomeNum, int foliageNum, Vector3 position, Quaternion rotation)
     {
-        BiomeNum = biomeNum;
-        FoliageNum = foliageNum;
+        Prefab = TerrainGradient.BiomeDatas[biomeNum]._FoliageSettings.FoliageInfos[foliageNum].Prefab;
         Position = position;
-        float scale = (World.Biomes[biomeNum]._FoliageSettings.FoliageInfos[foliageNum].MaxExtensionHeight * scaleIncrease) + World.Biomes[biomeNum]._FoliageSettings.FoliageInfos[foliageNum].MinFoliageScale;
-        Scale = new(scale, scale, scale);
-        Rotation = Quaternion.Euler(0, randomRotation * 360, 0);
+        Rotation = rotation;
     }
 }

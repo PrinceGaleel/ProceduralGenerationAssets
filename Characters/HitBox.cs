@@ -44,12 +44,15 @@ public class HitBox : MonoBehaviour
         }
     }
 
-    public void DecreaseHealth(HitData hitData)
+    public bool DecreaseHealth(HitData hitData)
     {
         if (TeamsManager.IsEnemy(Character, hitData.From))
         {
-            Character.DecreaseHealth(-hitData.Amount * DamageMultiplier);
+            Character.DecreaseHealth(hitData.Amount * DamageMultiplier);
+            return true;
         }
+
+        return false;
     }
 
     public void IncreaseMana(HitData hitData)

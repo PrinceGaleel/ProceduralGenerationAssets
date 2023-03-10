@@ -3,10 +3,14 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+[RequireComponent(typeof(CharacterController))]
 public class PlayerStats : CharacterStats
 {
     public static PlayerStats Instance { get; private set; }
-    public static Transform PlayerTransform { get; private set; }
+
+    [Header("Player Specific")]
+    [SerializeField] private Transform MyTransform;
+    public static Transform PlayerTransform { get { return Instance.MyTransform; } }
     public Vector3 SpawnPoint;
 
     [Header("Gravity")]
@@ -14,10 +18,9 @@ public class PlayerStats : CharacterStats
     private bool IsGroundedState;
     private bool IsGroundedPhysics;
 
-    private CharacterController _CharacterController;
-    private Transform GroundChecker;
-    private Vector2 Velocity;
-    private Action EndLastMovement;
+    [SerializeField] private CharacterController Controller;
+    [SerializeField] private Transform GroundChecker;
+    private Vector2 Vec2Velocity;
 
     private const float MaxGroundDist = 0.2f;
     private float VerticalAcceleration;
@@ -29,18 +32,7 @@ public class PlayerStats : CharacterStats
     public CharacterObjectParents GenderParts;
     public CharacterObjectListsAllGender AllGenderParts;
 
-    [Header("Animation Names")]
-    public string RightStrafeAnim;
-    public string LeftStrafeAnim;
-    public string FallingAnim;
-
-    [Header("Speeds")]
-    public float StrafeSpeed;
-
-    [Header("Ohter")]
-    private int GravityMask;
-
-    private void Awake()
+    protected override void Awake()
     {
         if (Instance)
         {
@@ -51,55 +43,29 @@ public class PlayerStats : CharacterStats
         else
         {
             Instance = this;
-            PlayerTransform = transform;
-            CharStandardAwake();
             SpawnPoint = Chunk.GetPerlinPosition(0, 0) + new Vector3(0, 5, 0);
 
             CanMove = true;
-            Velocity = new();
+            Vec2Velocity = new();
             VerticalSpeed = 0;
-            if (!GroundChecker)
-            {
-                GroundChecker = new GameObject().transform;
-                GroundChecker.SetParent(transform);
-                GroundChecker.localPosition = new(0, 0.1f, 0);
-                GroundChecker.name = "GroundChecker";
-            }
-
-            if (!_CharacterController)
-            {
-                _CharacterController = GetComponent<CharacterController>();
-
-                if (!_CharacterController)
-                {
-                    _CharacterController = gameObject.AddComponent<CharacterController>();
-                }
-            }
 
             GenderParts = new();
             AllGenderParts = new();
+
             IsGroundedPhysics = true;
             IsGroundedState = true;
 
-            GravityMask = ~LayerMask.GetMask("Water", "Grass", "Controller", "Weapon", "Arms", "Harvestable", "Hitbox", "Resource");
+            PlayerTransform.position = Chunk.GetPerlinPosition(World.CurrentSaveData.LastPosition.x, World.CurrentSaveData.LastPosition.z) + new Vector3(0, 50, 0);
         }
-
-        gameObject.SetActive(false);
     }
 
     private void Start()
     {
-        UIController.SetHealthBar(CurrentHealth / MaxHealth);
-        UIController.SetManaBar(CurrentHealth / MaxHealth);
-        UIController.SetStaminaBar(CurrentHealth / MaxHealth);
-        MyTeamID = TeamsManager.AddTeam("Player Faction", false);
-        TeamsManager.Teams[MyTeamID].Members.Add(this);
-
-        if (!Anim.GetBool(IdleName))
-        {
-            Anim.SetBool(IdleName, true);
-            EndLastMovement = () => Anim.SetBool(IdleName, false);
-        }
+        UIController.UpdateHealthBar(CurrentHealth, MaxHealth);
+        UIController.UpdateManaBar(CurrentMana, MaxMana);
+        UIController.UpdateStaminaBar(CurrentStamina, MaxStamina);
+        MyTeamID = TeamsManager.AddTeam("Player Faction", false, new() { this });
+        ChangeAnimation(IdleName);
     }
 
     private void Update()
@@ -108,28 +74,13 @@ public class PlayerStats : CharacterStats
 
         if (CanMove)
         {
-            Velocity = (Input.GetAxis("Vertical") * new Vector2(PlayerTransform.forward.x, PlayerTransform.forward.z)) + (Input.GetAxis("Horizontal") * new Vector2(PlayerTransform.right.x, transform.right.z));
+            Vec2Velocity = (Input.GetAxis("Vertical") * new Vector2(PlayerTransform.forward.x, PlayerTransform.forward.z)) + (Input.GetAxis("Horizontal") * new Vector2(PlayerTransform.right.x, transform.right.z));
 
-            if (Input.GetKey(KeyCode.W))
-            {
-                Velocity *= NormalSpeed;
-            }
-            else if (Input.GetKey(KeyCode.S))
-            {
-                Velocity *= BackingOffSpeed;
-            }
-            else if (Input.GetKey(KeyCode.A))
-            {
-                Velocity *= StrafeSpeed;
-            }
-            else if (Input.GetKey(KeyCode.D))
-            {
-                Velocity *= StrafeSpeed;
-            }
-            else
-            {
-                Velocity = new();
-            }
+            if (Input.GetKey(KeyCode.W)) Vec2Velocity *= NormalSpeed;
+            else if (Input.GetKey(KeyCode.S)) Vec2Velocity *= BackingOffSpeed;
+            else if (Input.GetKey(KeyCode.A)) Vec2Velocity *= StrafeSpeed;
+            else if (Input.GetKey(KeyCode.D)) Vec2Velocity *= StrafeSpeed;
+            else Vec2Velocity = Vector2.zero;
 
             if (IsGroundedPhysics && Input.GetKey(KeyCode.Space) && VerticalSpeed < 0)
             {
@@ -137,14 +88,11 @@ public class PlayerStats : CharacterStats
                 VerticalSpeed = JumpStrength;
             }
         }
-        else
-        {
-            Velocity = new();
-        }
+        else Vec2Velocity = Vector2.zero;
 
         if (IsGroundedState)
         {
-            if(Input.GetMouseButtonDown(0))
+            if (Input.GetMouseButtonDown(0))
             {
                 Anim.SetBool("NextAttack", true);
             }
@@ -152,76 +100,46 @@ public class PlayerStats : CharacterStats
             if (!IsGroundedPhysics)
             {
                 IsGroundedState = false;
-                EndLastMovement?.Invoke();
-                Anim.SetBool(FallingAnim, true);
-                EndLastMovement = () => Anim.SetBool(FallingAnim, false);
+                ChangeAnimation(FallingAnim);
             }
             else if (CanMove)
             {
                 if (Input.GetKey(KeyCode.W))
                 {
-                    if (!Anim.GetBool(WalkingAnim))
-                    {
-                        EndLastMovement?.Invoke();
-                        Anim.SetBool(WalkingAnim, true);
-                        EndLastMovement = () => Anim.SetBool(WalkingAnim, false);
-                    }
+                    if (!Anim.GetBool(WalkingAnim)) ChangeAnimation(WalkingAnim);
                 }
                 else if (Input.GetKey(KeyCode.S))
                 {
-                    if (!Anim.GetBool(BackwardAnim))
-                    {
-                        EndLastMovement?.Invoke();
-                        Anim.SetBool(BackwardAnim, true);
-                        EndLastMovement = () => Anim.SetBool(BackwardAnim, false);
-                    }
+                    if (!Anim.GetBool(BackwardAnim)) ChangeAnimation(BackwardAnim);
                 }
                 else if (Input.GetKey(KeyCode.A))
                 {
-                    if (!Anim.GetBool(LeftStrafeAnim))
-                    {
-                        EndLastMovement?.Invoke();
-                        Anim.SetBool(WalkingAnim, true);
-                        Anim.SetBool(LeftStrafeAnim, true);
-                        EndLastMovement = () => StopLeftStrafe();
-                    }
+                    if (!Anim.GetBool(LeftStrafeAnim)) ChangeAnimation(WalkingAnim, LeftStrafeAnim);
                 }
                 else if (Input.GetKey(KeyCode.D))
                 {
-                    if (!Anim.GetBool(RightStrafeAnim))
-                    {
-                        EndLastMovement?.Invoke();
-                        Anim.SetBool(WalkingAnim, true);
-                        Anim.SetBool(RightStrafeAnim, true);
-                        EndLastMovement = () => StopRightStrafe();
-                    }
+                    if (!Anim.GetBool(RightStrafeAnim)) ChangeAnimation(WalkingAnim, RightStrafeAnim);
                 }
                 else if (!Anim.GetBool(IdleName))
                 {
-                    EndLastMovement?.Invoke();
-                    Anim.SetBool(IdleName, true);
-                    EndLastMovement = () => Anim.SetBool(IdleName, false);
+                    ChangeAnimation(IdleName);
                 }
             }
             else if (!Anim.GetBool(IdleName))
             {
-                EndLastMovement?.Invoke();
-                Anim.SetBool(IdleName, true);
-                EndLastMovement = () => Anim.SetBool(IdleName, false);
+                ChangeAnimation(IdleName);
             }
         }
         else if (IsGroundedPhysics)
         {
             IsGroundedState = true;
-            EndLastMovement?.Invoke();
-            Anim.SetBool(IdleName, true);
-            EndLastMovement = () => Anim.SetBool(IdleName, false);
+            ChangeAnimation(IdleName);
         }
     }
 
     private void FixedUpdate()
     {
-        if (Physics.BoxCast(GroundChecker.transform.position, new Vector3(0.2f, 0.1f, 0.125f), -GroundChecker.transform.up, PlayerTransform.rotation, MaxGroundDist, GravityMask))
+        if (Physics.BoxCast(GroundChecker.transform.position, new Vector3(0.2f, 0.1f, 0.125f), -GroundChecker.transform.up, PlayerTransform.rotation, MaxGroundDist, World.GravityMask))
         {
             VerticalAcceleration = Mathf.Clamp(VerticalAcceleration + (Physics.gravity.y * Time.deltaTime), Physics.gravity.y, 50);
             VerticalSpeed = Mathf.Clamp(VerticalSpeed + (VerticalAcceleration * Time.deltaTime), Physics.gravity.y, 50);
@@ -236,68 +154,77 @@ public class PlayerStats : CharacterStats
             IsGroundedPhysics = false;
         }
 
-        _CharacterController.Move(new Vector3(Velocity.x, VerticalSpeed, Velocity.y) * Time.deltaTime);
-    }
-
-    private void StopRightStrafe()
-    {
-        Anim.SetBool(WalkingAnim, false);
-        Anim.SetBool(RightStrafeAnim, false);
-        EndLastMovement = null;
-    }
-
-    private void StopLeftStrafe()
-    {
-        Anim.SetBool(WalkingAnim, false);
-        Anim.SetBool(LeftStrafeAnim, false);
-        EndLastMovement = null;
-    }
-
-    public override void DecreaseHealth(float amount)
-    {
-        DefaultDecreaseHealth(amount);
-        UIController.SetHealthBar(CurrentHealth / MaxHealth);
+        Controller.Move(new Vector3(Vec2Velocity.x, VerticalSpeed, Vec2Velocity.y) * Time.deltaTime);
     }
 
     public override void IncreaseHealth(float amount)
     {
-        DefaultIncreaseHealth(amount);
-        UIController.SetHealthBar(CurrentHealth / MaxHealth);
+        base.IncreaseHealth(amount);
+        UIController.UpdateHealthBar(CurrentHealth, MaxHealth);
     }
 
-    public override void DecreaseStamina(float amount)
+    public override void DecreaseHealth(float amount)
     {
-        DefaultDecreaseHealth(amount);
-        UIController.SetStaminaBar(CurrentStamina / MaxStamina);
+        base.DecreaseHealth(amount);
+        UIController.UpdateHealthBar(CurrentHealth, MaxHealth);
     }
 
     public override void IncreaseStamina(float amount)
     {
-        DefaultIncreaseHealth(amount);
-        UIController.SetStaminaBar(CurrentStamina / MaxStamina);
+        base.IncreaseStamina(amount);
+        UIController.UpdateStaminaBar(CurrentStamina, MaxStamina);
     }
 
-    public override void DecreaseMana(float amount)
+    public override void DecreaseStamina(float amount)
     {
-        DefaultDecreaseHealth(amount);
-        UIController.SetManaBar(CurrentMana / MaxMana);
+        base.IncreaseStamina(amount);
+        UIController.UpdateStaminaBar(CurrentStamina, MaxStamina);
     }
 
     public override void IncreaseMana(float amount)
     {
-        DefaultIncreaseHealth(amount);
-        UIController.SetManaBar(CurrentMana / MaxMana);
+        base.IncreaseMana(amount);
+        UIController.UpdateManaBar(CurrentMana, MaxMana);
+    }
+
+    public override void DecreaseMana(float amount)
+    {
+        base.DecreaseMana(amount);
+        UIController.UpdateManaBar(CurrentMana, MaxMana);
     }
 
     protected override void Death()
     {
-        _CharacterController.enabled = false;
+        Controller.enabled = false;
         VerticalSpeed = 0;
-        Velocity = new();
+        Vec2Velocity = new();
         PlayerTransform.position = SpawnPoint;
         CurrentHealth = MaxHealth;
         CurrentStamina = MaxStamina;
         CurrentMana = MaxMana;
-        _CharacterController.enabled = true;
+        Controller.enabled = true;
     }
+
+#if UNITY_EDITOR
+    protected override void OnValidate()
+    {
+        base.OnValidate();
+        Controller = GetComponent<CharacterController>();
+        MyTransform = transform;
+
+        if (GroundChecker)
+        {
+            GroundChecker.localPosition = new(0, 0.1f, 0);
+            GroundChecker.name = "GroundChecker";
+        }
+    }
+
+    /*
+    private void OnDrawGizmosSelected()
+    {
+        Gizmos.color = Color.red;
+        if (GroundChecker) Gizmos.DrawWireCube(GroundChecker.transform.position, new Vector3(0.2f, 0.1f, 0.125f) * 2);
+    }
+    */
+#endif
 }

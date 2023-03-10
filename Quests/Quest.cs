@@ -10,7 +10,7 @@ public class Quest
     public readonly int RequiredAmount;
 
     public readonly int GoldReward;
-    public readonly DictList<Item, int> Drops;
+    public readonly PairList<Item, int> Drops;
     public readonly CharacterStats Questee;
 
     public Quest(string name, string description, int requiredAmount)

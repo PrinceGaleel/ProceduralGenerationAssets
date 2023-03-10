@@ -12,7 +12,7 @@ public class SceneTransitioner : MonoBehaviour
     public RectTransform MainCanvas;
     public TextMeshProUGUI TipText;
     public TextMeshProUGUI ProgressText;
-    public Slider Bar;
+    public UnityEngine.UI.Slider Bar;
 
     private const float LerpAmount = 2.5f;
 
