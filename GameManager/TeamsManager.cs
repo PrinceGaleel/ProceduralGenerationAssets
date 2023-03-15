@@ -37,7 +37,7 @@ public class TeamsManager : MonoBehaviour
         }
     }
 
-    public static void AddMember(int teamID, CharacterStats member)
+    public static void AddMember(int teamID, BaseCharacter member)
     {
         lock (Teams)
         {
@@ -60,20 +60,20 @@ public class TeamsManager : MonoBehaviour
 
             foreach (int teamID in teams.Keys)
             {
-                List<CharacterStats> enemies = new();
+                List<BaseCharacter> enemies = new();
 
                 foreach (int enemyTeamID in teams[teamID].Enemies)
                 {
                     if (enemyTeamID != teamID)
                     {
-                        List<CharacterStats> members;
+                        List<BaseCharacter> members;
 
                         lock (teams[enemyTeamID].Members)
                         {
                             members = new(teams[enemyTeamID].Members);
                         }
 
-                        foreach (CharacterStats character in members)
+                        foreach (BaseCharacter character in members)
                         {
                             enemies.Add(character);
                         }
@@ -109,7 +109,7 @@ public class TeamsManager : MonoBehaviour
         Teams.Remove(teamID);
     }
 
-    public static int AddTeam(string factionName, bool isAutoHostile, List<CharacterStats> members)
+    public static int AddTeam(string factionName, bool isAutoHostile, List<BaseCharacter> members)
     {
         List<int> keys = new(Teams.Keys);
         Teams.Add(TeamCounter, new(factionName, isAutoHostile, members));
@@ -134,23 +134,23 @@ public class TeamsManager : MonoBehaviour
         return TeamCounter - 1;
     }
 
-    public static bool IsEnemy(CharacterStats characterOne, CharacterStats characterTwo)
+    public static bool IsEnemy(BaseCharacter characterOne, BaseCharacter characterTwo)
     {
         return Teams[characterOne.MyTeamID].Enemies.Contains(characterTwo.MyTeamID);
     }
 
-    public static bool IsAlly(CharacterStats characterOne, CharacterStats characterTwo)
+    public static bool IsAlly(BaseCharacter characterOne, BaseCharacter characterTwo)
     {
         return Teams[characterOne.MyTeamID].Enemies.Contains(characterTwo.MyTeamID);
     }
         
-    private static List<CharacterStats> GetEnemies(int myTeamID, Vector3 position, float searchDistance)
+    private static List<BaseCharacter> GetEnemies(int myTeamID, Vector3 position, float searchDistance)
     {
-        List<CharacterStats> enemies = new();
+        List<BaseCharacter> enemies = new();
 
         lock (Teams[myTeamID].AllEnemies)
         {
-            foreach (CharacterStats enemy in Teams[myTeamID].AllEnemies)
+            foreach (BaseCharacter enemy in Teams[myTeamID].AllEnemies)
             {
                 if (Vector3.Distance(enemy.transform.position, position) < searchDistance)
                 {
@@ -162,7 +162,7 @@ public class TeamsManager : MonoBehaviour
         return enemies;
     }
 
-    public static List<CharacterStats> GetEnemies(MobDen den)
+    public static List<BaseCharacter> GetEnemies(MobDen den)
     {
         return GetEnemies(den.MyTeamID, den.transform.position, den.TerritoryRadius);
     }
@@ -170,14 +170,14 @@ public class TeamsManager : MonoBehaviour
     public class Team
     {
         public string FactionName;
-        public List<CharacterStats> Members;
-        public List<CharacterStats> AllEnemies;
+        public List<BaseCharacter> Members;
+        public List<BaseCharacter> AllEnemies;
         public bool IsAutoHostile;
 
         public List<int> Enemies;
         public List<int> Allies;
 
-        public Team(string factionName, bool isAutoHostile, List<CharacterStats> members)
+        public Team(string factionName, bool isAutoHostile, List<BaseCharacter> members)
         {
             FactionName = factionName;
             Members = members;

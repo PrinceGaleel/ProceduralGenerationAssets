@@ -87,7 +87,7 @@ public class LoadGame : MonoBehaviour
 
             if (Directory.Exists(path))
             {
-                World.InitializeWorldData(SaveData.LoadData(Selected.SaveName));
+                GameManager.InitializeWorldData(SaveData.LoadData(Selected.SaveName));
                 SceneTransitioner.LoadScene("GameWorld", true);
             }
 

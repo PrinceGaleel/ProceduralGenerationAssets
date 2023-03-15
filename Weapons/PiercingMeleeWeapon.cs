@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class PiercingMeleeWeapon : BluntMeleeWeapon
 {
-    private List<CharacterStats> CharacterHits;
+    private List<BaseCharacter> CharacterHits;
 
     protected override void HitCheck(Collider collider)
     {

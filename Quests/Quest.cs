@@ -11,7 +11,7 @@ public class Quest
 
     public readonly int GoldReward;
     public readonly PairList<Item, int> Drops;
-    public readonly CharacterStats Questee;
+    public readonly BaseCharacter Questee;
 
     public Quest(string name, string description, int requiredAmount)
     {

@@ -49,7 +49,7 @@ public class CharacterCreator : MonoBehaviour
 
             if (saveName != "")
             {
-                World.InitializeWorldData(SaveData.LoadData(saveName));
+                GameManager.InitializeWorldData(SaveData.LoadData(saveName));
                 SceneTransitioner.LoadScene("GameWorld", true);
             }
         }

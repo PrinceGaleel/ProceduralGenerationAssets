@@ -41,11 +41,6 @@ public class SettingsMenu : MonoBehaviour
         }
     }
 
-    public void SetFPSText()
-    {
-        FPSText.text = (FPSSlider.value * FPSIncremenet).ToString();
-    }
-
     public void OnLeave()
     {
         int vSync;

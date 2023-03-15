@@ -16,9 +16,6 @@ public class StructureCreator : MonoBehaviour
 {
     public static StructureCreator Instance { get; private set; }
 
-    public static ConcurrentQueue<Vector2Int> MobDensToCreate;
-    private static ConcurrentQueue<VillageToCreate> VillagesToCreate;
-
     public static List<Vector2Int> VillageChunks = new();
     public static List<Vector2Int> MobDenPositions = new() { new(0, 0) };
 
@@ -59,18 +56,6 @@ public class StructureCreator : MonoBehaviour
         new(1, 1)
     };
 
-    private struct VillageToCreate
-    {
-        public Vector2Int ChunkPosition;
-        public PairList<Vector2, GameObject> Buildings;
-
-        public VillageToCreate(Vector2Int chunk, PairList<Vector2, GameObject> buildings)
-        {
-            ChunkPosition = chunk;
-            Buildings = buildings;
-        }
-    }
-
     private void Awake()
     {
         if (Instance)
@@ -86,54 +71,18 @@ public class StructureCreator : MonoBehaviour
         }
     }
 
-    private void Update()
-    {
-        if (VillagesToCreate.Count > 0)
-        {
-            if (VillagesToCreate.TryDequeue(out VillageToCreate villageInfo))
-            {
-                if (World.ActiveTerrain[villageInfo.ChunkPosition])
-                { 
-                    for (int i = 0; i < villageInfo.Buildings.Count; i++)
-                    {
-                        Instantiate(villageInfo.Buildings[i].Value, Chunk.GetPerlinPosition(villageInfo.Buildings[i].Key), Quaternion.identity, World.ActiveTerrain[villageInfo.ChunkPosition].MyTransform);
-                    }
-                }
-            }
-        }
-
-        if (MobDensToCreate.Count > 0)
-        {
-            if (MobDensToCreate.TryDequeue(out Vector2Int chunkPos))
-            {
-                if (World.ActiveTerrain.ContainsKey(chunkPos))
-                {
-                    Instantiate(MobDenPrefabs[Random.Range(0, MobDenPrefabs.Length)],
-                        Chunk.GetPerlinPosition(chunkPos * Chunk.DefaultChunkSize), Quaternion.identity).
-                        transform.SetParent(World.ActiveTerrain[chunkPos].MyTransform);
-                }
-            }
-        }
-    }
-
-    public static void InitializeStatics()
-    {
-        MobDensToCreate = new();
-        VillagesToCreate = new();
-    }
-
-    public struct PrepareVillage : IJob
+    public class PrepareVillage : SecondaryThreadJob
     {
         private readonly Vector2Int ChunkPosition;
         private readonly Vector2Int WorldPosition;
 
-        public PrepareVillage(Vector2Int chunkPosition, Vector2Int worldPosition)
+        public PrepareVillage(Vector2Int chunkPosition)
         {
             ChunkPosition = chunkPosition;
-            WorldPosition = worldPosition;
+            WorldPosition = chunkPosition * Chunk.DefaultChunkSize;
         }
 
-        public void Execute()
+        public override void Execute()
         {
             PairList<Vector2, GameObject> buildings = new();
             int whichCenter = Rnd.Next(CenterBuildings.Count);
@@ -210,13 +159,55 @@ public class StructureCreator : MonoBehaviour
                 }
             }
 
-            lock (VillagesToCreate) 
+            if (GameManager.ActiveTerrain[ChunkPosition])
+            {
+                for (int i = 0; i < buildings.Count; i++)
                 {
-                    VillagesToCreate.Enqueue(new(ChunkPosition, buildings));
+                    new CreateStructure(ChunkPosition, buildings[i].Key, buildings[i].Value).Schedule();
                 }
+            }
 
 
             FoliageManager.AddTreesToRemove(new(lowestX, lowestY), new(highestX, highestY));
+        }
+    }
+
+    public class CreateDen : MainThreadJob
+    {
+        private readonly Vector2Int ChunkPosition;
+
+        public CreateDen(Vector2Int chunkPosition)
+        {
+            ChunkPosition = chunkPosition;
+        }
+
+        public override void Execute()
+        {
+            if (GameManager.ActiveTerrain.ContainsKey(ChunkPosition))
+            {
+                Instantiate(MobDenPrefabs[Random.Range(0, MobDenPrefabs.Length)],
+                    Chunk.GetPerlinPosition(ChunkPosition * Chunk.DefaultChunkSize), Quaternion.identity).
+                    transform.SetParent(GameManager.ActiveTerrain[ChunkPosition].MyTransform);
+            }
+        }
+    }
+
+    public class CreateStructure : MainThreadJob
+    {
+        private readonly Vector2Int ChunkPosition;
+        private readonly Vector2 Position;
+        private readonly GameObject Prefab;
+
+        public CreateStructure(Vector2Int chunkPosition, Vector2 position, GameObject prefab)
+        {
+            ChunkPosition = chunkPosition;
+            Position = position;
+            Prefab = prefab;
+        }
+
+        public override void Execute()
+        {
+            if(GameManager.ActiveTerrain.ContainsKey(ChunkPosition)) Instantiate(Prefab, Chunk.GetPerlinPosition(Position), Quaternion.identity, GameManager.ActiveTerrain[ChunkPosition].MyTransform);
         }
     }
 }

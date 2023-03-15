@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class BluntMeleeWeapon : MonoBehaviour
 {
-    [SerializeField] protected CharacterStats Character;
+    [SerializeField] protected BaseCharacter Character;
     [SerializeField] protected float Damage;
     [SerializeField] protected int WeaponNum;
     [SerializeField] protected Collider MyCollider;
@@ -18,7 +18,7 @@ public class BluntMeleeWeapon : MonoBehaviour
         ToggleFist(false);
     }
 
-    public void Initialize(CharacterStats owner, float damage)
+    public void Initialize(BaseCharacter owner, float damage)
     {
         Damage = damage;
         Character = owner;

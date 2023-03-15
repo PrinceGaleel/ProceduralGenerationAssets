@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class Inventory : MonoBehaviour
 {
-    [SerializeField] private CharacterStats Owner;
+    [SerializeField] private BaseCharacter Owner;
     [SerializeField] private EquipmentContainer MyEquipmentContainer;
     private readonly Dictionary<Item, int> Items = new();
     public int Gold;
@@ -78,7 +78,7 @@ public class Inventory : MonoBehaviour
     protected virtual void OnValidate()
     {
         if (GetComponent<EquipmentContainer>()) MyEquipmentContainer = GetComponent<EquipmentContainer>();
-        if (!Owner) Owner = GetComponent<CharacterStats>();
+        if (!Owner) Owner = GetComponent<BaseCharacter>();
     }
 #endif
 }

@@ -85,14 +85,14 @@ public class NavMeshManager : MonoBehaviour
             }
             else if (ChunksToAdd.TryDequeue(out Vector2Int chunkPos))
             {
-                Chunk chunk = World.ActiveTerrain[chunkPos];
+                Chunk chunk = GameManager.ActiveTerrain[chunkPos];
                 ActiveSources.Add(new()
                 {
                     transform = chunk.MyTransform.localToWorldMatrix,
                     size = Vector3.zero,
                     shape = NavMeshBuildSourceShape.Mesh,
                     area = 0,
-                    sourceObject = chunk.ChunkMeshFilter.sharedMesh
+                    sourceObject = chunk.GetChunkMeshFilter.sharedMesh
                 });
 
                 SourcesDict[chunkPos] = ActiveSources[^1];
@@ -172,9 +172,9 @@ public class NavMeshManager : MonoBehaviour
             {
                 Vector2Int chunkToCheck = new(x + chunkPos.x, z + chunkPos.y);
 
-                if (World.ActiveTerrain.ContainsKey(chunkToCheck))
+                if (GameManager.ActiveTerrain.ContainsKey(chunkToCheck))
                 {
-                    Chunk chunk = World.ActiveTerrain[chunkToCheck];
+                    Chunk chunk = GameManager.ActiveTerrain[chunkToCheck];
 
                     if (!SourcesDict.ContainsKey(chunkToCheck))
                     {
@@ -214,7 +214,7 @@ public class NavMeshManager : MonoBehaviour
         {
             AwaitingFoliage.Remove(chunkPos);
 
-            if (World.ActiveTerrain[chunkPos].HasTerrain)
+            if (GameManager.ActiveTerrain[chunkPos].HasTerrain)
             {
                 ChunksToAdd.Enqueue(chunkPos);
             }

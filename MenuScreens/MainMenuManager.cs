@@ -7,48 +7,19 @@ using Photon.Pun;
 
 public class MainMenuManager : MonoBehaviour
 {
-    [SerializeField] private GameObject MainPanel, CreateLoad, CharacterCreator, SettingsPanel, CreditsPanel, LoadPanel;
-
     private GameObject LastToEnable;
 
-    private void Awake()
+    private void Start()
     {
-        MainPanel.SetActive(true);
-        CreateLoad.SetActive(false);
-        CharacterCreator.SetActive(false);
-        SettingsPanel.SetActive(false);
-        CreditsPanel.SetActive(false);
-        LoadPanel.SetActive(false);
-
-        LastToEnable = MainPanel;
+        if (transform.childCount > 0)
+        {
+            foreach (Transform child in transform) { child.gameObject.SetActive(false); }
+            LastToEnable = transform.GetChild(0).gameObject;
+            LastToEnable.SetActive(true);
+        }
     }
 
-    public void EnableMain()
-    {
-        TogglePanel(MainPanel);
-    }
-
-    public void EnableSettings()
-    {
-        TogglePanel(SettingsPanel);
-    }
-
-    public void EnableCredits()
-    {
-        TogglePanel(CreditsPanel);
-    }
-
-    public void EnableLoadPanel()
-    {
-        TogglePanel(LoadPanel);
-    }
-
-    public void EnableCharacterCreator()
-    {
-        TogglePanel(CharacterCreator);
-    }
-
-    private void TogglePanel(GameObject panel)
+    public void TogglePanel(GameObject panel)
     {
         LastToEnable.SetActive(false);
         LastToEnable = panel;

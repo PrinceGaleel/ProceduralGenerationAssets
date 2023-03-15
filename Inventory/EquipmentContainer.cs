@@ -5,7 +5,7 @@ using UnityEngine;
 [RequireComponent(typeof(Inventory))]
 public class EquipmentContainer : MonoBehaviour
 {
-    [SerializeField] private CharacterStats Character;
+    [SerializeField] private BaseCharacter Character;
     [SerializeField] private Inventory Inventory;
 
     public WeaponEquippable RightHand;
@@ -111,7 +111,7 @@ public class EquipmentContainer : MonoBehaviour
 #if UNITY_EDITOR
     protected virtual void OnValidate()
     {
-        if(!Character) Character = GetComponent<CharacterStats>();
+        if(!Character) Character = GetComponent<BaseCharacter>();
         if(!Inventory) Inventory = GetComponent<Inventory>();
     }
 #endif

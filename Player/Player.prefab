@@ -339,21 +339,20 @@ MonoBehaviour:
   MaxMana: 100
   BaseDamage: 20
   CurrentExp: 0
-  ExpToLevelUp: 0
+  ExpToLevelUp: 100
   Level: 0
-  SkillPoints: 0
+  SkillPoints: 29
   StaminaRegenState: 1
   StaminaRegen: 7
   StaminaRegenTimer: 0
   StaminaRegenTime: 5
-  NormalSpeed: 6
+  WalkingSpeed: 6
   SprintSpeed: 9
   BackingOffSpeed: 4
   StrafeSpeed: 5
   DodgeSpeed: 10
   RotationSpeed: 120
-  MyRace: 0
-  MyTeamID: 0
+  MyTransform: {fileID: 5600692888165502627}
   Anim: {fileID: 5542794824981686775}
   _Inventory: {fileID: 9162514053089913598}
   Fists:
@@ -362,7 +361,9 @@ MonoBehaviour:
   Drops:
   - Key: {fileID: 0}
     Value: 0
-  MyTransform: {fileID: 5600692888165502627}
+  MyRace: 0
+  MyTeamID: 0
+  Refresh: 0
   SpawnPoint: {x: 0, y: 0, z: 0}
   CanMove: 0
   Controller: {fileID: 5600692888165502631}

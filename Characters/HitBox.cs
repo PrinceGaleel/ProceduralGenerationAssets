@@ -11,7 +11,7 @@ public enum DamageTypes
 public class HitBox : MonoBehaviour
 {
     public float CurrentArmorRating;
-    public CharacterStats Character;
+    public BaseCharacter Character;
     public float DamageMultiplier = 1;
 
     private void Awake()
@@ -90,11 +90,11 @@ public class HitBox : MonoBehaviour
 
 public struct HitData
 {
-    public CharacterStats From;
+    public BaseCharacter From;
     public float Amount;
     public DamageTypes DamageType;
 
-    public HitData(float amount, CharacterStats character, DamageTypes damageType)
+    public HitData(float amount, BaseCharacter character, DamageTypes damageType)
     {
         Amount = Mathf.Abs(amount);
         From = character;

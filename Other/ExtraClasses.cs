@@ -35,6 +35,26 @@ public class ExtraUtils
 
         return output;
     }
+
+    public static float RoundToFloat(float num, float roundTo)
+    {
+        return Mathf.Round(num / roundTo) * roundTo;
+    }
+
+    public static Vector3 RoundToVec3(Vector3 pos, int roundTo)
+    {
+        return new(RoundToFloat(pos.x, roundTo), RoundToFloat(pos.y, roundTo), RoundToFloat(pos.z, roundTo));
+    }
+
+    public static int RoundToVec3Int(float num, int roundTo)
+    {
+        return Mathf.RoundToInt(num / roundTo) * roundTo;
+    }
+
+    public static Vector3Int RoundToInt(Vector3 pos, int roundTo)
+    {
+        return new(RoundToVec3Int(pos.x, roundTo), RoundToVec3Int(pos.y, roundTo), RoundToVec3Int(pos.z, roundTo));
+    }
 }
 
 [Serializable]

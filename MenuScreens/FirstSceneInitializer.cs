@@ -23,7 +23,7 @@ public class FirstSceneInitializer : MonoBehaviour
 
         StructureCreator.InitializePrefabs(MobDenPrefabs, CenterBuildings, EssentialBuildings, Houses, OptionalBuildings, Extras);
         TerrainGradient.Initialize(Biomes);
-        World.InitializeConstants(ChunkPrefab);
+        GameManager.InitializeConstants(ChunkPrefab);
         GrassManager.Initialize(GrassMaterial, GrassShader);
         Chunk.InitializeTriangles();
     }

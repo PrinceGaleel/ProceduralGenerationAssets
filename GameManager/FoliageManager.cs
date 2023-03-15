@@ -21,8 +21,6 @@ public class FoliageManager : MonoBehaviour
     private static Dictionary<Vector2Int, Queue<FoliageInfoToMove>> FoliagesToAdd;
     private static Dictionary<Vector2Int, Bounds> FoliageToRemove;
 
-    private static Queue<GameObject> ToDestroy;
-
     public static bool HasTrees(Vector2Int chunkPos) { return CurrentFoliage.ContainsKey(chunkPos); }
 
     private void Awake()
@@ -41,18 +39,13 @@ public class FoliageManager : MonoBehaviour
         enabled = false;
     }
 
-    private void Start()
-    {
-        enabled = false;
-    }
-
     private void Update()
     {
         if (FutureFoliagesToClear.Count > 0)
         {
             if (FutureFoliagesToClear.TryDequeue(out Vector2Int chunkPos))
             {
-                ClearFoliage(chunkPos);
+                AddClearFoliage(chunkPos);
             }
         }
 
@@ -61,7 +54,7 @@ public class FoliageManager : MonoBehaviour
             Vector2Int key = FoliagesToClear.First().Key;
             if (FoliagesToClear[key].Count > 0)
             {
-                ToDestroy.Enqueue(FoliagesToClear[key].Dequeue().gameObject);
+                new ToDestroyJob(FoliagesToClear[key].Dequeue().gameObject).Schedule();
             }
             else
             {
@@ -69,17 +62,14 @@ public class FoliageManager : MonoBehaviour
             }
         }
 
-        if(ToDestroy.Count > 0)
+        if(FoliageToRemove.Count > 0)
         {
-            if(ToDestroy.TryDequeue(out GameObject foliage))
-            {
-                Destroy(foliage, 1);
-            }
+
         }
 
         if (FoliagesToAdd.Count > 0)
         {
-            //Nextoliage();
+            Nextoliage();
         }
     }
 
@@ -93,6 +83,7 @@ public class FoliageManager : MonoBehaviour
         }
         else
         {
+            new AINodeManager.AddNodesChunkJob(chunkPos * Chunk.DefaultChunkSize).Schedule();
             NavMeshManager.CheckAwaiting(chunkPos);
             FoliagesToAdd.Remove(chunkPos);
         }
@@ -169,7 +160,6 @@ public class FoliageManager : MonoBehaviour
         FoliagesToClear = new();
         CurrentFoliage = new();
         FutureFoliagesToClear = new();
-        ToDestroy = new();
 
         for (int i = 0; i < TerrainGradient.BiomeDatas.Length; i++)
         {

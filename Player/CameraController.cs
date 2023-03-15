@@ -13,7 +13,7 @@ public class CameraController : MonoBehaviour
     private CameraState CurrentState;
 
     private float XCamRotation;
-    private float CurrentCamDist;
+    private float TargetCamDist;
     private float ActualCamDist;
     public float MouseSensitivity;
 
@@ -62,10 +62,10 @@ public class CameraController : MonoBehaviour
     private void Start()
     {
         GoFirstPerson();
-        CurrentCamDist = 0;
+        TargetCamDist = 0;
         MainCam.transform.SetLocalPositionAndRotation(new Vector3(0, 0, 0), Quaternion.Euler(0, 0, 0));
         ThirdPersonParent.transform.localRotation = Quaternion.Euler(0, 0, 0);
-        ActualCamDist = CurrentCamDist;
+        ActualCamDist = TargetCamDist;
 
         Cursor.lockState = CursorLockMode.Locked;
     }
@@ -98,10 +98,7 @@ public class CameraController : MonoBehaviour
 
         if (CurrentState == CameraState.First_Person)
         {
-            if (Input.mouseScrollDelta.y < 0)
-            {
-                GoThirdPerson();
-            }
+            if (Input.mouseScrollDelta.y < 0) GoThirdPerson();
         }
         else if (CurrentState == CameraState.Third_Person)
         {
@@ -112,19 +109,13 @@ public class CameraController : MonoBehaviour
             {
                 ChangeCurrentCamDist(sphereHit, Vector3.zero);
             }
-            else
-            {
-                ActualCamDist = CurrentCamDist;
-            }
+            else ActualCamDist = TargetCamDist; 
 
             if (Input.mouseScrollDelta.y != 0)
             {
-                CurrentCamDist = Mathf.Clamp(CurrentCamDist - Input.mouseScrollDelta.y, MinCamDist, MaxCamDist);
+                TargetCamDist = Mathf.Clamp(TargetCamDist - Input.mouseScrollDelta.y, MinCamDist, MaxCamDist);
 
-                if (CurrentCamDist - Input.mouseScrollDelta.y < MinCamDist)
-                {
-                    GoFirstPerson();
-                }
+                if (TargetCamDist - Input.mouseScrollDelta.y < MinCamDist) GoFirstPerson(); 
             }
         }
     }
@@ -137,7 +128,7 @@ public class CameraController : MonoBehaviour
 
         MainCam.transform.SetLocalPositionAndRotation(new Vector3(0, 0, 0), Quaternion.Euler(0, 0, 0));
         ThirdPersonParent.transform.localRotation = Quaternion.Euler(0, 0, 0);
-        CurrentCamDist = 0;
+        TargetCamDist = 0;
         ActualCamDist = 0;
         MainCam.transform.localPosition = new(0, 0, 0);
     }
@@ -148,9 +139,9 @@ public class CameraController : MonoBehaviour
         CurrentState = CameraState.Third_Person;
         ChangeHeadAttachState(true);
 
-        MainCam.transform.SetLocalPositionAndRotation(new Vector3(0, 0, MinCamDist), Quaternion.Euler(0, 0, 0));
+        MainCam.transform.localRotation = Quaternion.Euler(0, 0, 0);
         ThirdPersonParent.transform.localRotation = Quaternion.Euler(0, 0, 0);
-        CurrentCamDist = MinCamDist;
+        TargetCamDist = MinCamDist;
         ActualCamDist = MinCamDist;
     }
 
@@ -200,7 +191,7 @@ public class CameraController : MonoBehaviour
         {
             if (Vector3.Distance(ThirdPersonParent.transform.InverseTransformPoint(ThirdPersonParent.position), ThirdPersonParent.transform.InverseTransformPoint(hit.point)) > MinCollisionDist)
             {
-                if (Vector3.Distance(ThirdPersonParent.transform.InverseTransformPoint(ThirdPersonParent.position), ThirdPersonParent.transform.InverseTransformPoint(hit.point)) < CurrentCamDist)
+                if (Vector3.Distance(ThirdPersonParent.transform.InverseTransformPoint(ThirdPersonParent.position), ThirdPersonParent.transform.InverseTransformPoint(hit.point)) < TargetCamDist)
                 {
                     ActualCamDist = Vector3.Distance(ThirdPersonParent.transform.InverseTransformPoint(ThirdPersonParent.position), ThirdPersonParent.transform.InverseTransformPoint(hit.point + offset));
                 }

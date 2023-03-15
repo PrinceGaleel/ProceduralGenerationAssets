@@ -11,17 +11,17 @@ public class WorldInitializer : MonoBehaviour
     {
         PlayerStats.Instance.gameObject.SetActive(false);
         ChunksToCreate = new();
-        for (int i = 0, x = -World.LODThreeDistance; x <= World.LODThreeDistance; x++)
+        for (int i = 0, x = -GameManager.LODThreeDistance; x <= GameManager.LODThreeDistance; x++)
         {
-            for (int z = -World.LODThreeDistance; z <= World.LODThreeDistance; z++)
+            for (int z = -GameManager.LODThreeDistance; z <= GameManager.LODThreeDistance; z++)
             {
-                Vector2Int chunkPos = new(World.CurrentPlayerChunkPos.x + x, World.CurrentPlayerChunkPos.y + z);
+                Vector2Int chunkPos = new(GameManager.CurrentPlayerChunkPos.x + x, GameManager.CurrentPlayerChunkPos.y + z);
 
-                if (World.ActiveTerrain.TryAdd(chunkPos, Instantiate(World.ChunkPrefab, new(chunkPos.x * Chunk.DefaultChunkSize, 0, chunkPos.y * Chunk.DefaultChunkSize), Quaternion.identity, World.WorldTransform).GetComponent<Chunk>()))
+                if (GameManager.ActiveTerrain.TryAdd(chunkPos, Instantiate(GameManager.ChunkPrefab, new(chunkPos.x * Chunk.DefaultChunkSize, 0, chunkPos.y * Chunk.DefaultChunkSize), Quaternion.identity, GameManager.WorldTransform).GetComponent<Chunk>()))
                 {
                     ChunksToCreate.Add(chunkPos);
-                    World.ActiveTerrain[chunkPos].SetPositions(chunkPos);
-                    new World.InitializeChunk(chunkPos).Schedule();
+                    GameManager.ActiveTerrain[chunkPos].SetPositions(chunkPos);
+                    new GameManager.InitializeChunk(chunkPos).Schedule();
                 }
 
                 i++;
@@ -34,8 +34,8 @@ public class WorldInitializer : MonoBehaviour
         if (ChunksToCreate.Count == 0)
         {
             FoliageManager.PopulateAllFoliage();
-            NavMeshManager.AddPOI(World.CurrentPlayerChunkPos, 1);
-            World.Instance.enabled = true;
+            NavMeshManager.AddPOI(GameManager.CurrentPlayerChunkPos, 1);
+            GameManager.Instance.enabled = true;
             FoliageManager.Instance.enabled = true;
             PlayerStats.Instance.gameObject.SetActive(true);
 
@@ -45,18 +45,12 @@ public class WorldInitializer : MonoBehaviour
             Destroy(this);
             enabled = false;
         }
-        else if (World.ActiveTerrain[ChunksToCreate[0]])
+        else if (GameManager.ActiveTerrain[ChunksToCreate[0]])
         {
             while (ChunksToCreate.Count > 0)
             {
-                if (World.ActiveTerrain[ChunksToCreate[0]].HasTerrain)
-                {
-                    ChunksToCreate.RemoveAt(0);
-                }
-                else
-                {
-                    break;
-                }
+                if (GameManager.ActiveTerrain[ChunksToCreate[0]].HasTerrain) ChunksToCreate.RemoveAt(0);
+                else break;
             }
         }
     }

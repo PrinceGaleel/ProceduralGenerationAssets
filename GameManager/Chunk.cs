@@ -26,10 +26,10 @@ public class Chunk : MonoBehaviour
 
     public static void InitializeStatics()
     {
-        HeightPerlinOffset = new(World.CurrentSaveData.Seed + BaseOffset, World.CurrentSaveData.Seed + BaseOffset);
-        TemperaturePerlinOffset = new(World.CurrentSaveData.Seed + 10000 + BaseOffset, World.CurrentSaveData.Seed + 10000 + BaseOffset);
+        HeightPerlinOffset = new(GameManager.CurrentSaveData.Seed + BaseOffset, GameManager.CurrentSaveData.Seed + BaseOffset);
+        TemperaturePerlinOffset = new(GameManager.CurrentSaveData.Seed + 10000 + BaseOffset, GameManager.CurrentSaveData.Seed + 10000 + BaseOffset);
         OctaveOffsets = new Vector2[NumOctaves];
-        System.Random prng = new(World.CurrentSaveData.Seed);
+        System.Random prng = new(GameManager.CurrentSaveData.Seed);
         for (int i = 0; i < NumOctaves; i++)
         {
             OctaveOffsets[i].x = prng.Next(100000) + HeightPerlinOffset.x;
@@ -37,14 +37,15 @@ public class Chunk : MonoBehaviour
         }
     }
 
-    private static int Seed { get { return World.CurrentSaveData.Seed; } }
+    private static int Seed { get { return GameManager.CurrentSaveData.Seed; } }
     public const int DefaultChunkSize = 60;
     public const int FoliageSquareCheckSize = 5;
 
     public Vector2Int WorldPosition;
     public Vector2Int ChunkPosition;
 
-    public MeshFilter ChunkMeshFilter { get; private set; }
+    public MeshFilter GetChunkMeshFilter { get { return ChunkMeshFilter; } }
+    [SerializeField] private MeshFilter ChunkMeshFilter;
     [SerializeField] private MeshRenderer _MeshRenderer;
     [SerializeField] private MeshCollider _MeshCollider;
     public TerrainLODStates CurrentLODState { get; private set; }
@@ -64,11 +65,6 @@ public class Chunk : MonoBehaviour
     private Mesh MyMesh;
     private int MyMeshID;
 
-    private void Awake()
-    {
-        ChunkMeshFilter = GetComponent<MeshFilter>();
-    }
-
     public void SetPositions(Vector2Int chunkPos)
     {
         ChunkPosition = chunkPos;
@@ -80,10 +76,7 @@ public class Chunk : MonoBehaviour
 
     private const int NumOctaves = 4;
     private static Vector2[] OctaveOffsets;
-    private static float GetHeightPerlinValue(Vector2 pos)
-    {
-        return GetHeightPerlinValue(pos.x, pos.y);
-    }
+    private static float GetHeightPerlinValue(Vector2 pos) { return GetHeightPerlinValue(pos.x, pos.y); }
     public static float GetHeightPerlinValue(float x, float y)
     {
         float amplitude = 1;
@@ -102,37 +95,20 @@ public class Chunk : MonoBehaviour
 
         return Mathf.Abs(perlinNoise);
     }
+
     private const float DirtScale = 5;
-    public static float GetDirtPerlin(float x, float y)
-    {
-        return Mathf.PerlinNoise((x + OctaveOffsets[0].x) / DefaultChunkSize * DirtScale, (y + OctaveOffsets[0].y) / DefaultChunkSize * DirtScale);
-    }
+    public static float GetDirtPerlin(float x, float y) { return Mathf.PerlinNoise((x + OctaveOffsets[0].x) / DefaultChunkSize * DirtScale, (y + OctaveOffsets[0].y) / DefaultChunkSize * DirtScale); }
 
     private static float GetTemperaturePerlin(Vector2Int pos) { return GetTemperaturePerlin(pos.x, pos.y); }
-    public static float GetTemperaturePerlin(float x, float y)
-    {
-        return Mathf.Abs(Mathf.PerlinNoise((x + TemperaturePerlinOffset.x) / DefaultChunkSize * TemperaturePerlinScale, (y + TemperaturePerlinOffset.y) / DefaultChunkSize * TemperaturePerlinScale));
-    }
+    public static float GetTemperaturePerlin(float x, float y) { return Mathf.Abs(Mathf.PerlinNoise((x + TemperaturePerlinOffset.x) / DefaultChunkSize * TemperaturePerlinScale, (y + TemperaturePerlinOffset.y) / DefaultChunkSize * TemperaturePerlinScale)); }
 
-    public static Vector3 GetPerlinPosition(Vector2 position)
-    {
-        return GetPerlinPosition(position.x, position.y);
-    }
+    public static Vector3 GetPerlinPosition(Vector2 position) { return GetPerlinPosition(position.x, position.y); }
 
-    public static Vector3 GetPerlinPosition(float x, float y)
-    {
-        return new(x, (GetHeightPerlinValue(x, y) * HeightMultipler) + (GetDirtPerlin(x, y) * 2), y);
-    }
+    public static Vector3 GetPerlinPosition(float x, float y) { return new(x, (GetHeightPerlinValue(x, y) * HeightMultipler) + (GetDirtPerlin(x, y) * 2), y); }
 
-    public static Vector2Int GetChunkPosition(float x, float y)
-    {
-        return new(Mathf.RoundToInt(x / DefaultChunkSize), Mathf.RoundToInt(y / DefaultChunkSize));
-    }
+    public static Vector2Int GetChunkPosition(float x, float y) { return new(Mathf.RoundToInt(x / DefaultChunkSize), Mathf.RoundToInt(y / DefaultChunkSize)); }
 
-    public static Vector2Int GetChunkPosition(Vector3 position)
-    {
-        return GetChunkPosition(position.x, position.z);
-    }
+    public static Vector2Int GetChunkPosition(Vector3 position) { return GetChunkPosition(position.x, position.z); }
 
     private void AssignVerts(int lodDetail)
     {
@@ -159,7 +135,7 @@ public class Chunk : MonoBehaviour
         }
 
         CalculateNormals();
-        World.MeshesToAssign.Enqueue(this);
+        GameManager.MeshesToAssign.Enqueue(this);
     }
 
     private void CalculateNormals()
@@ -225,25 +201,22 @@ public class Chunk : MonoBehaviour
             HasStructures = true;
             if (StructureCreator.VillageChunks.Contains(ChunkPosition))
             {
-                new StructureCreator.PrepareVillage(ChunkPosition, WorldPosition).Schedule();
+                new StructureCreator.PrepareVillage(ChunkPosition).Schedule();
             }
             else if (StructureCreator.MobDenPositions.Contains(ChunkPosition))
             {
-                StructureCreator.MobDensToCreate.Enqueue(ChunkPosition);
+                new StructureCreator.CreateDen(ChunkPosition).Schedule();
             }
         }
     }
 
-    private Vector2Int GetVertexPosition(int x, int y)
-    {
-        return new Vector2Int(x + WorldPosition.x - (DefaultChunkSize / 2), y + WorldPosition.y - (DefaultChunkSize / 2));
-    }
+    private Vector2Int GetVertexPosition(int x, int y) { return new Vector2Int(x + WorldPosition.x - (DefaultChunkSize / 2), y + WorldPosition.y - (DefaultChunkSize / 2)); }
 
     public void AssignTreeData()
     {
         if (!HasTrees)
         {
-            System.Random random = new(Mathf.Abs(WorldPosition.x * WorldPosition.y));
+            System.Random random = new(Mathf.Abs((WorldPosition.x + WorldPosition.y) * Seed));
             Queue<FoliageInfoToMove> foliages = new();
 
             for (int y = 0; y < DefaultChunkSize - FoliageSquareCheckSize; y += FoliageSquareCheckSize)
@@ -279,7 +252,7 @@ public class Chunk : MonoBehaviour
 
     public void CreateMesh()
     {
-        if (ChunkMeshFilter)
+        if (GetChunkMeshFilter)
         {
             MyMesh = new();
 
@@ -296,9 +269,12 @@ public class Chunk : MonoBehaviour
 
     private void ApplyMesh()
     {
-        ChunkMeshFilter.sharedMesh = MyMesh;
-        _MeshCollider.sharedMesh = MyMesh;
-        HasTerrain = true;
+        if (GetChunkMeshFilter)
+        {
+            GetChunkMeshFilter.sharedMesh = MyMesh;
+            _MeshCollider.sharedMesh = MyMesh;
+            HasTerrain = true;
+        }
     }
 
     public class BakePhysicsJob : SecondaryThreadJob
@@ -333,10 +309,7 @@ public class Chunk : MonoBehaviour
             MyMeshID = meshID;
         }
 
-        public override void Execute()
-        {
-            if (MyChunk.MyMeshID == MyMeshID) MyChunk.ApplyMesh();
-        }
+        public override void Execute() { if (MyChunk.MyMeshID == MyMeshID) MyChunk.ApplyMesh(); }
     }
 
     public static void InitializeTriangles()
@@ -371,6 +344,10 @@ public class Chunk : MonoBehaviour
             vertexIndex++;
         }
     }
+
+#if UNITY_EDITOR
+    private void OnValidate() { ChunkMeshFilter = GetComponent<MeshFilter>(); }
+#endif
 }
 
 [System.Serializable]

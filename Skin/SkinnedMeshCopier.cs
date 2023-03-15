@@ -27,7 +27,7 @@ public class SkinnedMeshCopier : CharacterOrganizer
 
     public void LoadCharacter()
     {
-        CharacterSkin skin = World.CurrentSaveData.CharSkin;
+        CharacterSkin skin = GameManager.CurrentSaveData.CharSkin;
         CharacterObjectParents genderParts;
         if (skin.IsMale)
         {
@@ -42,7 +42,7 @@ public class SkinnedMeshCopier : CharacterOrganizer
         PlayerStats.Instance.GenderParts.Eyebrow = CopySkinnedMeshRenderer(genderParts.Eyebrow.GetChild(skin.Eyebrow), PlayerStats.Instance.SkinnedMeshParent);
         PlayerStats.Instance.GenderParts.HeadAllElements = CopySkinnedMeshRenderer(genderParts.HeadAllElements.GetChild(skin.HeadAllElements), PlayerStats.Instance.SkinnedMeshParent);
 
-        if (World.CurrentSaveData.CharSkin.IsMale)
+        if (GameManager.CurrentSaveData.CharSkin.IsMale)
         {
             PlayerStats.Instance.GenderParts.FacialHair = CopySkinnedMeshRenderer(genderParts.FacialHair.GetChild(skin.FacialHair), PlayerStats.Instance.SkinnedMeshParent);
         }
@@ -60,7 +60,7 @@ public class SkinnedMeshCopier : CharacterOrganizer
 
         CameraController.Instance.FirstPersonDisable = new() { PlayerStats.Instance.AllGenderParts.AllHair, PlayerStats.Instance.GenderParts.Eyebrow, PlayerStats.Instance.GenderParts.HeadAllElements };
         
-        if (World.CurrentSaveData.CharSkin.IsMale)
+        if (GameManager.CurrentSaveData.CharSkin.IsMale)
         {
             CameraController.Instance.FirstPersonDisable.Add(PlayerStats.Instance.GenderParts.FacialHair);
         }

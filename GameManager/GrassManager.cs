@@ -99,7 +99,7 @@ public class GrassManager : MonoBehaviour
         {
             foreach (Vector2Int key in GrassChunks.Keys)
             {
-                if(Mathf.Abs(key.x - World.CurrentPlayerChunkPos.x) > MaxGrassDistance || Mathf.Abs(key.y - World.CurrentPlayerChunkPos.y) > MaxGrassDistance)
+                if(Mathf.Abs(key.x - GameManager.CurrentPlayerChunkPos.x) > MaxGrassDistance || Mathf.Abs(key.y - GameManager.CurrentPlayerChunkPos.y) > MaxGrassDistance)
                 {
                     if(GrassChunks.TryRemove(key, out GrassChunk grassChunk))
                     {
@@ -118,7 +118,7 @@ public class GrassManager : MonoBehaviour
                         return;
                     }
 
-                    Vector2Int chunkToCheck = new(World.CurrentPlayerChunkPos.x + x, World.CurrentPlayerChunkPos.y + y);
+                    Vector2Int chunkToCheck = new(GameManager.CurrentPlayerChunkPos.x + x, GameManager.CurrentPlayerChunkPos.y + y);
                     if (!GrassChunks.ContainsKey(chunkToCheck))
                     {
                         if(ChunksBuffer.TryDequeue(out GrassChunk grassChunk))

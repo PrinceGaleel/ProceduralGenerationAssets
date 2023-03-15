@@ -4,14 +4,13 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(CharacterController))]
-public class PlayerStats : CharacterStats
+public class PlayerStats : BaseCharacter
 {
     public static PlayerStats Instance { get; private set; }
 
     [Header("Player Specific")]
-    [SerializeField] private Transform MyTransform;
-    public static Transform PlayerTransform { get { return Instance.MyTransform; } }
     public Vector3 SpawnPoint;
+    public static Transform PlayerTransform { get { return Instance.MyTransform; } }
 
     [Header("Gravity")]
     public bool CanMove;
@@ -55,7 +54,7 @@ public class PlayerStats : CharacterStats
             IsGroundedPhysics = true;
             IsGroundedState = true;
 
-            PlayerTransform.position = Chunk.GetPerlinPosition(World.CurrentSaveData.LastPosition.x, World.CurrentSaveData.LastPosition.z) + new Vector3(0, 50, 0);
+            PlayerTransform.position = Chunk.GetPerlinPosition(GameManager.CurrentSaveData.LastPosition.x, GameManager.CurrentSaveData.LastPosition.z) + new Vector3(0, 50, 0);
         }
     }
 
@@ -76,7 +75,7 @@ public class PlayerStats : CharacterStats
         {
             Vec2Velocity = (Input.GetAxis("Vertical") * new Vector2(PlayerTransform.forward.x, PlayerTransform.forward.z)) + (Input.GetAxis("Horizontal") * new Vector2(PlayerTransform.right.x, transform.right.z));
 
-            if (Input.GetKey(KeyCode.W)) Vec2Velocity *= NormalSpeed;
+            if (Input.GetKey(KeyCode.W)) Vec2Velocity *= WalkingSpeed;
             else if (Input.GetKey(KeyCode.S)) Vec2Velocity *= BackingOffSpeed;
             else if (Input.GetKey(KeyCode.A)) Vec2Velocity *= StrafeSpeed;
             else if (Input.GetKey(KeyCode.D)) Vec2Velocity *= StrafeSpeed;
@@ -139,7 +138,7 @@ public class PlayerStats : CharacterStats
 
     private void FixedUpdate()
     {
-        if (Physics.BoxCast(GroundChecker.transform.position, new Vector3(0.2f, 0.1f, 0.125f), -GroundChecker.transform.up, PlayerTransform.rotation, MaxGroundDist, World.GravityMask))
+        if (Physics.BoxCast(GroundChecker.transform.position, new Vector3(0.2f, 0.1f, 0.125f), -GroundChecker.transform.up, PlayerTransform.rotation, MaxGroundDist, GameManager.GravityMask))
         {
             VerticalAcceleration = Mathf.Clamp(VerticalAcceleration + (Physics.gravity.y * Time.deltaTime), Physics.gravity.y, 50);
             VerticalSpeed = Mathf.Clamp(VerticalSpeed + (VerticalAcceleration * Time.deltaTime), Physics.gravity.y, 50);
