@@ -49,6 +49,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   WorldPosition: {x: 600, y: 540}
   ChunkPosition: {x: 10, y: 9}
+  ChunkMeshFilter: {fileID: 7766003661228588759}
+  TreeMeshFilter: {fileID: 0}
   _MeshRenderer: {fileID: 8362191688193078113}
   _MeshCollider: {fileID: 6372840903280311197}
   MyTransform: {fileID: 7243774774459150742}

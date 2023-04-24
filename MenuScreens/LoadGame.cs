@@ -1,11 +1,10 @@
 using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
 using System.IO;
+using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
-using TMPro;
-using UnityEngine.UI;
-using UnityEngine.EventSystems;
+
+using UnityEngine;
 
 public class LoadGame : MonoBehaviour
 {
@@ -35,14 +34,13 @@ public class LoadGame : MonoBehaviour
 
                 if (stream.Length > 0)
                 {
-                    SaveData saveData = new BinaryFormatter().Deserialize(stream) as SaveData;
-
-                    if(saveData.SaveName == null)
+                    try
                     {
-                        saveData.SaveName = Path.GetFileName(dirs[i]);
+                        SaveData saveData = new BinaryFormatter().Deserialize(stream) as SaveData;
+                        saveData.SaveName ??= Path.GetFileName(dirs[i]);
+                        saves.Add(saveData);
                     }
-
-                    saves.Add(saveData);
+                    catch (SerializationException) { }
                 }
 
                 stream.Close();
@@ -60,12 +58,12 @@ public class LoadGame : MonoBehaviour
 
     public void Back()
     {
-        SceneTransitioner.LoadScene("MainMenu");
+        SceneTransitioner.LoadScene("MainMenu", false, false);
     }
 
     public void DeleteSave()
     {
-        if(Selected)
+        if (Selected)
         {
             string path = Application.persistentDataPath + "/" + Selected.SaveName;
 
@@ -81,14 +79,12 @@ public class LoadGame : MonoBehaviour
 
     public void LoadSave()
     {
-        if(Selected)
+        if (Selected)
         {
-            string path = Application.persistentDataPath + "/" + Selected.SaveName;
-
-            if (Directory.Exists(path))
+            if (SaveHandler.LoadData(Selected._SaveData.SaveNum.ToString(), out SaveData saveData))
             {
-                GameManager.InitializeWorldData(SaveData.LoadData(Selected.SaveName));
-                SceneTransitioner.LoadScene("GameWorld", true);
+                GameManager.InitializeWorldData(saveData);
+                SceneTransitioner.LoadScene("GameWorld", false, true);
             }
 
             CancelLoad();

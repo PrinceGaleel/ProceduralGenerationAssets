@@ -25,7 +25,7 @@ public abstract class BaseNavAI : BaseAI
             Agent.isStopped = false;
         }
     }
-    public override void SetPatrolling(Vector3[] patrolPoints)
+    public override void SetMainPatrolling(Vector3[] patrolPoints)
     {
         List<Vector3> points = new();
 
@@ -38,7 +38,7 @@ public abstract class BaseNavAI : BaseAI
         }
 
         PatrolPoints = points.ToArray();
-        SetPatrolling();
+        SetMainPatrolling();
     }
 
 #if UNITY_EDITOR

@@ -9,7 +9,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1588895830433058, guid: 9e6a196cc88c55d4db41fbf4731861ba, type: 3}
       propertyPath: m_Name
-      value: BaseSkin
+      value: BaseSkin Variant
       objectReference: {fileID: 0}
     - target: {fileID: 4005077195242232, guid: 9e6a196cc88c55d4db41fbf4731861ba, type: 3}
       propertyPath: m_RootOrder

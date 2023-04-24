@@ -2,25 +2,25 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class NodeDenMob : BaseNodeAI
+[RequireComponent(typeof(BaseCharacter))]
+public class NodeDenMob : BaseNodeAI, IDenMob
 {
-    public MobDen Den;
+    [Header("Den Mob Specific")]
+    [SerializeField] protected MobDen Den;
 
-    protected float TargetDenDistance { get { return Vector3.Distance(Target.transform.position, Den.transform.position); } }
+    public float TargetDenDistance { get { return Vector3.Distance(Target.transform.position, Den.transform.position); } } 
 
-    private void Update()
-    {
-        CheckStamina();
-        CurrentStateAction?.Invoke();
-    }
+    public void ISetDen(MobDen den) { Den = den; }
 
     protected override void TargetCheck()
     {
         base.TargetCheck();
 
+        if (TargetDenDistance > Den.TerritoryRadius * 1.2f) { Target = null; }
+
         if (!Target)
         {
-            SetIdling();
+            SetMainIdling();
             Den.GetNewAttackTarget(this);
         }
     }

@@ -3,36 +3,31 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Collections.Concurrent;
 using System.Threading;
+using System;
 
 public class MyJobs : MonoBehaviour
 {
     private static MyJobs Instance;
-    private static ConcurrentQueue<MainThreadJob> QueueMainThread;
-    private static ConcurrentQueue<SecondaryThreadJob> QueueOne;
-    private static ConcurrentQueue<SecondaryThreadJob> QueueTwo;
 
-    private static ConcurrentQueue<AssignJoinedNodesJob> NodesQueueOne;
-    private static ConcurrentQueue<AssignJoinedNodesJob> NodesQueueTwo;
-    private static ConcurrentQueue<AssignJoinedNodesJob> NodesQueueThree;
-    private static ConcurrentQueue<AssignJoinedNodesJob> NodesQueueFour;
+    private static MainThreadJob NextMainJob;
+    private static List<MainThreadJob> QueueMain;
+    private static ConcurrentQueue<MainThreadJob> QueueMainBuffer;
 
-    private static ConcurrentQueue<PathfindingJob> PathfindingQueue;
-    private static ConcurrentQueue<AssignNodeNeighboursJob> NeighboursQueue;
+    private static ConcurrentQueue<PathfindingThreadJob> QueuePathfindingOne;
+    private static ConcurrentQueue<PathfindingThreadJob> QueuePathfindingTwo;
+    private static ConcurrentQueue<PathfindingThreadJob> QueuePathfindingThree;
+    private static ConcurrentQueue<PathfindingThreadJob> QueuePathfindingFour;
 
-    private static Thread ThreadOne;
-    private static Thread ThreadTwo;
+    private Thread ThreadAdmin;
 
-    private static Thread ThreadNodesOne;
-    private static Thread ThreadNodesTwo;
-    private static Thread ThreadNodesThree;
-    private static Thread ThreadNodesFour;
-
-    private static Thread ThreadPathfinding;
-    private static Thread ThreadNeighbours;
+    private static Thread PathfindingThreadOne;
+    private static Thread PathfindingThreadTwo;
+    private static Thread PathfindingThreadThree;
+    private static Thread PathfindingThreadFour;
 
     private void Awake()
     {
-        if(Instance)
+        if (Instance)
         {
             Destroy(this);
             enabled = false;
@@ -42,60 +37,79 @@ public class MyJobs : MonoBehaviour
             Instance = this;
             DontDestroyOnLoad(gameObject);
 
-            QueueMainThread = new();
-            QueueOne = new();
-            QueueTwo = new();
 
-            NodesQueueOne = new();
-            NodesQueueTwo = new();
-            NodesQueueThree = new();
-            NodesQueueFour = new();
+            QueueMain = new();
+            QueueMainBuffer = new();
+            ThreadAdmin = new(new ThreadStart(AdminUpdate));
+            ThreadAdmin.Start();
 
-            PathfindingQueue = new();
-            NeighboursQueue = new();
-
-            ThreadOne = new(new ThreadStart(ThreadUpdateOne));
-            ThreadTwo = new(new ThreadStart(ThreadUpdateTwo));
-
-            ThreadNodesOne = new(new ThreadStart(ThreadUpdateNodesOne));
-            ThreadNodesTwo = new(new ThreadStart(ThreadUpdateNodesTwo));
-            ThreadNodesThree = new(new ThreadStart(ThreadUpdateNodesThree));
-            ThreadNodesFour = new(new ThreadStart(ThreadUpdateNodesFour));
-
-            ThreadPathfinding = new(new ThreadStart(ThreadUpdatePathfinding));
-            ThreadNeighbours = new(new ThreadStart(ThreadUpdateNeighbours));
-
-            ThreadOne.Start();
-            ThreadTwo.Start();
-
-            ThreadNodesOne.Start();
-            ThreadNodesTwo.Start();
-            ThreadNodesThree.Start();
-            ThreadNodesFour.Start();
-
-            ThreadPathfinding.Start();
-            ThreadNeighbours.Start();
+            QueuePathfindingOne = new();
+            QueuePathfindingTwo = new();
+            QueuePathfindingThree = new();
+            QueuePathfindingFour = new();
+            PathfindingThreadOne = new(new ThreadStart(PathfindingUpdateOne));
+            PathfindingThreadTwo = new(new ThreadStart(PathfindingUpdateTwo));
+            PathfindingThreadThree = new(new ThreadStart(PathfindingUpdateThree));
+            PathfindingThreadFour = new(new ThreadStart(PathfindingUpdateFour));
+            PathfindingThreadOne.Start();
+            PathfindingThreadTwo.Start();
+            PathfindingThreadThree.Start();
+            PathfindingThreadFour.Start();
         }
     }
 
     private void Update()
     {
-        if(QueueMainThread.Count > 0)
+        if (NextMainJob != null)
+        { 
+            NextMainJob.Execute();
+            NextMainJob = null;
+        }
+    }
+
+    private static void AdminUpdate()
+    {
+        while (true)
         {
-            if (QueueMainThread.TryDequeue(out MainThreadJob job))
+            lock (QueueMain)
             {
-                job.Execute();
+                while (QueueMainBuffer.Count > 0)
+                {
+                    if(QueueMainBuffer.TryDequeue(out MainThreadJob job))
+                    {
+                        QueueMain.Add(job);
+                    }
+                }
+            }
+
+            if (NextMainJob == null && QueueMain.Count > 0)
+            {
+                List<MainThreadJob> jobs = new(QueueMain);
+                int nextJobIndex = 0;
+                for (int i = 1; i < jobs.Count; i++)
+                {
+                    if (jobs[i].GetPriority < jobs[nextJobIndex].GetPriority)
+                    {
+                        nextJobIndex = i;
+                    }
+                }
+
+                lock (QueueMain)
+                {
+                    NextMainJob = QueueMain[nextJobIndex];
+                    QueueMain.RemoveAt(nextJobIndex);
+                }
             }
         }
     }
 
-    private static void ThreadUpdatePathfinding()
+    private static void PathfindingUpdateOne()
     {
         while (true)
         {
-            if (PathfindingQueue.Count > 0)
+            while (QueuePathfindingOne.Count > 0)
             {
-                if (PathfindingQueue.TryDequeue(out PathfindingJob job))
+                if (QueuePathfindingOne.TryDequeue(out PathfindingThreadJob job))
                 {
                     job.Execute();
                 }
@@ -103,13 +117,13 @@ public class MyJobs : MonoBehaviour
         }
     }
 
-    private static void ThreadUpdateNodesOne()
+    private static void PathfindingUpdateTwo()
     {
         while (true)
         {
-            if (NodesQueueOne.Count > 0)
+            while (QueuePathfindingTwo.Count > 0)
             {
-                if (NodesQueueOne.TryDequeue(out AssignJoinedNodesJob job))
+                if (QueuePathfindingTwo.TryDequeue(out PathfindingThreadJob job))
                 {
                     job.Execute();
                 }
@@ -117,13 +131,13 @@ public class MyJobs : MonoBehaviour
         }
     }
 
-    private static void ThreadUpdateNodesTwo()
+    private static void PathfindingUpdateThree()
     {
         while (true)
         {
-            if (NodesQueueTwo.Count > 0)
+            while (QueuePathfindingThree.Count > 0)
             {
-                if (NodesQueueTwo.TryDequeue(out AssignJoinedNodesJob job))
+                if (QueuePathfindingThree.TryDequeue(out PathfindingThreadJob job))
                 {
                     job.Execute();
                 }
@@ -131,69 +145,13 @@ public class MyJobs : MonoBehaviour
         }
     }
 
-    private static void ThreadUpdateNodesThree()
+    private static void PathfindingUpdateFour()
     {
         while (true)
         {
-            if (NodesQueueThree.Count > 0)
+            while (QueuePathfindingFour.Count > 0)
             {
-                if (NodesQueueThree.TryDequeue(out AssignJoinedNodesJob job))
-                {
-                    job.Execute();
-                }
-            }
-        }
-    }
-
-    private static void ThreadUpdateNodesFour()
-    {
-        while (true)
-        {
-            if (NodesQueueFour.Count > 0)
-            {
-                if (NodesQueueFour.TryDequeue(out AssignJoinedNodesJob job))
-                {
-                    job.Execute();
-                }
-            }
-        }
-    }
-
-    private static void ThreadUpdateNeighbours()
-    {
-        while (true)
-        {
-            if (NeighboursQueue.Count > 0)
-            {
-                if (NeighboursQueue.TryDequeue(out AssignNodeNeighboursJob job))
-                {
-                    job.Execute();
-                }
-            }
-        }
-    }
-
-    private static void ThreadUpdateOne()
-    {
-        while(true)
-        {
-            if(QueueOne.Count > 0)
-            { 
-                if(QueueOne.TryDequeue(out SecondaryThreadJob job))
-                {
-                    job.Execute();
-                }
-            }
-        }
-    }
-
-    private static void ThreadUpdateTwo()
-    {
-        while (true)
-        {
-            if (QueueTwo.Count > 0)
-            {
-                if (QueueTwo.TryDequeue(out SecondaryThreadJob job))
+                if (QueuePathfindingFour.TryDequeue(out PathfindingThreadJob job))
                 {
                     job.Execute();
                 }
@@ -203,103 +161,64 @@ public class MyJobs : MonoBehaviour
 
     private void OnDestroy()
     {
-        if (ThreadOne != null) { if (ThreadOne.IsAlive) { ThreadOne.Abort(); } }
+        if (ThreadAdmin != null) { if (ThreadAdmin.IsAlive) { ThreadAdmin.Abort(); } }
+        if (PathfindingThreadOne != null) { if (PathfindingThreadOne.IsAlive) { PathfindingThreadOne.Abort(); } }
+        if (PathfindingThreadTwo != null) { if (PathfindingThreadTwo.IsAlive) { PathfindingThreadTwo.Abort(); } }
+        if (PathfindingThreadThree != null) { if (PathfindingThreadThree.IsAlive) { PathfindingThreadThree.Abort(); } }
+        if (PathfindingThreadFour != null) { if (PathfindingThreadFour.IsAlive) { PathfindingThreadFour.Abort(); } }
 
-        if (ThreadTwo != null) { if (ThreadTwo.IsAlive) { ThreadTwo.Abort(); } }
-
-        if (ThreadNodesOne != null) { if (ThreadNodesOne.IsAlive) { ThreadNodesOne.Abort(); } }
-        if (ThreadNodesTwo != null) { if (ThreadNodesTwo.IsAlive) { ThreadNodesTwo.Abort(); } }
-        if (ThreadNodesThree != null) { if (ThreadNodesThree.IsAlive) { ThreadNodesThree.Abort(); } }
-        if (ThreadNodesFour != null) { if (ThreadNodesFour.IsAlive) { ThreadNodesFour.Abort(); } }
-
-        if (ThreadPathfinding != null) { if (ThreadPathfinding.IsAlive) { ThreadPathfinding.Abort(); } }
-        if (ThreadNeighbours != null) { if (ThreadNeighbours.IsAlive) { ThreadNeighbours.Abort(); } }
-
-        QueueMainThread = null;
-        QueueOne = null;
-        QueueTwo = null;
-
-        ThreadNodesOne = null;
-        ThreadNodesTwo = null;
-        ThreadNodesThree = null;
-        ThreadNodesFour = null;
-
-        PathfindingQueue = null;
-        NeighboursQueue = null;
+        QueueMain = null;
+        QueueMainBuffer = null;
+        QueuePathfindingOne = null;
+        QueuePathfindingTwo = null;
+        QueuePathfindingThree = null;
+        QueuePathfindingFour = null;
     }
 
-    public static void Schedule(MainThreadJob job) { QueueMainThread.Enqueue(job); }
+    public static void Schedule(MainThreadJob job) { QueueMainBuffer.Enqueue(job); }
 
-    public static void Schedule(SecondaryThreadJob job)
+    public static void Schedule(PathfindingThreadJob job)
     {
-        if(QueueOne.Count < QueueTwo.Count)
+        if (QueuePathfindingOne.Count < QueuePathfindingTwo.Count)
         {
-            QueueOne.Enqueue(job);
+            QueuePathfindingOne.Enqueue(job);
+        }
+        else if (QueuePathfindingTwo.Count < QueuePathfindingThree.Count)
+        {
+            QueuePathfindingTwo.Enqueue(job);
+        }
+        else if (QueuePathfindingThree.Count < QueuePathfindingFour.Count)
+        {
+            QueuePathfindingThree.Enqueue(job);
         }
         else
         {
-            QueueTwo.Enqueue(job);
+            QueuePathfindingFour.Enqueue(job);
         }
     }
-
-    public static void Schedule(PathfindingJob job) { PathfindingQueue.Enqueue(job); }
-
-    public static void Schedule(AssignJoinedNodesJob job)
-    {
-        if (NodesQueueOne.Count < NodesQueueTwo.Count) NodesQueueOne.Enqueue(job);
-        else if (NodesQueueTwo.Count < NodesQueueThree.Count) NodesQueueTwo.Enqueue(job);
-        else if(NodesQueueThree.Count < NodesQueueFour.Count) NodesQueueThree.Enqueue(job);
-        else NodesQueueFour.Enqueue(job);
-    }
-
-    public static void Schedule(AssignNodeNeighboursJob job) { NeighboursQueue.Enqueue(job); }
 }
 
-public abstract class PathfindingJob
+public abstract class Job
 {
     public abstract void Execute();
 
-    public void Schedule()
+    public abstract void Schedule();
+}
+
+public abstract class MainThreadJob : Job
+{
+    protected int Priority = 1;
+    public int GetPriority { get { return Priority; } }
+
+    public override void Schedule()
     {
         MyJobs.Schedule(this);
     }
 }
 
-public abstract class AssignNodeNeighboursJob
+public abstract class PathfindingThreadJob : Job
 {
-    public abstract void Execute();
-
-    public void Schedule()
-    {
-        MyJobs.Schedule(this);
-    }
-}
-
-public abstract class AssignJoinedNodesJob
-{
-    public abstract void Execute();
-
-    public void Schedule()
-    {
-        MyJobs.Schedule(this);
-    }
-}
-
-public abstract class MainThreadJob
-{
-    public abstract void Execute();
-
-    public void Schedule()
-    {
-        MyJobs.Schedule(this);
-    }
-}
-
-public abstract class SecondaryThreadJob
-{
-    public abstract void Execute();
-
-    public void Schedule()
+    public override void Schedule()
     {
         MyJobs.Schedule(this);
     }
@@ -316,7 +235,7 @@ public class ToDestroyJob : MainThreadJob
 
     public override void Execute()
     {
-        Object.Destroy(ToDestroy);
+        UnityEngine.Object.Destroy(ToDestroy);
     }
 }
 
@@ -332,5 +251,20 @@ public class ToDisableJob : MainThreadJob
     public override void Execute()
     {
         ToDisable.SetActive(false);
+    }
+}
+
+public class ToEnableMonobehaivourJob : MainThreadJob
+{
+    private readonly MonoBehaviour ToEnable;
+
+    public ToEnableMonobehaivourJob(MonoBehaviour toEnable)
+    {
+        ToEnable = toEnable;
+    }
+
+    public override void Execute()
+    {
+        ToEnable.enabled = true;
     }
 }

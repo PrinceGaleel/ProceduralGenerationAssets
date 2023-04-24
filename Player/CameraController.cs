@@ -1,23 +1,20 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class CameraController : MonoBehaviour
 {
     public static CameraController Instance;
-
     public Camera MainCam;
-    [SerializeField] private Transform ThirdPersonParent;
-    [SerializeField] private Transform FirstPersonParent;
+    [SerializeField] private Transform CamParent;
+    [SerializeField] private CameraState CurrentState;
 
-    private CameraState CurrentState;
-
-    private float XCamRotation;
-    private float TargetCamDist;
-    private float ActualCamDist;
+    [SerializeField] private float XCamRotation;
+    [SerializeField] private float TargetCamDist;
+    [SerializeField] private float ActualCamDist;
     public float MouseSensitivity;
 
-    [SerializeField] private Transform SpineRotator;
     [SerializeField] private float InteractDistance = 5f;
 
     [Header("Camera Settigns")]
@@ -31,8 +28,7 @@ public class CameraController : MonoBehaviour
     public List<Transform> FirstPersonDisable;
     public List<Transform> FirstPersonArmsLayer;
 
-    private Outline CurrentOutline;
-    private Vector3 StartingSpineRotation;
+    [SerializeField] private Outline CurrentOutline;
 
     private enum CameraState
     {
@@ -51,11 +47,7 @@ public class CameraController : MonoBehaviour
         else
         {
             Instance = this;
-            StartingSpineRotation = SpineRotator.eulerAngles;
-            if (!MainCam)
-            {
-                enabled = false;
-            }
+            if (!MainCam) enabled = false;
         }
     }
 
@@ -64,7 +56,7 @@ public class CameraController : MonoBehaviour
         GoFirstPerson();
         TargetCamDist = 0;
         MainCam.transform.SetLocalPositionAndRotation(new Vector3(0, 0, 0), Quaternion.Euler(0, 0, 0));
-        ThirdPersonParent.transform.localRotation = Quaternion.Euler(0, 0, 0);
+        CamParent.transform.localRotation = Quaternion.Euler(0, 0, 0);
         ActualCamDist = TargetCamDist;
 
         Cursor.lockState = CursorLockMode.Locked;
@@ -74,38 +66,34 @@ public class CameraController : MonoBehaviour
     {
         ResetText();
 
-        if (Physics.Raycast(ThirdPersonParent.position, ThirdPersonParent.forward, out RaycastHit hit, InteractDistance, ~LayerMask.GetMask("Controller")))
+        if (Physics.Raycast(MainCam.transform.position, MainCam.transform.forward, out RaycastHit hit, InteractDistance))
         {
-            if (hit.transform.TryGetComponent(out DropItem item))
+            if (hit.transform.TryGetComponent(out Interactable interactable))
             {
-                CurrentOutline = item._Outline;
-                CurrentOutline.enabled = true;
-
-                UIController.Instance.InteractInfo.text = "Press F to pick up";
+                UIController.Instance.InteractInfo.text = interactable.GetInteractInfo;
 
                 if (Input.GetKeyDown(KeyCode.F))
                 {
-                    PlayerStats.Instance._Inventory.AddItem(item._Item, item.Amount);
-                    Destroy(hit.transform.gameObject);
-                    hit.transform.gameObject.SetActive(false);
+                    string message = interactable.PlayerInteract();
+                    if (message != "") UIController.SetMessageInfo(message);
                 }
             }
         }
 
         transform.eulerAngles = new Vector3(0, Mathf.Repeat(transform.eulerAngles.y + Input.GetAxis("Mouse X") * MouseSensitivity, 360), 0);
         XCamRotation = Mathf.Clamp(XCamRotation - (Input.GetAxis("Mouse Y") * MouseSensitivity), MinYAngle, MaxYAngle);
-        SpineRotator.eulerAngles = StartingSpineRotation + new Vector3(0, transform.eulerAngles.y, XCamRotation);
+        CamParent.rotation = Quaternion.Euler(new(XCamRotation, transform.eulerAngles.y, 0));
 
         if (CurrentState == CameraState.First_Person)
         {
-            if (Input.mouseScrollDelta.y < 0) GoThirdPerson();
+            //if (Input.mouseScrollDelta.y < 0) GoThirdPerson();
         }
         else if (CurrentState == CameraState.Third_Person)
         {
-            ThirdPersonParent.transform.localEulerAngles = new Vector3(XCamRotation, 0, 0);
+            CamParent.transform.localEulerAngles = new Vector3(XCamRotation, 0, 0);
             MainCam.transform.localPosition = Vector3.Lerp(MainCam.transform.localPosition, new Vector3(0, 0, -ActualCamDist), Time.deltaTime * 7f);
 
-            if (Physics.SphereCast(ThirdPersonParent.position, CollisionOffset, (MainCam.transform.position - ThirdPersonParent.position).normalized, out RaycastHit sphereHit, Vector3.Distance(MainCam.transform.position, ThirdPersonParent.position), ~LayerMask.GetMask("Weapon", "Harvestable", "Controller", "Hitbox", "Resource")))
+            if (Physics.SphereCast(CamParent.position, CollisionOffset, (MainCam.transform.position - CamParent.position).normalized, out RaycastHit sphereHit, Vector3.Distance(MainCam.transform.position, CamParent.position), ~LayerMask.GetMask("Weapon", "Harvestable", "Controller", "Hitbox", "Resource")))
             {
                 ChangeCurrentCamDist(sphereHit, Vector3.zero);
             }
@@ -122,12 +110,11 @@ public class CameraController : MonoBehaviour
 
     private void GoFirstPerson()
     {
-        MainCam.transform.SetParent(FirstPersonParent);
         CurrentState = CameraState.First_Person;
         ChangeHeadAttachState(false);
 
         MainCam.transform.SetLocalPositionAndRotation(new Vector3(0, 0, 0), Quaternion.Euler(0, 0, 0));
-        ThirdPersonParent.transform.localRotation = Quaternion.Euler(0, 0, 0);
+        CamParent.transform.localRotation = Quaternion.Euler(0, 0, 0);
         TargetCamDist = 0;
         ActualCamDist = 0;
         MainCam.transform.localPosition = new(0, 0, 0);
@@ -135,12 +122,11 @@ public class CameraController : MonoBehaviour
 
     private void GoThirdPerson()
     {
-        MainCam.transform.SetParent(ThirdPersonParent);
         CurrentState = CameraState.Third_Person;
         ChangeHeadAttachState(true);
 
         MainCam.transform.localRotation = Quaternion.Euler(0, 0, 0);
-        ThirdPersonParent.transform.localRotation = Quaternion.Euler(0, 0, 0);
+        CamParent.transform.localRotation = Quaternion.Euler(0, 0, 0);
         TargetCamDist = MinCamDist;
         ActualCamDist = MinCamDist;
     }
@@ -189,11 +175,11 @@ public class CameraController : MonoBehaviour
     {
         if (!hit.transform.GetComponent<CharacterController>())
         {
-            if (Vector3.Distance(ThirdPersonParent.transform.InverseTransformPoint(ThirdPersonParent.position), ThirdPersonParent.transform.InverseTransformPoint(hit.point)) > MinCollisionDist)
+            if (Vector3.Distance(CamParent.transform.InverseTransformPoint(CamParent.position), CamParent.transform.InverseTransformPoint(hit.point)) > MinCollisionDist)
             {
-                if (Vector3.Distance(ThirdPersonParent.transform.InverseTransformPoint(ThirdPersonParent.position), ThirdPersonParent.transform.InverseTransformPoint(hit.point)) < TargetCamDist)
+                if (Vector3.Distance(CamParent.transform.InverseTransformPoint(CamParent.position), CamParent.transform.InverseTransformPoint(hit.point)) < TargetCamDist)
                 {
-                    ActualCamDist = Vector3.Distance(ThirdPersonParent.transform.InverseTransformPoint(ThirdPersonParent.position), ThirdPersonParent.transform.InverseTransformPoint(hit.point + offset));
+                    ActualCamDist = Vector3.Distance(CamParent.transform.InverseTransformPoint(CamParent.position), CamParent.transform.InverseTransformPoint(hit.point + offset));
                 }
             }
         }

@@ -1,9 +1,12 @@
 using System.Collections;
 using System.Collections.Generic;
+
 using UnityEngine;
 
 public class RenderTerrainMap : MonoBehaviour
 {
+    [SerializeField] private bool IsManualBounds = false;
+
     public static RenderTerrainMap Instance;
     private static Transform MyTransform;
 
@@ -31,13 +34,18 @@ public class RenderTerrainMap : MonoBehaviour
             gameObject.layer = LayerMask.NameToLayer("Terrain");
             CamToDrawWidth = GetComponent<Camera>();
 
-            transform.position = new(transform.position.x, Chunk.HeightMultipler * 1.5f, transform.position.z);
-            CamToDrawWidth.farClipPlane = Chunk.HeightMultipler * 2;
-            CamToDrawWidth.nearClipPlane = 0;
+            if (!IsManualBounds)
+            {
+                Bounds bounds = new(transform.position, new(((GrassManager.MaxGrassDistance * 2) + 1) * Chunk.ChunkSize, PerlinData.HeightMultipler * 2, ((GrassManager.MaxGrassDistance * 2) + 1) * Chunk.ChunkSize));
+                CamToDrawWidth.orthographicSize = bounds.size.magnitude / AdjustScaling;
 
-            Bounds bounds = new(transform.position, new(GameManager.LODOneDistance * Chunk.DefaultChunkSize, Chunk.HeightMultipler * 2, GameManager.LODOneDistance * Chunk.DefaultChunkSize));
+                MyTransform.position = new(MyTransform.position.x, PerlinData.HeightMultipler * 1.5f, MyTransform.position.z);
+
+                CamToDrawWidth.farClipPlane = PerlinData.HeightMultipler * 2;
+                CamToDrawWidth.nearClipPlane = 0;
+            }
+
             CamToDrawWidth.cullingMask = LayerMask.GetMask("Terrain");
-            CamToDrawWidth.orthographicSize = bounds.size.magnitude / AdjustScaling;
 
             TempTexture = new(Resolution, Resolution, 24);
             CamToDrawWidth.targetTexture = TempTexture;

@@ -2,28 +2,27 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.AI;
 
 public class MobDen : MonoBehaviour
 {
-    public Transform SpawnTransform;
-    public Vector3 SpawnPoint;
+    [SerializeField] private Transform SpawnTransform;
+    [SerializeField] private Vector3 SpawnPoint;
     public int MyTeamID;
-    private DenStates CurrentState;
+    [SerializeField] private DenStates CurrentState;
 
-    public int MinSpawn;
-    public int MaxSpawn;
+    [SerializeField] private int MinSpawn;
+    [SerializeField] private int MaxSpawn;
 
-    private int NumToSpawn;
+    [SerializeField] private int NumToSpawn;
     public float TerritoryRadius;
 
-    public List<BaseAI> Mobs;
-    public List<BaseCharacter> Enemies;
+    [SerializeField] private List<BaseAI> Mobs;
+    [SerializeField] private List<BaseCharacter> Enemies;
 
-    public GameObject Mob;
+    [SerializeField] private GameObject Mob;
 
-    public Vector2 Highest;
-    public Vector2 Lowest;
+    [SerializeField] private Vector2 Highest;
+    [SerializeField] private Vector2 Lowest;
 
     public enum DenStates
     {
@@ -34,39 +33,33 @@ public class MobDen : MonoBehaviour
 
     private void Awake()
     {
-        if(!SpawnTransform)
+        if (!SpawnTransform)
         {
             SpawnTransform = transform;
         }
 
+        SpawnPoint = SpawnTransform.position + new Vector3(0, 1, 0);
+
         FoliageManager.AddTreesToRemove(Lowest + new Vector2(transform.position.x, transform.position.z), Highest + new Vector2(transform.position.x, transform.position.z));
 
-        if (!NavMesh.SamplePosition(transform.position, out _, 10, ~0))
+        Vector2Int chunkPos = Chunk.GetChunkPosition(transform.position);
+        if (GameManager.ActiveTerrain.ContainsKey(chunkPos))
         {
-            NavMeshManager.AddUnreadyToEnable(Chunk.GetChunkPosition(transform.position.x, transform.position.z), this);
-            enabled = false;
+            if (!GameManager.ActiveTerrain[chunkPos].HasTerrain) AddToWaiting(chunkPos);
         }
+        else AddToWaiting(chunkPos);
+    }
+
+    private void AddToWaiting(Vector2Int chunkPos)
+    {
+        if (!Chunk.WaitingForTerrain.ContainsKey(chunkPos)) Chunk.WaitingForTerrain.Add(chunkPos, new() { this });
+        else Chunk.WaitingForTerrain[chunkPos].Add(this);
+        enabled = false;
     }
 
     private void Start()
     {
-        if (!NavMesh.SamplePosition(transform.position, out _, 10, ~0))
-        {
-            enabled = false;
-            return;
-        }
-
         MyTeamID = TeamsManager.AddTeam("Mob Den", true, new());
-
-        if (NavMesh.SamplePosition(SpawnTransform.position, out NavMeshHit hit, 10, ~0))
-        {
-            SpawnPoint = hit.position;
-        }
-        else
-        {
-            SpawnPoint = SpawnTransform.position;
-        }
-
         Initialize();
     }
 
@@ -111,16 +104,16 @@ public class MobDen : MonoBehaviour
 
     public void SpawnMob()
     {
-        NodeDenMob mob = Instantiate(Mob, SpawnPoint, Quaternion.identity).GetComponent<NodeDenMob>();
+        BaseAI mob = Instantiate(Mob, SpawnPoint, Quaternion.identity).GetComponent<BaseAI>();
         Mobs.Add(mob);
-        mob.Den = this;
-        mob.MyTeamID = MyTeamID;
+        (mob as IDenMob).ISetDen(this);
+        mob.SetTeamID = MyTeamID;
         mob.transform.SetParent(transform);
         AssignPatrolPoints(mob);
-        TeamsManager.AddMember(MyTeamID, mob);
+        TeamsManager.AddMember(MyTeamID, mob.GetCharacter);
     }
 
-    public void AssignPatrolPoints(NodeDenMob mob)
+    public void AssignPatrolPoints(BaseAI mob)
     {
         List<Vector3> patrolPoints = new();
 
@@ -129,20 +122,20 @@ public class MobDen : MonoBehaviour
             float x = ((float)GameManager.Rnd.NextDouble() * (TerritoryRadius * 0.7f)) - (TerritoryRadius * 0.7f) + transform.position.x;
             float z = ((float)GameManager.Rnd.NextDouble() * (TerritoryRadius * 0.7f)) - (TerritoryRadius * 0.7f) + transform.position.z;
 
-            if(NavMesh.SamplePosition(Chunk.GetPerlinPosition(x,z), out NavMeshHit hit, 10, ~0))
+            if (Physics.Raycast(GameManager.GetPerlinPosition(x, z) + new Vector3(0, 5, 0), Vector3.down, out RaycastHit hit, 10))
             {
-                patrolPoints.Add(hit.position);
+                patrolPoints.Add(hit.point);
             }
         }
 
-        mob.SetPatrolling(patrolPoints.ToArray());
+        mob.SetMainPatrolling(patrolPoints.ToArray());
     }
 
     private void SetPatrolling()
     {
-        foreach (NodeDenMob mob in Mobs)
+        foreach (BaseAI mob in Mobs)
         {
-            mob.SetPatrolling();
+            mob.SetMainPatrolling();
         }
 
         CurrentState = DenStates.Patrolling;
@@ -166,13 +159,13 @@ public class MobDen : MonoBehaviour
         }
         else
         {
-            mob.SetPatrolling();
+            mob.SetMainPatrolling();
         }
     }
 
     private void OnDisable()
     {
-        foreach (NodeDenMob mob in Mobs)
+        foreach (BaseAI mob in Mobs)
         {
             mob.Teleport(SpawnPoint);
             mob.gameObject.SetActive(false);

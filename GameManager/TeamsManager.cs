@@ -1,16 +1,18 @@
+using System.Threading;
+using System.Collections.Concurrent;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Unity.Jobs;
-using UnityEngine.Jobs;
+using UnityEditor;
 
 public class TeamsManager : MonoBehaviour
 {
     private static TeamsManager Instance;
 
-    private PopulateEnemiesJob PopulateEnemiesCheck;
     private static int TeamCounter;
     private static Dictionary<int, Team> Teams;
+    private static JobHandle EnemiesCheck;
 
     private void Awake()
     {
@@ -23,18 +25,15 @@ public class TeamsManager : MonoBehaviour
         else
         {
             Instance = this;
-            PopulateEnemiesCheck = new();
-            PopulateEnemiesCheck.Schedule();
+            Teams = new();
+            TeamCounter = 0;
+            EnemiesCheck = new PopulateEnemiesJob().Schedule();
         }
     }
 
     private void Update()
     {
-        if(PopulateEnemiesCheck.IsCompleted)
-        {
-            PopulateEnemiesCheck = new();
-            PopulateEnemiesCheck.Schedule();
-        }
+        if (EnemiesCheck.IsCompleted) EnemiesCheck = new PopulateEnemiesJob().Schedule();
     }
 
     public static void AddMember(int teamID, BaseCharacter member)
@@ -45,64 +44,17 @@ public class TeamsManager : MonoBehaviour
         }
     }
 
-    public class PopulateEnemiesJob : SecondaryThreadJob
-    {
-        public bool IsCompleted { get; private set; }
-
-        public PopulateEnemiesJob()
-        {
-            IsCompleted = false;
-        }
-
-        public override void Execute()
-        {
-            Dictionary<int, Team> teams = new(Teams);
-
-            foreach (int teamID in teams.Keys)
-            {
-                List<BaseCharacter> enemies = new();
-
-                foreach (int enemyTeamID in teams[teamID].Enemies)
-                {
-                    if (enemyTeamID != teamID)
-                    {
-                        List<BaseCharacter> members;
-
-                        lock (teams[enemyTeamID].Members)
-                        {
-                            members = new(teams[enemyTeamID].Members);
-                        }
-
-                        foreach (BaseCharacter character in members)
-                        {
-                            enemies.Add(character);
-                        }
-                    }
-                }
-
-                lock (Teams[teamID].AllEnemies)
-                {
-                    Teams[teamID].AllEnemies = enemies;
-                }
-            }
-
-            IsCompleted = true;
-        }
-    }
-
-    public static void InitializeStatics()
-    {
-        Teams = new();
-        TeamCounter = 0;
-    }
-
     public static void RemoveTeam(int teamID)
     {
-        foreach (int team in Teams.Keys)
+        List<int> keys = new(Teams.Keys);
+        foreach (int key in keys)
         {
-            if(Teams[team].Enemies.Contains(teamID))
+            if (Teams.ContainsKey(key))
             {
-                Teams[team].Enemies.Remove(teamID);
+                if (Teams[key].EnemyTeamIDs.Contains(teamID))
+                {
+                    Teams[key].EnemyTeamIDs.Remove(teamID);
+                }
             }
         }
 
@@ -112,21 +64,25 @@ public class TeamsManager : MonoBehaviour
     public static int AddTeam(string factionName, bool isAutoHostile, List<BaseCharacter> members)
     {
         List<int> keys = new(Teams.Keys);
-        Teams.Add(TeamCounter, new(factionName, isAutoHostile, members));
+        Teams.Add(TeamCounter, new(TeamCounter, factionName, isAutoHostile, new(members)));
 
         if (isAutoHostile)
         {
-            for (int i = keys.Count - 1; i > -1; i--)
+            for (int i = 0; i < keys.Count; i++)
             {
-                Teams[TeamCounter].Enemies.Add(keys[i]);
+                Teams[TeamCounter].EnemyTeamIDs.Add(keys[i]);
+                Teams[keys[i]].EnemyTeamIDs.Add(TeamCounter);
             }
         }
-
-        for (int i = keys.Count - 1; i > -1; i--)
+        else
         {
-            if (Teams[keys[i]].IsAutoHostile || isAutoHostile)
+            for (int i = 0; i < keys.Count; i++)
             {
-                Teams[keys[i]].Enemies.Add(TeamCounter);
+                if (isAutoHostile || Teams[keys[i]].IsAutoHostile)
+                {
+                    Teams[keys[i]].EnemyTeamIDs.Add(TeamCounter);
+                    Teams[TeamCounter].EnemyTeamIDs.Add(keys[i]);
+                }
             }
         }
 
@@ -136,26 +92,23 @@ public class TeamsManager : MonoBehaviour
 
     public static bool IsEnemy(BaseCharacter characterOne, BaseCharacter characterTwo)
     {
-        return Teams[characterOne.MyTeamID].Enemies.Contains(characterTwo.MyTeamID);
+        return Teams[characterOne.MyTeamID].EnemyTeamIDs.Contains(characterTwo.MyTeamID);
     }
 
     public static bool IsAlly(BaseCharacter characterOne, BaseCharacter characterTwo)
     {
-        return Teams[characterOne.MyTeamID].Enemies.Contains(characterTwo.MyTeamID);
+        return Teams[characterOne.MyTeamID].EnemyTeamIDs.Contains(characterTwo.MyTeamID);
     }
         
     private static List<BaseCharacter> GetEnemies(int myTeamID, Vector3 position, float searchDistance)
     {
-        List<BaseCharacter> enemies = new();
+        List<BaseCharacter> enemies = new(Teams[myTeamID].AllEnemies);
 
-        lock (Teams[myTeamID].AllEnemies)
+        for (int i = enemies.Count -1; i > -1; i--)
         {
-            foreach (BaseCharacter enemy in Teams[myTeamID].AllEnemies)
+            if (Vector3.Distance(enemies[i].transform.position, position) > searchDistance)
             {
-                if (Vector3.Distance(enemy.transform.position, position) < searchDistance)
-                {
-                    enemies.Add(enemy);
-                }
+                enemies.RemoveAt(i);
             }
         }
 
@@ -167,23 +120,58 @@ public class TeamsManager : MonoBehaviour
         return GetEnemies(den.MyTeamID, den.transform.position, den.TerritoryRadius);
     }
 
+    private void OnDestroy()
+    {
+        Teams = null;
+        TeamCounter = 0;
+    }
+
+    private struct PopulateEnemiesJob : IJob
+    {
+        public void Execute()
+        {
+            Dictionary<int, Team> teams = new(Teams);
+
+            foreach (KeyValuePair<int, Team> teamPair in teams)
+            {
+                List<BaseCharacter> enemies = new();
+
+                foreach (int enemyTeamID in teamPair.Value.EnemyTeamIDs)
+                {
+                    if (enemyTeamID != teamPair.Key)
+                    {
+                        List<BaseCharacter> members = new(teams[enemyTeamID].Members);
+                        foreach (BaseCharacter character in members)
+                        {
+                            enemies.Add(character);
+                        }
+                    }
+                }
+
+                if (Teams.ContainsKey(teamPair.Key)) Teams[teamPair.Key].AllEnemies = new(enemies);
+            }
+        }
+    }
+
     public class Team
     {
+        public int ID;
         public string FactionName;
-        public List<BaseCharacter> Members;
-        public List<BaseCharacter> AllEnemies;
+        public ConcurrentBag<BaseCharacter> Members;
+        public ConcurrentBag<BaseCharacter> AllEnemies;
         public bool IsAutoHostile;
 
-        public List<int> Enemies;
-        public List<int> Allies;
+        public List<int> EnemyTeamIDs;
+        public List<int> AllyTeamIDs;
 
-        public Team(string factionName, bool isAutoHostile, List<BaseCharacter> members)
+        public Team(int id, string factionName, bool isAutoHostile, ConcurrentBag<BaseCharacter> members)
         {
+            ID = id;
             FactionName = factionName;
             Members = members;
             IsAutoHostile = isAutoHostile;
-            Enemies = new();
-            Allies = new();
+            EnemyTeamIDs = new();
+            AllyTeamIDs = new();
             AllEnemies = new();
         }
     }

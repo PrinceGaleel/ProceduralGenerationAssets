@@ -1,13 +1,17 @@
+using AYellowpaper.SerializedCollections;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+[DisallowMultipleComponent]
 public class Inventory : MonoBehaviour
 {
-    [SerializeField] private BaseCharacter Owner;
-    [SerializeField] private EquipmentContainer MyEquipmentContainer;
-    private readonly Dictionary<Item, int> Items = new();
+    [SerializeField] protected BaseCharacter Owner;
+    [SerializeField] protected AnimatorManager AnimManager;
+    [SerializedDictionary("Item", "Amount")] public SerializedDictionary<Item, int> Items = new();
     public int Gold;
+
+    [SerializeField] protected string CurrentAnimationSet;
 
     public void AddItem(Item item, int amount)
     {
@@ -17,15 +21,15 @@ public class Inventory : MonoBehaviour
         }
         else
         {
-            Items[item] = amount;
+            Items.Add(item, amount);
         }
     }
 
-    public void AddItems(PairList<Item, int> items)
+    public void AddItems(List<CustomTuple<Item, int>> items)
     {
         for (int i = 0; i < items.Count; i++)
         {
-            items.Add(items[i].Key, items[i].Value);
+            items.Add(new(items[i].Item1, items[i].Item2));
         }
     }
 
@@ -77,8 +81,8 @@ public class Inventory : MonoBehaviour
 #if UNITY_EDITOR
     protected virtual void OnValidate()
     {
-        if (GetComponent<EquipmentContainer>()) MyEquipmentContainer = GetComponent<EquipmentContainer>();
-        if (!Owner) Owner = GetComponent<BaseCharacter>();
+        if(!Owner) Owner = GetComponent<BaseCharacter>();
+        if (GetComponent<AnimatorManager>()) AnimManager = GetComponent<AnimatorManager>();
     }
 #endif
 }

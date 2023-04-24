@@ -2,20 +2,18 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class BluntMeleeWeapon : MonoBehaviour
+[RequireComponent(typeof(BoxCollider))]
+public class BluntMeleeWeapon : BaseWeapon
 {
-    [SerializeField] protected BaseCharacter Character;
-    [SerializeField] protected float Damage;
-    [SerializeField] protected int WeaponNum;
     [SerializeField] protected Collider MyCollider;
-    public void ToggleFist(bool isEnabled) { MyCollider.enabled = isEnabled; enabled = isEnabled; }
+    public void ToggleWeapon(bool isEnabled) { MyCollider.enabled = isEnabled; enabled = isEnabled; }
 
     protected HashSet<Transform> TransformHits = new();
     protected readonly Collider[] ColliderHits = new Collider[5];
 
     protected virtual void Awake()
     {
-        ToggleFist(false);
+        ToggleWeapon(false);
     }
 
     public void Initialize(BaseCharacter owner, float damage)
@@ -28,17 +26,18 @@ public class BluntMeleeWeapon : MonoBehaviour
     {
         if(Character.WeaponNum != WeaponNum)
         {
-            ToggleFist(false);
+            ToggleWeapon(false);
         }
     }
 
     protected virtual void HitCheck(Collider collider)
     {
-        if (collider.GetComponent<HitBox>() is HitBox hitBox)
+        HitBox hitBox = collider.GetComponent<HitBox>();
+        if (hitBox)
         {
             if (hitBox.DecreaseHealth(new(Damage, Character, DamageTypes.Physical)))
             {
-                ToggleFist(false);
+                ToggleWeapon(false);
                 return;
             }
         }

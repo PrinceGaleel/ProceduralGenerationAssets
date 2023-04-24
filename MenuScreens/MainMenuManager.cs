@@ -4,10 +4,19 @@ using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
 using Photon.Pun;
+using UnityEngine.SceneManagement;
 
 public class MainMenuManager : MonoBehaviour
 {
     private GameObject LastToEnable;
+
+    private void Awake()
+    {
+        if (GrassManager.GrassComputeShader == null)
+        {
+            SceneManager.LoadScene("FirstScene");
+        }
+    }
 
     private void Start()
     {
@@ -26,13 +35,7 @@ public class MainMenuManager : MonoBehaviour
         LastToEnable.SetActive(true);
     }
 
-    public void ToScene(string sceneName)
-    {
-        SceneTransitioner.LoadScene(sceneName);
-    }
+    public void ToScene(string sceneName) { SceneTransitioner.LoadScene(sceneName, false, false); }
 
-    public void Quit()
-    {
-        Application.Quit();
-    }
+    public void Quit() { Application.Quit(); }
 }

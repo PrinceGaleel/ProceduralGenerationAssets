@@ -1,15 +1,18 @@
 using System.Collections;
 using System.Collections.Generic;
+
 using UnityEngine;
 
-public static class TerrainGradient
+using static GameManager;
+
+public static class TerrainColorGradient
 {
     public static BiomeData[] BiomeDatas { get; private set; }
     private static Dictionary<Vector2Int, BiomeData> BiomesDict;
     private static Dictionary<BiomeData, int> BiomeNums;
     private const float BlendPercent = 0.02f;
 
-    public static void Initialize(BiomeData[] biomeDatas)
+    public static void InitializeStatics(BiomeData[] biomeDatas)
     {
         BiomesDict = new();
         BiomeDatas = biomeDatas;
@@ -59,9 +62,9 @@ public static class TerrainGradient
         return BiomeNums[biomeData];
     }
 
-    public static Vector3 TerrainColorAsVector3(float x, float y, float dirtPerlin)
+    public static Vector3 TerrainColorAsVector3(float x, float y)
     {
-        return ColorAsVec3(GetTerrainColor(Chunk.GetHeightPerlinValue(x, y), Chunk.GetTemperaturePerlin(x, y), dirtPerlin));
+        return ColorAsVec3(GetTerrainColor(GetHeightPerlin(x, y), GetTemperaturePerlin(x, y)));
     }
 
     public static Vector3 ColorAsVec3(Color color)
@@ -80,7 +83,7 @@ public static class TerrainGradient
         return BiomesDict[new(CeilToOneDPInt(heightNoise), CeilToOneDPInt(tempNoise))];
     }
 
-    public static Color GetTerrainColor(float heightNoise, float tempNoise, float dirtPerlin)
+    public static Color GetTerrainColor(float heightNoise, float tempNoise)
     {
         int xPos = CeilToOneDPInt(heightNoise);
         int yPos = CeilToOneDPInt(tempNoise);
@@ -94,13 +97,8 @@ public static class TerrainGradient
         BiomeData whichXBorder = topNum != topRightNum ? topNum : biome;
         BiomeData whichYBorder = topRightNum != rightNum ? rightNum : biome;
 
-        Color topColor = topNum.TerrainGradient.Evaluate(dirtPerlin);
-        Color topRightColor = topRightNum.TerrainGradient.Evaluate(dirtPerlin);
-        Color biomeColor = biome.TerrainGradient.Evaluate(dirtPerlin);
-        Color rightColor = rightNum.TerrainGradient.Evaluate(dirtPerlin);
-
-        Color colorTop = Color.Lerp(topColor, topRightColor, Mathf.Abs(whichXBorder.HighestPoint - BlendPercent - heightNoise) / BlendPercent);
-        Color colorBottom = Color.Lerp(biomeColor, rightColor, Mathf.Abs(whichXBorder.HighestPoint - BlendPercent - heightNoise) / BlendPercent);
+        Color colorTop = Color.Lerp(topNum.TerrainColor, topRightNum.TerrainColor, Mathf.Abs(whichXBorder.HighestPoint - BlendPercent - heightNoise) / BlendPercent);
+        Color colorBottom = Color.Lerp(biome.TerrainColor, rightNum.TerrainColor, Mathf.Abs(whichXBorder.HighestPoint - BlendPercent - heightNoise) / BlendPercent);
         Color blendedColor = Color.Lerp(colorBottom, colorTop, Mathf.Abs(whichYBorder.HighestTemperature - BlendPercent - tempNoise) / BlendPercent);
 
         return blendedColor;

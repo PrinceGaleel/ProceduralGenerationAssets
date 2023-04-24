@@ -4,27 +4,33 @@ using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
 using Photon.Pun;
+using UnityEngine.Jobs;
+using Unity.Jobs.LowLevel.Unsafe;
 
 public class FirstSceneInitializer : MonoBehaviour
 {
-    public GameObject ChunkPrefab;
-    public BiomeData[] Biomes;
+    [Header("Chunks")]
+    [SerializeField] private GameObject ChunkPrefab;
+    [SerializeField] private BiomeData[] Biomes;
+    [SerializeField] private AnimationCurve TerrainGradient;
 
-    public Material GrassMaterial;
-    public ComputeShader GrassShader;
+    [Header("Grass")]
+    [SerializeField] private Material GrassMaterial;
+    [SerializeField] private ComputeShader GrassShader;
 
-    public GameObject[] MobDenPrefabs;
-    public PairList<GameObject, Vector2> CenterBuildings, EssentialBuildings, Houses, OptionalBuildings, Extras;
+    [Header("Structures")]
+    [SerializeField] private GameObject[] MobDenPrefabs;
+    [SerializeField] private VillageBuildings Village;
 
     private void Awake()
     {
-        GrassManager.GrassMaterial = Instantiate(GrassMaterial);
-        GrassManager.GrassShader = Instantiate(GrassShader);
+        PerlinData.TerrainGradient = TerrainGradient;
 
-        StructureCreator.InitializePrefabs(MobDenPrefabs, CenterBuildings, EssentialBuildings, Houses, OptionalBuildings, Extras);
-        TerrainGradient.Initialize(Biomes);
+        StructureCreator.InitializePrefabs(MobDenPrefabs, Village);
+        TerrainColorGradient.InitializeStatics(Biomes);
         GameManager.InitializeConstants(ChunkPrefab);
-        GrassManager.Initialize(GrassMaterial, GrassShader);
-        Chunk.InitializeTriangles();
+        GrassManager.InitializeStatics(Instantiate(GrassMaterial), Instantiate(GrassShader));
+        FoliageManager.InitializeThresholds();
+        UIInventory.InitializeStatics();
     }
 }

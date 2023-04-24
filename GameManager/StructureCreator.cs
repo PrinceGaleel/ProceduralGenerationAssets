@@ -1,13 +1,19 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using UnityEngine;
-using System.Threading;
-using Unity.Jobs;
-using System.Collections.Concurrent;
 
+using UnityEngine;
+using Unity.Jobs;
+
+using static GameManager;
+using static PerlinData;
+using static Chunk;
+using static Road;
+
+using Random = System.Random;
 public enum StructureTypes
 {
+    Empty,
     Village,
     MobDen
 }
@@ -16,45 +22,24 @@ public class StructureCreator : MonoBehaviour
 {
     public static StructureCreator Instance { get; private set; }
 
-    public static List<Vector2Int> VillageChunks = new();
-    public static List<Vector2Int> MobDenPositions = new() { new(0, 0) };
+    public static List<Vector2Int> VillageChunks = new() { new(0, 0) };
+    public static List<Vector2Int> MobDenPositions = new() { };
 
-    private const int MinVillageSize = 20;
-    private const int MaxVillageSize = 30;
-
-    private const int MainRoadThickness = 5;
-    private const int SideRoadThickness = 2;
-    private const int BuildingPadding = 3;
-
+    private static Random Rnd;
     private static GameObject[] MobDenPrefabs;
-    private static PairList<GameObject, Vector2> CenterBuildings;
-    private static PairList<GameObject, Vector2> EssentialBuildings;
-    private static PairList<GameObject, Vector2> Houses;
-    private static PairList<GameObject, Vector2> OptionalBuildings;
-    private static PairList<GameObject, Vector2> Extras;
+    private static List<CustomTuple<GameObject, Vector2>> CenterBuildings, EssentialBuildings, Houses, OptionalBuildings, Extras;
 
-    public static void InitializePrefabs(GameObject[] mobDenPrefabs, PairList<GameObject, Vector2> centerBuildings,
-        PairList<GameObject, Vector2> essentialBuildings, PairList<GameObject, Vector2> houses,
-        PairList<GameObject, Vector2> optionalBuildings, PairList<GameObject, Vector2> extras)
+    private static Dictionary<Vector2Int, Village> Villages;
+
+    public static void InitializePrefabs(GameObject[] mobDenPrefabs, VillageBuildings village)
     {
-
         MobDenPrefabs = mobDenPrefabs;
-        CenterBuildings = centerBuildings;
-        EssentialBuildings = essentialBuildings;
-        Houses = houses;
-        OptionalBuildings = optionalBuildings;
-        Extras = extras;
+        CenterBuildings = village.CenterBuildings;
+        EssentialBuildings = village.EssentialBuildings;
+        Houses = village.Houses;
+        OptionalBuildings = village.OptionalBuildings;
+        Extras = village.Extras;
     }
-
-    private static System.Random Rnd;
-
-    private readonly static Vector2[] StartingQuadrants = new Vector2[4]
-    {
-        new(-1, -1),
-        new(-1, 1),
-        new(1, -1),
-        new(1, 1)
-    };
 
     private void Awake()
     {
@@ -68,107 +53,121 @@ public class StructureCreator : MonoBehaviour
         {
             Instance = this;
             Rnd = new();
+            Villages = new();
         }
     }
 
-    public class PrepareVillage : SecondaryThreadJob
+    private void OnDestroy()
+    {
+        Villages = null;
+    }
+
+    public readonly struct PrepareVillage : IJob
     {
         private readonly Vector2Int ChunkPosition;
-        private readonly Vector2Int WorldPosition;
+        private readonly Vector2 StartPosition;
+
+        private const int MinBuildings = 20, MaxBuildings = 30;
+        private const int MinSideRoads = 1, MaxSideRoads = 2;
+        private const int MaxMainRoads = 0, MinMainRoads = 2;
+        private const float MainRoadWidth = 10, SideRoadWidth = 4;
+        private const float BuildingPadding = 3;
 
         public PrepareVillage(Vector2Int chunkPosition)
         {
             ChunkPosition = chunkPosition;
-            WorldPosition = chunkPosition * Chunk.DefaultChunkSize;
+            StartPosition = chunkPosition * ChunkSize;
+        }
+
+        public static Quaternion GetRotator(float angle) { return Quaternion.AngleAxis(angle, Vector3.up); }
+        public static Vector2 Vec3ToVec2(Vector3 position) { return new(position.x, position.z); }
+        public static Vector3 Vec2ToVec3(Vector2 position) { return new (position.x, 0, position.y); }
+
+        public void Execute()
+        {
+            lock (Rnd)
+            {
+                Queue<CustomTuple<GameObject, Vector2>> buildings = GetBuildings();
+                List<Vector2> positions = new()
+                {
+                    new Vector2((float)Rnd.NextDouble() * 2 - 1, (float)Rnd.NextDouble() * 2 - 1).normalized
+                };
+
+                positions.Add(-positions[0]);
+
+                int[] roadsPerQuadrant = new int[4] { Rnd.Next(MinSideRoads, MaxSideRoads + 1), Rnd.Next(MinSideRoads, MaxSideRoads + 1), Rnd.Next(MinSideRoads, MaxSideRoads + 1), Rnd.Next(MinSideRoads, MaxSideRoads + 1) };
+                CustomTuple<Vector2, float>[] startingDirections = new CustomTuple<Vector2, float>[4]
+                {
+                    new(positions[0], 90),
+                    new(positions[0], -90),
+                    new(positions[1], 90),
+                    new(positions[1], -90)
+                };
+
+                for (int i = 0; i < 4; i++)
+                {
+                    Quaternion rotation = Quaternion.LookRotation((GetRotator(-startingDirections[i].Item2) * Vec2ToVec3(startingDirections[i].Item1)) - new Vector3(0, 0, 0));
+                    Vector2 position = StartPosition + (startingDirections[i].Item1 * buildings.Peek().Item2.x) + Vec3ToVec2(MainRoadWidth * 0.5f * (GetRotator(startingDirections[i].Item2) * Vec2ToVec3(startingDirections[i].Item1)));
+
+                    int numBuildings = Mathf.Min(Mathf.FloorToInt((float)buildings.Count / (4 - i)), buildings.Count);
+                    int[] numBuildingsPerRoad = new int[roadsPerQuadrant[i] + 1];
+
+                    for (int j = 0; j < numBuildingsPerRoad.Length; j++)
+                    {
+                        numBuildingsPerRoad[j] = Rnd.Next(numBuildings / 2, numBuildings);
+                        numBuildings -= numBuildingsPerRoad[j];
+                    }
+
+                    for (int j = 0; j < numBuildingsPerRoad.Length; j++)
+                    {
+                        for (int k = numBuildingsPerRoad[j]; k > 0; k--)
+                        {
+                            CustomTuple<GameObject, Vector2> pair = buildings.Dequeue();
+
+                            new CreateStructure(ChunkPosition, position, pair.Item1, rotation).Schedule();
+                            position += startingDirections[i].Item1 * (pair.Item2.x + buildings.Peek().Item2.x + BuildingPadding); 
+                        }
+
+                        position += startingDirections[i].Item1 * (BuildingPadding + SideRoadWidth);
+                    }
+                }
+            }
+        }
+
+        private Queue<CustomTuple<GameObject, Vector2>> GetBuildings()
+        {
+            Queue<CustomTuple<GameObject, Vector2>> buildings = new(EssentialBuildings);
+
+            int numBuildings = Rnd.Next(MinBuildings, MaxBuildings + 1);
+            int numHouses = Mathf.FloorToInt(numBuildings * 0.6f);
+            int numOptional = Mathf.FloorToInt(numBuildings * 0.2f);
+
+            numBuildings -= numHouses;
+            numBuildings -= numOptional;
+
+            if (Houses.Count > 0) for (int i = 0; i < numHouses; i++) buildings.Enqueue(Houses[Rnd.Next(Houses.Count)]);
+            if (OptionalBuildings.Count > 0) for (int i = 0; i < numOptional; i++) buildings.Enqueue(OptionalBuildings[Rnd.Next(OptionalBuildings.Count)]);
+            if (Extras.Count > 0) for (int i = 0; i < numBuildings; i++) buildings.Enqueue(Extras[Rnd.Next(Extras.Count)]);
+
+            return buildings;
+        }
+    }
+
+    public class ScheduleVillageCreation : MainThreadJob
+    {
+        private readonly Vector2Int ChunkPosition;
+
+        public ScheduleVillageCreation(Vector2Int chunkPosition)
+        {
+            ChunkPosition = chunkPosition;
         }
 
         public override void Execute()
         {
-            PairList<Vector2, GameObject> buildings = new();
-            int whichCenter = Rnd.Next(CenterBuildings.Count);
-            buildings.Add(WorldPosition, CenterBuildings.Keys[whichCenter]);
-
-            PairList<GameObject, Vector2> buildingOrder = new();
-            for (int i = 0; i < EssentialBuildings.Count; i++)
-            {
-                buildingOrder.Add(EssentialBuildings[i]);
-            }
-            int numHouses = Rnd.Next(MinVillageSize, MaxVillageSize);
-            for (int i = 0; i < numHouses; i++)
-            {
-                buildingOrder.Add(Houses[Rnd.Next(Houses.Count)]);
-            }
-            buildingOrder.Shuffle();
-
-            //
-            float highestX = WorldPosition.x + CenterBuildings[whichCenter].Value.x;
-            float lowestX = WorldPosition.x - CenterBuildings[whichCenter].Value.x;
-            float highestY = WorldPosition.y + CenterBuildings[whichCenter].Value.y;
-            float lowestY = WorldPosition.y - CenterBuildings[whichCenter].Value.y;
-
-            //
-            for (int i = 0; i < 4; i++)
-            {
-                CustomPair<GameObject, Vector2> pair = buildingOrder.TakePairAt(0);
-                buildings.Add(buildings[0].Key + ((CenterBuildings.Values[whichCenter] + pair.Value) * StartingQuadrants[i]) + (0.5f * MainRoadThickness * StartingQuadrants[i]), pair.Key);
-
-                Vector2 halfExtents = pair.Value;
-
-                Vector2 currentX = buildings[^1].Key;
-                Vector2 currentZ = buildings[^1].Key;
-
-                bool isHorizontal = true;
-
-                for (int j = Mathf.Min(Mathf.FloorToInt((float)buildingOrder.Count / (4 - i)), buildingOrder.Count); j > 0; j--)
-                {
-                    pair = buildingOrder.TakePairAt(0);
-                    Vector2 newPos;
-
-                    if (isHorizontal)
-                    {
-                        currentX += (halfExtents + pair.Value) * (new Vector2(1, 0) * StartingQuadrants[i]);
-                        newPos = currentX;
-                    }
-                    else
-                    {
-                        currentZ += (halfExtents + pair.Value) * (new Vector2(0, 1) * StartingQuadrants[i]);
-                        newPos = currentZ;
-                    }
-
-                    buildings.Add(newPos, pair.Key);
-                    halfExtents = pair.Value;
-                    isHorizontal = !isHorizontal;
-
-                    if (highestX < newPos.x + pair.Value.x)
-                    {
-                        highestX = newPos.x + pair.Value.x;
-                    }
-                    else if (lowestX > newPos.x - pair.Value.x)
-                    {
-                        lowestX = newPos.x - pair.Value.x;
-                    }
-
-                    if (highestY < newPos.y + pair.Value.y)
-                    {
-                        highestY = newPos.y + pair.Value.y;
-                    }
-                    else if (lowestY > newPos.y - pair.Value.y)
-                    {
-                        lowestY = newPos.y - pair.Value.y;
-                    }
-                }
-            }
-
-            if (GameManager.ActiveTerrain[ChunkPosition])
-            {
-                for (int i = 0; i < buildings.Count; i++)
-                {
-                    new CreateStructure(ChunkPosition, buildings[i].Key, buildings[i].Value).Schedule();
-                }
-            }
-
-
-            FoliageManager.AddTreesToRemove(new(lowestX, lowestY), new(highestX, highestY));
+            Village village = new GameObject("Village").AddComponent<Village>();
+            village.transform.SetParent(ActiveTerrain[ChunkPosition].transform);
+            Villages.Add(ChunkPosition, village);
+            new PrepareVillage(ChunkPosition).Schedule();
         }
     }
 
@@ -183,11 +182,11 @@ public class StructureCreator : MonoBehaviour
 
         public override void Execute()
         {
-            if (GameManager.ActiveTerrain.ContainsKey(ChunkPosition))
+            if (ActiveTerrain.ContainsKey(ChunkPosition))
             {
-                Instantiate(MobDenPrefabs[Random.Range(0, MobDenPrefabs.Length)],
-                    Chunk.GetPerlinPosition(ChunkPosition * Chunk.DefaultChunkSize), Quaternion.identity).
-                    transform.SetParent(GameManager.ActiveTerrain[ChunkPosition].MyTransform);
+                Instantiate(MobDenPrefabs[UnityEngine.Random.Range(0, MobDenPrefabs.Length)],
+                    GetPerlinPosition(ChunkPosition * ChunkSize), Quaternion.identity).
+                    transform.SetParent(ActiveTerrain[ChunkPosition].MyTransform);
             }
         }
     }
@@ -197,17 +196,19 @@ public class StructureCreator : MonoBehaviour
         private readonly Vector2Int ChunkPosition;
         private readonly Vector2 Position;
         private readonly GameObject Prefab;
+        private readonly Quaternion Rotation;
 
-        public CreateStructure(Vector2Int chunkPosition, Vector2 position, GameObject prefab)
+        public CreateStructure(Vector2Int chunkPosition, Vector2 position, GameObject prefab, Quaternion rotation)
         {
             ChunkPosition = chunkPosition;
             Position = position;
             Prefab = prefab;
+            Rotation = rotation;
         }
 
         public override void Execute()
         {
-            if(GameManager.ActiveTerrain.ContainsKey(ChunkPosition)) Instantiate(Prefab, Chunk.GetPerlinPosition(Position), Quaternion.identity, GameManager.ActiveTerrain[ChunkPosition].MyTransform);
+            if (ActiveTerrain.ContainsKey(ChunkPosition)) Instantiate(Prefab, GetPerlinPosition(Position), Rotation, Villages[ChunkPosition].transform);
         }
     }
 }

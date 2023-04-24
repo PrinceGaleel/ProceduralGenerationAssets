@@ -12,33 +12,28 @@ public enum SortingMethod
 
 public class UIInventory : MonoBehaviour
 {
-    private const int SlotsPerPage = 20;
-    private int CurrentPage;
-    private int MaxPage;
+    [SerializeField] private int SlotsPerPage = 20;
+    [SerializeField] private int CurrentPage;
+    [SerializeField] private int MaxPage;
 
-    private List<Item> CurrentItems;
-    private List<int> ItemAmounts;
+    [SerializeField] private List<Item> CurrentItems;
+    [SerializeField] private List<int> ItemAmounts;
 
-    private SimpleInventorySlot CurrentlySelected;
-    public GameObject InvSlotPrefab;
-    public Transform ItemsContainer;
-    public GridLayoutGroup Layout;
+    [SerializeField] private InventorySlot CurrentlySelected;
+    [SerializeField] private GameObject InvSlotPrefab;
+    [SerializeField] private VerticalLayoutGroup Layout;
 
-    public TextMeshProUGUI GoldAmountText;
-    public TextMeshProUGUI PageNumText;
+    [SerializeField] private TextMeshProUGUI GoldAmountText;
+    [SerializeField] private TextMeshProUGUI PageNumText;
 
-    private SortingMethod CurrentSortingMethod;
-    private ItemTypes CurrentType;
+    [SerializeField] private SortingMethod CurrentSortingMethod;
+    [SerializeField] private ItemTypes CurrentType;
 
     private readonly static char[] Characters = new char[27] { 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', ' '};
-    private Dictionary<char, int> NumCharacterValues;
+    private static Dictionary<char, int> NumCharacterValues;
 
-    private void Awake()
+    public static void InitializeStatics()
     {
-        CurrentPage = 1;
-        CurrentItems = new();
-        CurrentlySelected = null;
-
         NumCharacterValues = new();
         for (int i = 0; i < Characters.Length; i++)
         {
@@ -46,11 +41,26 @@ public class UIInventory : MonoBehaviour
         }
     }
 
+    private void Awake()
+    {
+        CurrentPage = 1;
+        CurrentItems = new();
+        CurrentlySelected = null;
+    }
+
     private void Update()
     {
         if (Input.GetKeyDown(KeyCode.Escape))
         {
             UIController.Instance.ToggleInventory(false);
+        }
+        else if (Input.GetKeyDown(KeyCode.RightArrow))
+        {
+            IncrementPage(1);
+        }
+        else if (Input.GetKeyDown(KeyCode.LeftArrow))
+        {
+            IncrementPage(-1);
         }
     }
 
@@ -65,8 +75,8 @@ public class UIInventory : MonoBehaviour
             CurrentType = ItemTypes.Weapon;
 
             CurrentPage = 1;
-            GoldAmountText.text = PlayerStats.Instance._Inventory.Gold.ToString();
-            SetInventoryType(ItemTypes.Misc);
+            GoldAmountText.text = PlayerStats.Instance.MyInventory.Gold.ToString();
+            SetInventoryType(ItemTypes.Null);
             gameObject.SetActive(true);
         }
         else
@@ -77,7 +87,15 @@ public class UIInventory : MonoBehaviour
 
     public void SetInvType(string itemType)
     {
-        if (itemType.ToLower() == "other")
+        if(itemType.ToLower() == "favorite")
+        {
+
+        }
+        else if(itemType.ToLower() == "all")
+        {
+            SetInventoryType(ItemTypes.Null);
+        }
+        else if (itemType.ToLower() == "misc")
         {
             SetInventoryType(ItemTypes.Misc);
         }
@@ -107,28 +125,28 @@ public class UIInventory : MonoBehaviour
         }
     }
 
-    public void SetInventoryType(ItemTypes itemType)
+    private void SetInventoryType(ItemTypes itemType)
     {
         if (CurrentType != itemType)
         {
             CurrentType = itemType;
             ClearInventorySlots();
             
-            CurrentItems = PlayerStats.Instance._Inventory.GetItems();
-            ItemAmounts = PlayerStats.Instance._Inventory.GetItemAmounts();
+            CurrentItems = PlayerStats.Instance.MyInventory.GetItems();
+            ItemAmounts = PlayerStats.Instance.MyInventory.GetItemAmounts();
 
-            if (itemType == ItemTypes.Misc)
+            if (itemType == ItemTypes.Null)
             {
                 for (int i = 0; i < CurrentItems.Count; i++)
                 {
-                    Instantiate(InvSlotPrefab).GetComponent<SimpleInventorySlot>().Intialize(CurrentItems[i], ItemAmounts[i], ItemsContainer, PlayerStats.Instance._Inventory);
+                    Instantiate(InvSlotPrefab).GetComponent<InventorySlot>().Intialize(CurrentItems[i], ItemAmounts[i], Layout.transform, PlayerStats.Instance.MyInventory);
                 }
             }
             else
             {
                 for (int i = CurrentItems.Count - 1; i > -1; i--)
                 {
-                    if(CurrentItems[i]._ItemType != CurrentType)
+                    if(CurrentItems[i].MyItemType != CurrentType)
                     {
                         CurrentItems.RemoveAt(i);
                     }
@@ -136,9 +154,9 @@ public class UIInventory : MonoBehaviour
 
                 for (int i = 0; i < CurrentItems.Count; i++)
                 {
-                    if (CurrentItems[i]._ItemType == CurrentType)
+                    if (CurrentItems[i].MyItemType == CurrentType)
                     {
-                        Instantiate(InvSlotPrefab).GetComponent<SimpleInventorySlot>().Intialize(CurrentItems[i], ItemAmounts[i], ItemsContainer, PlayerStats.Instance._Inventory);
+                        Instantiate(InvSlotPrefab).GetComponent<InventorySlot>().Intialize(CurrentItems[i], ItemAmounts[i], Layout.transform, PlayerStats.Instance.MyInventory);
                     }
                 }
             }
@@ -160,9 +178,9 @@ public class UIInventory : MonoBehaviour
 
     private void ClearInventorySlots()
     {
-        for (int i = ItemsContainer.childCount - 1; i > -1; i--)
+        for (int i = Layout.transform.childCount - 1; i > -1; i--)
         {
-            Destroy(ItemsContainer.GetChild(i).gameObject);
+            Destroy(Layout.transform.GetChild(i).gameObject);
         }
     }
 
@@ -186,4 +204,20 @@ public class UIInventory : MonoBehaviour
             PageNumText.text = CurrentPage.ToString();
         }
     }
+
+#if UNITY_EDITOR
+    private void OnValidate()
+    {
+        if (SlotsPerPage == -1)
+        {
+            if (InvSlotPrefab)
+            {
+                if (InvSlotPrefab.TryGetComponent(out RectTransform rectTransform))
+                {
+                    SlotsPerPage = Mathf.FloorToInt(Layout.GetComponent<RectTransform>().sizeDelta.y / rectTransform.sizeDelta.y);
+                }
+            }
+        }
+    }
+#endif
 }

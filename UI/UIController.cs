@@ -9,26 +9,27 @@ public class UIController : MonoBehaviour
     public static UIController Instance { get; private set; }
 
     [Header("Panels")]
-    public GameObject HUD;
-    public UIInventory Inventory;
-    public MenuManager PauseMenu;
-    private bool IsOccupied;
+    [SerializeField] private GameObject HUD;
+    [SerializeField] private UIInventory Inventory;
+    [SerializeField] private MenuManager PauseMenu;
+    [SerializeField] private bool IsOccupied;
 
     [Header("HUD")]
-    public MySlider HealthBar;
-    public MySlider ManaBar;
-    public MySlider StaminaBar;
+    [SerializeField] private MySlider HealthBar;
+    [SerializeField] private MySlider ManaBar;
+    [SerializeField] private MySlider StaminaBar;
 
-    public RectTransform NorthRotator;
+    [SerializeField] private RectTransform MiniMap;
+    [SerializeField] private RectTransform NorthRotator;
 
     public TextMeshProUGUI InteractInfo;
-    public TextMeshProUGUI MessageInfo;
+    [SerializeField] private TextMeshProUGUI MessageInfo;
     public TextMeshProUGUI TimeText;
 
-    public TextMeshProUGUI FrameRateCounter;
-    private float FPSTimer = 0;
+    [SerializeField] private TextMeshProUGUI FrameRateCounter;
+    [SerializeField] private float FPSTimer = 0;
     private readonly float FPSTime = 1;
-    private int NumFrames = 0;
+    [SerializeField] private int NumFrames = 0;
 
     private void Awake()
     {
@@ -81,7 +82,11 @@ public class UIController : MonoBehaviour
             FPSTimer = 0;
         }
 
-        NorthRotator.rotation = Quaternion.Euler(0, 0, PlayerStats.PlayerTransform.eulerAngles.y);
+        Vector3 dir = Vector3.Normalize(Vector3.zero - PlayerStats.PlayerTransform.position);
+        float angle = Mathf.Atan2(dir.x, dir.z) * Mathf.Rad2Deg;
+        NorthRotator.localRotation = Quaternion.Euler(0f, 0f, -angle);
+        MiniMap.rotation = Quaternion.Euler(0, 0, PlayerStats.PlayerTransform.eulerAngles.y);
+        //NorthRotator.rotation = Quaternion.LookRotation(new(-PlayerStats.PlayerTransform.position.x, 0, -PlayerStats.PlayerTransform.position.z), new(1, 0, 0));
 
         if (Input.GetKeyDown(KeyCode.I))
         {
@@ -128,10 +133,10 @@ public class UIController : MonoBehaviour
         Instance.StaminaBar.UpdateSlider(min, max);
     }
 
-    public void SetMessageInfo(float activatedTime, string message)
+    public static void SetMessageInfo(string message, float activatedTime = 5)
     {
-        MessageInfo.text = message;
-        MessageInfo.GetComponent<DisableTimer>().SetTimer(activatedTime);
+        Instance.MessageInfo.text = message;
+        Instance.MessageInfo.GetComponent<DisableTimer>().SetTimer(activatedTime);
     }
 
     public void ToggleInventory(bool isEnabled)
@@ -163,7 +168,7 @@ public class UIController : MonoBehaviour
     private void TogglePlayerMovement(bool enabled)
     {
         CameraController.Instance.enabled = enabled;
-        PlayerStats.Instance.CanMove = enabled;
+        PlayerStats.CanMove = enabled;
     }
 
     private void ToggleCursor(bool isEnabled)

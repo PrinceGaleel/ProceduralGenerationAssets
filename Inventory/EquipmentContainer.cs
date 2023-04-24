@@ -1,74 +1,113 @@
+using Photon.Pun;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-[RequireComponent(typeof(Inventory))]
-public class EquipmentContainer : MonoBehaviour
+public class EquipmentContainer : Inventory
 {
-    [SerializeField] private BaseCharacter Character;
-    [SerializeField] private Inventory Inventory;
-
-    public WeaponEquippable RightHand;
-    public WeaponEquippable LeftHand;
-
-    public CustomPair<HitBox[], ArmourEquippable> Helmet;
-    public CustomPair<HitBox[], ArmourEquippable> Chestpiece;
-    public CustomPair<HitBox[], ArmourEquippable> Arms;
-    public CustomPair<HitBox[], ArmourEquippable> Leggings;
-    public CustomPair<HitBox[], ArmourEquippable> Feet;
-
-    private void Awake()
+#if UNITY_EDITOR
+    protected override void OnValidate()
     {
-        if(!Character)
+        base.OnValidate();
+        RightHand.Owner = this;
+        RightHand.WeaponNum = 0;
+
+        LeftHand.Owner = this;
+        RightHand.WeaponNum = 1;
+    }
+#endif
+
+    [Header("Equipment")]
+    [SerializeField] protected WeaponSlot RightHand;
+    [SerializeField] protected WeaponSlot LeftHand;
+
+    public ArmorSlot Helmet;
+    public ArmorSlot Chestpiece;
+    public ArmorSlot Arms;
+    public ArmorSlot Leggings;
+    public ArmorSlot Feet;
+
+    [Serializable]
+    public class ArmorSlot
+    {
+        public HitBox[] HitsBoxes;
+        public ArmorItem Equippable;
+    }
+
+    [Serializable]
+    public class WeaponSlot
+    {
+        public enum SlotState
         {
-            Destroy(this);
-            enabled = false;
+            Empty,
+            Equipped,
+            Occupied
         }
-        else if (!Inventory)
+
+        public int WeaponNum;
+        public Transform Spawnpoint;
+        public BaseWeapon CurrentWeapon;
+        public WeaponItem Item;
+        public Inventory Owner;
+        public SlotState CurrentState = SlotState.Empty;
+
+        public void Unequip()
         {
-            Destroy(this);
-            enabled = false;
+            if (CurrentState == SlotState.Equipped)
+            {
+                if (CurrentWeapon)
+                {
+                    Owner.Items.Add(Item, 1);
+                    Destroy(CurrentWeapon.gameObject);
+                    CurrentWeapon = null;
+                }
+
+                Item = null;
+            }
+            else
+            {
+                CurrentWeapon = null;
+                Item = null;
+            }
+
+            CurrentState = SlotState.Empty;
+        }
+
+        public BaseWeapon Equip(WeaponItem weapon)
+        {
+            Unequip();
+            CurrentState = SlotState.Equipped;
+
+            Item = weapon;
+            BaseWeapon newWeapon = Instantiate(weapon.OtherPrefab).GetComponent<BaseWeapon>();
+            newWeapon.WeaponNumber = WeaponNum;
+            CurrentWeapon = newWeapon;
+
+            return newWeapon;
+        }
+
+        public void Occupy(BaseWeapon newWeapon)
+        {
+            Unequip();
+            CurrentState = SlotState.Occupied;
+            
+            newWeapon.WeaponNumber = WeaponNum;
+            CurrentWeapon = newWeapon;
         }
     }
 
-    public void UnequipLeftHand()
+    public bool EquipHelmet(ArmorItem helmet)
     {
-
-    }
-
-    public void UnequipRightHand()
-    {
-
-    }
-
-    public bool EquipLeftHand(WeaponEquippable weapon)
-    {
-        if(LeftHand)
+        if (helmet._ArmourType == ArmourType.Helmet)
         {
-            UnequipLeftHand();
+
         }
 
         return false;
     }
 
-    public bool EquipRightHand(WeaponEquippable weapon)
-    {
-
-
-        return false;
-    }
-
-    public bool EquipHelmet(ArmourEquippable helmet)
-    {
-        if(helmet._ArmourType == ArmourType.Helmet)
-        {
-
-        }
-
-        return false;
-    }
-
-    public bool EquipChestpiece(ArmourEquippable chestpiece)
+    public bool EquipChestpiece(ArmorItem chestpiece)
     {
         if (chestpiece._ArmourType == ArmourType.Chestpiece)
         {
@@ -78,7 +117,7 @@ public class EquipmentContainer : MonoBehaviour
         return false;
     }
 
-    public bool EquipLeggings(ArmourEquippable leggings)
+    public bool EquipLeggings(ArmorItem leggings)
     {
         if (leggings._ArmourType == ArmourType.Leggings)
         {
@@ -88,7 +127,7 @@ public class EquipmentContainer : MonoBehaviour
         return false;
     }
 
-    public bool EquipArms(ArmourEquippable arms)
+    public bool EquipArms(ArmorItem arms)
     {
         if (arms._ArmourType == ArmourType.Arms)
         {
@@ -98,7 +137,7 @@ public class EquipmentContainer : MonoBehaviour
         return false;
     }
 
-    public bool EquipFeet(ArmourEquippable feet)
+    public bool EquipFeet(ArmorItem feet)
     {
         if (feet._ArmourType == ArmourType.Shoes)
         {
@@ -107,12 +146,4 @@ public class EquipmentContainer : MonoBehaviour
 
         return false;
     }
-
-#if UNITY_EDITOR
-    protected virtual void OnValidate()
-    {
-        if(!Character) Character = GetComponent<BaseCharacter>();
-        if(!Inventory) Inventory = GetComponent<Inventory>();
-    }
-#endif
 }

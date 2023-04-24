@@ -10,7 +10,7 @@ public class MenuManager : MonoBehaviour
     public GameObject MainPanel;
     public GameObject SettingsPanel;
 
-    private void Awake()
+    private void Start()
     {
         OpenMainPanel();
     }
@@ -40,6 +40,6 @@ public class MenuManager : MonoBehaviour
     
     public void ToScene(string sceneName)
     {
-        SceneTransitioner.LoadScene(sceneName);
+        SceneTransitioner.LoadScene(sceneName, false, false);
     }
 }

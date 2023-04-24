@@ -5,48 +5,39 @@ using UnityEngine;
 [RequireComponent(typeof(NodeAgent))]
 public abstract class BaseNodeAI : BaseAI
 {
+    [Header("Node AI Specific")]
     [SerializeField] protected NodeAgent Agent;
+
     protected override bool AgentUpdateRotation { get { return Agent.UpdateRotation; } set { Agent.UpdateRotation = value; } }
     protected override bool AgentStopped { get { return Agent.IsStopped; } set { Agent.IsStopped = value; } }
-    protected override float AgentSpeed { get { return Agent.MovementSpeed; } set { Agent.MovementSpeed = value; } }
+    protected override float AgentSpeed { get { return Agent.CurrentMovementSpeed; } set { Agent.CurrentMovementSpeed = value; } }
     protected override void ResetAgentPath() { Agent.SetIdle(); }
     public override void Teleport(Vector3 position) { Agent.Warp(position); }
     protected override void AgentMove(Vector3 position) { Agent.Move(position); }
 
     protected override void SetDestination(Vector3 destination)
     {
-        if (AINodeManager.IsWalkable(destination))
-        {
-            Agent.SetDestination(destination);
-            Agent.UpdateRotation = true;
-            AgentStopped = false;
-            CurrentDestination = destination;
-        }
+        Agent.SetDestination(destination);
+        Agent.UpdateRotation = true;
+        AgentStopped = false;
+        CurrentDestination = destination;
     }
 
-    public override void SetPatrolling(Vector3[] patrolPoints)
+    public override void SetMainPatrolling(Vector3[] patrolPoints)
     {
-        List<Vector3> points = new();
-
-        for (int i = 0; i < patrolPoints.Length; i++)
-        {
-            if (AINodeManager.IsWalkable(patrolPoints[i]))
-            {
-                points.Add(patrolPoints[i]);
-            }
-        }
-
-        PatrolPoints = points.ToArray();
-        SetPatrolling();
+        PatrolPoints = patrolPoints;
+        SetMainPatrolling();
     }
 
 #if UNITY_EDITOR
     protected override void OnValidate()
     {
         base.OnValidate();
-        Agent = GetComponent<NodeAgent>();
-        Agent.MovementSpeed = WalkingSpeed;
-        Agent.RotationSpeed = RotationSpeed;
+
+        if(!Agent) Agent = GetComponent<NodeAgent>();
+        if (Agent) Agent.CurrentRotationSpeed = RotationSpeed;
+        if (!MyCharacter) MyCharacter = GetComponent<BaseCharacter>();
+
         Agent.UpdateRotation = true;
     }
 #endif

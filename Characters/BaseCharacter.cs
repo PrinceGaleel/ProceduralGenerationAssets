@@ -6,14 +6,14 @@ public enum Races
 {
     Human = 0,
     Wolf = 1,
-    Spider
+    Spider = 2
 }
 
-[RequireComponent(typeof(Inventory))]
-public abstract class BaseCharacter : MonoBehaviour
+[RequireComponent(typeof(AnimatorManager))]
+public class BaseCharacter : MonoBehaviour
 {
     public enum RegenState
-    { 
+    {
         Waiting = 0,
         Full = 1,
         Regenerating = 2
@@ -29,8 +29,6 @@ public abstract class BaseCharacter : MonoBehaviour
     [SerializeField] protected float CurrentMana = 100;
     [SerializeField] protected float MaxMana = 100;
 
-    [SerializeField] protected float BaseDamage = 10;
-
     [Header("Levelling")]
     [SerializeField] protected int CurrentExp;
     [SerializeField] protected int ExpToLevelUp;
@@ -45,48 +43,28 @@ public abstract class BaseCharacter : MonoBehaviour
 
     [Header("Stamina Regen")]
     [SerializeField] private RegenState StaminaRegenState = RegenState.Full;
-    [SerializeField] protected float StaminaRegen = 7;
+    [SerializeField] protected float SprintDepletion = 7;
+    [SerializeField] protected float StaminaRegen = 5;
     [SerializeField] protected float StaminaRegenTimer = 0;
     [SerializeField] protected float StaminaRegenTime = 5;
 
-    [Header("Speeds")]
-    [SerializeField] protected float WalkingSpeed = 6;
-    [SerializeField] protected float SprintSpeed = 9;
-    [SerializeField] protected float BackingOffSpeed = 4;
-    [SerializeField] protected float StrafeSpeed = 5;
-    [SerializeField] protected float DodgeSpeed = 10;
-    [SerializeField] protected float RotationSpeed = 120;
-
-    [Header("Standard Animation Names")]
-    protected const string IdleName = "Idle";
-    protected const string RestingAnim = "Resting";
-    protected const string WalkingAnim = "Walk Forward";
-    protected const string RunningAnim = "Run Forward";
-    protected const string BackwardAnim = "Walk Backward";
-    protected const string RightStrafeAnim = "Right Strafe";
-    protected const string LeftStrafeAnim = "Left Strafe";
-    protected const string FallingAnim = "Falling";
-    protected const string DeathAnim = "Death";
-    protected const string WeaponNumber = "Weapon Number";
-
     [Header("Base Containers")]
+    [SerializeField] protected AnimatorManager AnimManager;
     [SerializeField] protected Transform MyTransform;
     public Transform GetTransform { get { return MyTransform; } }
-    public Animator Anim;
-    private string[] LastAnimations;
-    public Inventory _Inventory;
-    public BluntMeleeWeapon[] Fists;
-    public int WeaponNum { get { return Anim.GetInteger("Weapon Number"); } }
-    public List<CustomPair<Item, int>> Drops;
+    public Inventory MyInventory;
+    public List<CustomTuple<Item, int>> Drops;
+    public int WeaponNum { get { return AnimManager.WeaponNum; } }
 
     [Header("Other")]
+    [SerializeField] private bool InCombat;
     [SerializeField] protected Races MyRace;
     public Races GetRace { get { return MyRace; } }
     public int MyTeamID;
 
-    protected virtual void Awake()
+    protected virtual void Update()
     {
-        Anim.SetInteger("WeaponNum", -1);
+        CheckStamina();
     }
 
     protected void SetRequiredXP()
@@ -95,9 +73,9 @@ public abstract class BaseCharacter : MonoBehaviour
         SkillPoints = Mathf.FloorToInt(StartingSkillPoints * Mathf.Pow(StartingSkillPoints, SkillPointsMultiplier));
     }
 
-    protected void CheckStamina()
+    private void CheckStamina()
     {
-        if(StaminaRegenState == RegenState.Regenerating)
+        if (StaminaRegenState == RegenState.Regenerating)
         {
             IncreaseStamina(StaminaRegen * Time.deltaTime);
         }
@@ -105,51 +83,31 @@ public abstract class BaseCharacter : MonoBehaviour
         {
             StaminaRegenTimer += Time.deltaTime;
 
-            if(StaminaRegenTimer > StaminaRegenTime)
+            if (StaminaRegenTimer > StaminaRegenTime)
             {
                 StaminaRegenState = RegenState.Regenerating;
             }
         }
     }
 
+    public void Sprint()
+    {
+        DecreaseStamina(SprintDepletion * Time.deltaTime);
+
+        if (InCombat)
+        {
+            StaminaRegenState = RegenState.Waiting;
+            StaminaRegenTimer = 0;
+        }
+    }
+
     public void DropLoot()
     {
-        foreach (CustomPair<Item, int> pair in Drops)
+        foreach (CustomTuple<Item, int> pair in Drops)
         {
-            Transform drop = Instantiate(pair.Key.DropPrefab, new Vector3(MyTransform.position.x, MyTransform.position.y + 3, MyTransform.position.z), Quaternion.identity).transform;
-            drop.gameObject.AddComponent<DropItem>().Initialize(pair.Key, pair.Value, true);
+            Transform drop = Instantiate(pair.Item1.DropPrefab, new Vector3(MyTransform.position.x, MyTransform.position.y + 3, MyTransform.position.z), Quaternion.identity).transform;
+            drop.gameObject.AddComponent<DropItem>().Initialize(pair.Item1, pair.Item2, true);
             drop.eulerAngles = new(Random.Range(0, 360), Random.Range(0, 360), Random.Range(0, 360));
-        }
-    }
-
-    protected void ChangeAnimation(params string[] newAnimations)
-    {
-        StopLastAnimations();
-        LastAnimations = (string[])newAnimations.Clone();
-        StartNewAnimations();
-    }
-
-    private void StartNewAnimations()
-    {
-        if (LastAnimations != null)
-        {
-            foreach (string animationName in LastAnimations)
-            {
-                Anim.SetBool(animationName, true);
-            }
-        }
-    }
-
-    private void StopLastAnimations()
-    {
-        if (LastAnimations != null)
-        {
-            foreach (string animationName in LastAnimations)
-            {
-                Anim.SetBool(animationName, false);
-            }
-
-            LastAnimations = null;
         }
     }
 
@@ -181,8 +139,6 @@ public abstract class BaseCharacter : MonoBehaviour
     public virtual void DecreaseStamina(float amount)
     {
         CurrentStamina = CurrentStamina - Mathf.Abs(amount) > 0 ? CurrentStamina - Mathf.Abs(amount) : 0;
-        StaminaRegenState = RegenState.Waiting;
-        StaminaRegenTimer = 0;
     }
 
     public virtual void IncreaseMana(float amount)
@@ -197,7 +153,7 @@ public abstract class BaseCharacter : MonoBehaviour
 
     protected virtual void Death()
     {
-        ChangeAnimation(DeathAnim);
+        AnimManager.Die();
         DropLoot();
         enabled = false;
     }
@@ -205,24 +161,12 @@ public abstract class BaseCharacter : MonoBehaviour
 #if UNITY_EDITOR
     protected virtual void OnValidate()
     {
+        if (!AnimManager) AnimManager = GetComponentInChildren<AnimatorManager>();
+        if (!MyTransform) MyTransform = transform;
+        if (!MyInventory) MyInventory = gameObject.GetComponent<Inventory>();
+
         SetRequiredXP();
-        MyTransform = transform;
-        if (!Anim) Anim = GetComponent<Animator>();
-        _Inventory = gameObject.GetComponent<Inventory>();
-        FindHitboxes();
-
-        CurrentHealth = MaxHealth;
-        CurrentMana = MaxMana;
-        CurrentStamina = MaxStamina;
-
-
-        if (Fists != null)
-        {
-            if (Fists.Length > 0)
-            {
-                for (int i = 0; i < Fists.Length; i++) Fists[i].Initialize(this, BaseDamage);
-            }
-        }
+        FindHitboxes();        
     }
 
     private void FindHitboxes()

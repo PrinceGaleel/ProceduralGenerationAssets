@@ -1,8 +1,18 @@
+using System.IO;
+using System.Xml.Serialization;
+using System.Runtime.Serialization.Formatters.Binary;
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
+
+using TMPro;
+
 using UnityEngine;
 using UnityEngine.UI;
-using TMPro;
+using Unity.Jobs;
+
+using static SaveHandler;
 
 public class CharacterCreator : MonoBehaviour
 {
@@ -18,13 +28,25 @@ public class CharacterCreator : MonoBehaviour
 
     [SerializeField] private TMP_InputField CharacterName;
 
+    public static HashSet<Vector2Int> Positions;
+    private static BinaryFormatter MySerializer;
+    private static List<Vector2Int> ToSmooth;
+
     private System.Random Rnd;
 
     private void Awake()
     {
         Rnd = new();
+        
         MaleInfo = new(true);
         FemaleInfo = new(false);
+
+        MySerializer = new()
+        {
+            AssemblyFormat = System.Runtime.Serialization.Formatters.FormatterAssemblyStyle.Simple
+        };
+
+        ToSmooth = new();
     }
 
     private void Start()
@@ -45,16 +67,63 @@ public class CharacterCreator : MonoBehaviour
     {
         if (CharacterName.text != "")
         {
-            string saveName = SaveData.SaveMap(ExtraUtils.RemoveSpace(CharacterName.text), IsMale ? MaleInfo : FemaleInfo);
+            SaveData saveData = SaveMap(ExtraUtils.RemoveSpace(CharacterName.text), IsMale ? MaleInfo : FemaleInfo);
 
-            if (saveName != "")
+            if (saveData != null)
             {
-                GameManager.InitializeWorldData(SaveData.LoadData(saveName));
-                SceneTransitioner.LoadScene("GameWorld", true);
+                SceneTransitioner.LoadScene("GameWorld", true, true);
+                StartCoroutine(GenerateChunks());
             }
         }
     }
 
+    public IEnumerator GenerateChunks()
+    {
+        ToSmooth = new();
+        Positions = new();
+
+        int mapSize = GameManager.CurrentSaveData.MapSize;
+        int expectedAmount = ((mapSize * 2) + 1) * ((mapSize * 2) + 1);
+
+        for (int y = -mapSize; y <= mapSize; y++)
+        {
+            for (int x = -mapSize; x <= mapSize; x++)
+            {
+                new PerlinData.GenerateChunkData(GameManager.CurrentSaveData.MyPerlinData.ChunkSize, new(x, y)).Schedule();
+            }
+            yield return new WaitForEndOfFrame();
+        }
+
+        while(Positions.Count != expectedAmount)
+        {
+            yield return null;
+        }
+
+        Positions = null;
+        SceneTransitioner.AdvancePreLoad();
+    }
+
+    public class WriteChunkData : MainThreadJob
+    {
+        private readonly ChunkData MyChunkData;
+
+        public WriteChunkData(ChunkData chunkData)
+        {
+            MyChunkData = chunkData;
+        }
+
+        public override void Execute()
+        {
+            string savePath = PersistentDataPath + "/" + GameManager.CurrentSaveData.SaveNum + "/Chunks";
+            Vector2Int chunkPos = MyChunkData.ChunkPosition;
+
+            using FileStream fileStream = new(savePath + "/" + chunkPos.x + "," + chunkPos.y + ".chunk", FileMode.Create);
+            MySerializer.Serialize(fileStream, MyChunkData);
+
+            Positions.Add(MyChunkData.ChunkPosition);
+        }
+    }
+    
     public void ChangeHead(int direction)
     {
         WhichGender.HeadAllElements.GetChild(WhichInfo.HeadAllElements).gameObject.SetActive(false);
@@ -152,11 +221,20 @@ public class CharacterSkin
     public bool IsMale = true;
     public Races Race;
 
-    //Gender Specific
     public int HeadAllElements;
     public int Eyebrow;
     public int FacialHair;
     public int Hair;
+
+    public CharacterSkin()
+    {
+        IsMale = false;
+        Race = Races.Human;
+        FacialHair = -1;
+        HeadAllElements = 0;
+        Eyebrow = 0;
+        Hair = 0;
+    }
 
     public CharacterSkin(bool isMale)
     {

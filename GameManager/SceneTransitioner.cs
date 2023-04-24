@@ -1,9 +1,11 @@
 using System.Collections;
 using System.Collections.Generic;
+
 using UnityEngine;
-using TMPro;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+
+using TMPro;
 
 public class SceneTransitioner : MonoBehaviour
 {
@@ -12,13 +14,23 @@ public class SceneTransitioner : MonoBehaviour
     public RectTransform MainCanvas;
     public TextMeshProUGUI TipText;
     public TextMeshProUGUI ProgressText;
-    public UnityEngine.UI.Slider Bar;
+    public Slider Bar;
 
     private const float LerpAmount = 2.5f;
 
     private static readonly string[] Tips = new string[2] { "Tea > Coffee", "This is a tip!" };
 
+    private static bool IsPreLoad;
     private static bool IsManualLoad;
+    public static void AdvancePreLoad()
+    {
+        if (IsPreLoad)
+        {
+            IsPreLoad = false;
+            LoadScene();
+        }
+    }
+
     private static AsyncOperation LoadProgress;
     private static string CurrentScene;
 
@@ -33,8 +45,6 @@ public class SceneTransitioner : MonoBehaviour
         else
         {
             Instance = this;
-
-            IsManualLoad = false;
 
             Animator[] anims = GetComponentsInChildren<Animator>();
             foreach (Animator anim in anims)
@@ -51,27 +61,25 @@ public class SceneTransitioner : MonoBehaviour
         GlobalSettings.LoadSettings();
         CurrentScene = "MainMenu";
         IsManualLoad = false;
+        IsPreLoad = false;
         LoadScene();
     }
 
-    public static void LoadScene(string sceneName, bool isManual = false)
+    public static void LoadScene(string sceneName, bool isPreLoad, bool isManual)
     {
         if (LoadProgress.isDone)
         {
             CurrentScene = sceneName;
             IsManualLoad = isManual;
-            LoadScene();
+            IsPreLoad = isPreLoad;
+            if (!IsPreLoad) LoadScene();
+            else { ToggleScreen(true); }
         }
     }
 
     private static void LoadScene()
     {
         ToggleScreen(true);
-
-        Time.timeScale = 0;
-
-        Instance.Bar.value = 0;
-        Instance.ProgressText.text = "0%";
 
         if (Tips.Length > 0)
         {
@@ -129,7 +137,14 @@ public class SceneTransitioner : MonoBehaviour
 
     public static void ToggleScreen(bool isEnabled)
     {
-        Time.timeScale = 1;
+        if (isEnabled) 
+        {
+            Time.timeScale = 0;
+
+            Instance.Bar.value = 0;
+            Instance.ProgressText.text = "0%";
+        }
+        else Time.timeScale = 1;
         Instance.gameObject.SetActive(isEnabled);
     }
 }

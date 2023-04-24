@@ -246,7 +246,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   CurrentArmorRating: 0
-  Character: {fileID: 4904765105591257009}
+  Character: {fileID: 6053553281110474218}
   DamageMultiplier: 0.8
 --- !u!1 &1184568658847334
 GameObject:
@@ -340,7 +340,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   CurrentArmorRating: 0
-  Character: {fileID: 4904765105591257009}
+  Character: {fileID: 6053553281110474218}
   DamageMultiplier: 0.8
 --- !u!1 &1204771042999782
 GameObject:
@@ -464,7 +464,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   CurrentArmorRating: 0
-  Character: {fileID: 4904765105591257009}
+  Character: {fileID: 6053553281110474218}
   DamageMultiplier: 0.8
 --- !u!1 &1227735497199808
 GameObject:
@@ -557,7 +557,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   CurrentArmorRating: 0
-  Character: {fileID: 4904765105591257009}
+  Character: {fileID: 6053553281110474218}
   DamageMultiplier: 1
 --- !u!1 &1262260006197776
 GameObject:
@@ -619,7 +619,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   CurrentArmorRating: 0
-  Character: {fileID: 4904765105591257009}
+  Character: {fileID: 6053553281110474218}
   DamageMultiplier: 0.8
 --- !u!1 &1271138617705620
 GameObject:
@@ -747,7 +747,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   CurrentArmorRating: 0
-  Character: {fileID: 4904765105591257009}
+  Character: {fileID: 6053553281110474218}
   DamageMultiplier: 0.8
 --- !u!1 &1332994541535204
 GameObject:
@@ -840,7 +840,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   CurrentArmorRating: 0
-  Character: {fileID: 4904765105591257009}
+  Character: {fileID: 6053553281110474218}
   DamageMultiplier: 0.8
 --- !u!1 &1400499649821958
 GameObject:
@@ -933,7 +933,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   CurrentArmorRating: 0
-  Character: {fileID: 4904765105591257009}
+  Character: {fileID: 6053553281110474218}
   DamageMultiplier: 1
 --- !u!1 &1411430603249936
 GameObject:
@@ -995,7 +995,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   CurrentArmorRating: 0
-  Character: {fileID: 4904765105591257009}
+  Character: {fileID: 6053553281110474218}
   DamageMultiplier: 0.8
 --- !u!1 &1429635640016956
 GameObject:
@@ -1089,7 +1089,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   CurrentArmorRating: 0
-  Character: {fileID: 4904765105591257009}
+  Character: {fileID: 6053553281110474218}
   DamageMultiplier: 1
 --- !u!1 &1469370110053680
 GameObject:
@@ -1232,7 +1232,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f8d0e7ba56f8e584c9b571ba94fa7a10, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Character: {fileID: 4904765105591257009}
+  Character: {fileID: 6053553281110474218}
   Damage: 10
   WeaponNum: 0
   MyCollider: {fileID: 7835408352395544375}
@@ -1325,7 +1325,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   CurrentArmorRating: 0
-  Character: {fileID: 4904765105591257009}
+  Character: {fileID: 6053553281110474218}
   DamageMultiplier: 0.8
 --- !u!1 &1564268816905920
 GameObject:
@@ -1546,7 +1546,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   CurrentArmorRating: 0
-  Character: {fileID: 4904765105591257009}
+  Character: {fileID: 6053553281110474218}
   DamageMultiplier: 0.8
 --- !u!1 &1672113489759722
 GameObject:
@@ -1639,7 +1639,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   CurrentArmorRating: 0
-  Character: {fileID: 4904765105591257009}
+  Character: {fileID: 6053553281110474218}
   DamageMultiplier: 0.8
 --- !u!1 &1732460002252636
 GameObject:
@@ -1701,7 +1701,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   CurrentArmorRating: 0
-  Character: {fileID: 4904765105591257009}
+  Character: {fileID: 6053553281110474218}
   DamageMultiplier: 0.8
 --- !u!1 &1735516423897896
 GameObject:
@@ -1763,7 +1763,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   CurrentArmorRating: 0
-  Character: {fileID: 4904765105591257009}
+  Character: {fileID: 6053553281110474218}
   DamageMultiplier: 0.8
 --- !u!1 &1738986965219230
 GameObject:
@@ -1839,7 +1839,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   CurrentArmorRating: 0
-  Character: {fileID: 4904765105591257009}
+  Character: {fileID: 6053553281110474218}
   DamageMultiplier: 1
 --- !u!1 &1744429126559222
 GameObject:
@@ -2004,10 +2004,13 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4906187713331098}
-  - component: {fileID: 4904765105591257009}
+  - component: {fileID: 6978191500610324721}
   - component: {fileID: 95605706055870404}
-  - component: {fileID: 8193417202916341566}
   - component: {fileID: 2582036066771152963}
+  - component: {fileID: 8128766047137212759}
+  - component: {fileID: 6053553281110474218}
+  - component: {fileID: 4904765105591257009}
+  - component: {fileID: 8193417202916341566}
   - component: {fileID: -2819125382277446055}
   m_Layer: 9
   m_Name: NavDenWolf
@@ -2047,56 +2050,24 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &4904765105591257009
-MonoBehaviour:
+--- !u!143 &6978191500610324721
+CharacterController:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1811715708561768}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
   m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 40e4e9845f8ba2248ae211e66183d85c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  CurrentHealth: 100
-  MaxHealth: 100
-  CurrentStamina: 100
-  MaxStamina: 100
-  CurrentMana: 0
-  MaxMana: 0
-  BaseDamage: 10
-  CurrentExp: 0
-  ExpToLevelUp: 100
-  Level: 0
-  SkillPoints: 29
-  StaminaRegenState: 1
-  StaminaRegen: 7
-  StaminaRegenTimer: 0
-  StaminaRegenTime: 5
-  WalkingSpeed: 6
-  SprintSpeed: 6
-  BackingOffSpeed: 4
-  StrafeSpeed: 5
-  DodgeSpeed: 9
-  RotationSpeed: 160
-  MyTransform: {fileID: 4906187713331098}
-  Anim: {fileID: 95605706055870404}
-  _Inventory: {fileID: 8193417202916341566}
-  Fists:
-  - {fileID: 699922750987530746}
-  Drops: []
-  MyRace: 1
-  MyTeamID: 0
-  HeadConstraint: {fileID: 0}
-  Target: {fileID: 0}
-  AttackRange: 5
-  AttackTimer: 0
-  AttackCooldown: 5
-  MaxBackOffDistance: 10
-  MinBackOffDistance: 5
-  Agent: {fileID: 2582036066771152963}
-  Den: {fileID: 0}
+  serializedVersion: 2
+  m_Height: 2
+  m_Radius: 0.5
+  m_SlopeLimit: 45
+  m_StepOffset: 0.3
+  m_SkinWidth: 0.08
+  m_MinMoveDistance: 0.001
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!95 &95605706055870404
 Animator:
   serializedVersion: 4
@@ -2117,21 +2088,6 @@ Animator:
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorControllerStateOnDisable: 0
---- !u!114 &8193417202916341566
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1811715708561768}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 19c8a127549cbdb438461c150c34fc75, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  Owner: {fileID: 4904765105591257009}
-  MyEquipmentContainer: {fileID: 0}
-  Gold: 0
 --- !u!195 &2582036066771152963
 NavMeshAgent:
   m_ObjectHideFlags: 0
@@ -2154,6 +2110,108 @@ NavMeshAgent:
   m_BaseOffset: 0
   m_WalkableMask: 4294967295
   m_ObstacleAvoidanceType: 4
+--- !u!114 &8128766047137212759
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1811715708561768}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b4e0354fce3b58d41b7a509f2499a7ae, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Anim: {fileID: 95605706055870404}
+  LastAnimations: []
+  Dead: 0
+--- !u!114 &6053553281110474218
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1811715708561768}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9647ef168784c034695b4ec018303cc2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  CurrentHealth: 100
+  MaxHealth: 100
+  CurrentStamina: 100
+  MaxStamina: 100
+  CurrentMana: 100
+  MaxMana: 100
+  CurrentExp: 0
+  ExpToLevelUp: 100
+  Level: 0
+  SkillPoints: 29
+  StaminaRegenState: 1
+  SprintDepletion: 7
+  StaminaRegen: 7
+  StaminaRegenTimer: 0
+  StaminaRegenTime: 5
+  AnimManager: {fileID: 8128766047137212759}
+  MyTransform: {fileID: 4906187713331098}
+  _Inventory: {fileID: 8193417202916341566}
+  Drops: []
+  InCombat: 0
+  MyRace: 0
+  MyTeamID: 0
+--- !u!114 &4904765105591257009
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1811715708561768}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 40e4e9845f8ba2248ae211e66183d85c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  AnimManager: {fileID: 8128766047137212759}
+  MyTransform: {fileID: 4906187713331098}
+  MyCharacter: {fileID: 6053553281110474218}
+  BaseDamage: 10
+  Fists:
+  - {fileID: 699922750987530746}
+  WalkingSpeed: 6
+  SprintMultiplier: 1.5
+  BackingOffSpeed: 4
+  StrafeSpeed: 5
+  DodgeSpeed: 9
+  RotationSpeed: 160
+  HeadConstraint: {fileID: 0}
+  Target: {fileID: 0}
+  Anim: {fileID: 8128766047137212759}
+  AttackRange: 5
+  AttackTimer: 0
+  AttackCooldown: 5
+  MainState: 0
+  SecondaryState: 0
+  CurrentDestination: {x: 0, y: 0, z: 0}
+  PatrolPoints: []
+  MinBackOffDistance: 5
+  MaxBackOffDistance: 10
+  Agent: {fileID: 2582036066771152963}
+  Den: {fileID: 0}
+--- !u!114 &8193417202916341566
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1811715708561768}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 19c8a127549cbdb438461c150c34fc75, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Owner: {fileID: 6053553281110474218}
+  MyEquipmentContainer: {fileID: 0}
+  Gold: 0
 --- !u!114 &-2819125382277446055
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2292,7 +2350,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   CurrentArmorRating: 0
-  Character: {fileID: 4904765105591257009}
+  Character: {fileID: 6053553281110474218}
   DamageMultiplier: 0.8
 --- !u!1 &1934176251570566
 GameObject:
@@ -2472,7 +2530,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   CurrentArmorRating: 0
-  Character: {fileID: 4904765105591257009}
+  Character: {fileID: 6053553281110474218}
   DamageMultiplier: 2
 --- !u!1 &1971053421766010
 GameObject:
@@ -2565,7 +2623,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   CurrentArmorRating: 0
-  Character: {fileID: 4904765105591257009}
+  Character: {fileID: 6053553281110474218}
   DamageMultiplier: 1
 --- !u!1 &1998365729734212
 GameObject:
@@ -2627,5 +2685,5 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   CurrentArmorRating: 0
-  Character: {fileID: 4904765105591257009}
+  Character: {fileID: 6053553281110474218}
   DamageMultiplier: 0.8

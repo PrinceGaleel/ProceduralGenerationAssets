@@ -20,7 +20,7 @@ public class SettingsMenu : MonoBehaviour
 
     public Slider FPSSlider;
     public TextMeshProUGUI FPSText;
-    public Toggle VSyncToggle;
+    //public Toggle VSyncToggle;
 
     [Header("Other")]
     public Slider MusicSlider;
@@ -37,28 +37,28 @@ public class SettingsMenu : MonoBehaviour
         else
         {
             Instance = this;
-            InitializeSettings();
         }
+    }
+
+    private void Start()
+    {
+        InitializeSettings();
     }
 
     public void OnLeave()
     {
-        int vSync;
-        if (VSyncToggle.isOn)
-        {
-            vSync = 2;
-        }
-        else
-        {
-            vSync = 0;
-        }
+        /* int vSync;
+        if (VSyncToggle.isOn) vSync = 2;
+        else vSync = 1; */
 
         GlobalSettings.CurrentSettings._ScreenSettings = new(Screen.resolutions[ResolutionsDropdown.value].width, Screen.resolutions[ResolutionsDropdown.value].height, 
-            ScreenModes[ScreenModesDropdown.value], (int)(FPSSlider.value * FPSIncremenet), vSync);
+            ScreenModes[ScreenModesDropdown.value], (int)(FPSSlider.value * FPSIncremenet));
         GlobalSettings.CurrentSettings.MusicVolume = MusicSlider.value / 100;
 
         GlobalSettings.SaveSettings();
     }
+
+    public void SetFPSText() { FPSText.text = (FPSSlider.value * FPSIncremenet).ToString(); }
 
     public void InitializeSettings()
     {
@@ -69,14 +69,8 @@ public class SettingsMenu : MonoBehaviour
         FPSSlider.value = Application.targetFrameRate / FPSIncremenet;
         FPSText.text = Application.targetFrameRate.ToString();
 
-        if (QualitySettings.vSyncCount == 0)
-        {
-            VSyncToggle.isOn = false;
-        }
-        else
-        {
-            VSyncToggle.isOn = true;
-        }
+        /* if (QualitySettings.vSyncCount == 0) VSyncToggle.isOn = false;
+        else VSyncToggle.isOn = true; */
 
         int toSet = 0;
         List<TMP_Dropdown.OptionData> optionsData = new(ScreenModes.Length);
@@ -107,8 +101,5 @@ public class SettingsMenu : MonoBehaviour
         ResolutionsDropdown.value = toSet;
     }
 
-    public void ChangeMusicVolume()
-    {
-        MusicVolumeText.text = Mathf.FloorToInt(MusicSlider.value).ToString();
-    }
+    public void ChangeMusicVolume() { MusicVolumeText.text = Mathf.FloorToInt(MusicSlider.value).ToString(); }
 }

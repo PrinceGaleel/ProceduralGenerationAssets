@@ -11,14 +11,14 @@ GameObject:
   - component: {fileID: 4859018097767518}
   - component: {fileID: -4579786455304568764}
   - component: {fileID: 8231112341454683211}
-  - component: {fileID: -4762556590547350431}
   - component: {fileID: -6552905021210711154}
+  - component: {fileID: 1635547451324038909}
   m_Layer: 0
   m_Name: SM_Tree_01
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 2147483647
+  m_StaticEditorFlags: 0
   m_IsActive: 1
 --- !u!4 &4859018097767518
 Transform:
@@ -63,7 +63,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: f717718d04aa0e74f81e601a75507faa, type: 2}
+  - {fileID: 2100000, guid: 9815abc3682332c43bb766decd901afb, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -85,22 +85,6 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!208 &-4762556590547350431
-NavMeshObstacle:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1500899924992442}
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Shape: 1
-  m_Extents: {x: 0.25, y: 0.5, z: 0.35}
-  m_MoveThreshold: 0.1
-  m_Carve: 1
-  m_CarveOnlyStationary: 1
-  m_Center: {x: 0, y: 0, z: 0.1}
-  m_TimeToStationary: 0.5
 --- !u!64 &-6552905021210711154
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -115,3 +99,18 @@ MeshCollider:
   m_Convex: 0
   m_CookingOptions: 30
   m_Mesh: {fileID: 4300000, guid: bbed5699cd7c4aa458e8cad4f96afb32, type: 3}
+--- !u!114 &1635547451324038909
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1500899924992442}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 47c8469a0a1bb1b409dd333107fcc07a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ObstacleBounds:
+    Min: {x: -2.17, y: -1.48}
+    Max: {x: 1.8, y: 2}

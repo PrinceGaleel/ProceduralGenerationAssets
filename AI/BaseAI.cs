@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using UnityEngine;
 using UnityEngine.Animations.Rigging;
 
@@ -23,10 +24,12 @@ public enum SecondaryAIStates
     Null
 }
 
-public abstract class BaseAI : BaseCharacter
+public abstract class BaseAI : BaseController
 {
-    public MultiAimConstraint HeadConstraint;
+    [Header("Base AI Specific")]
+    [SerializeField] protected MultiAimConstraint HeadConstraint;
     [SerializeField] protected BaseCharacter Target;
+    [SerializeField] protected AnimatorManager Anim;
 
     [Header("Timer Variables")]
     [SerializeField] protected float AttackRange;
@@ -56,51 +59,60 @@ public abstract class BaseAI : BaseCharacter
     [SerializeField] protected float MinBackOffDistance;
     [SerializeField] protected float MaxBackOffDistance;
 
-    protected override void Awake()
+    public BaseCharacter GetCharacter { get { return MyCharacter; } }
+    public int SetTeamID { set { MyCharacter.MyTeamID = value; } }
+
+    protected void Awake()
     {
-        base.Awake();
-        ChangeAnimation(RestingAnim);
+        Anim.Rest();
     }
 
     protected virtual void Start()
     {
-        SetIdling();
+        SetMainIdling();
+    }
+
+    protected void Update()
+    {
+        CurrentStateAction?.Invoke();
     }
 
     protected virtual void SetWalking(Vector3 destination)
     {
-        SetMoving(destination, WalkingSpeed, WalkingAnim);
+        Anim.Walk();
+        SetMoving(destination, WalkingSpeed);
     }
     protected virtual void SetRunning(Vector3 destination)
     {
-        SetMoving(destination, SprintSpeed, RunningAnim);
+        Anim.Run();
+        SetMoving(destination, SprintSpeed);
     }
-    protected virtual void SetMoving(Vector3 destination, float speed, string animName)
+    protected virtual void SetMoving(Vector3 destination, float speed)
     {
-        ChangeAnimation(animName);
         SecondaryState = SecondaryAIStates.Walking;
         SetDestination(destination);
         AgentSpeed = speed;
         AgentStopped = false;
+        AgentUpdateRotation = true;
     }
 
     protected abstract void SetDestination(Vector3 destination);
     protected virtual void SetRotating()
     {
         SecondaryState = SecondaryAIStates.Rotating;
-        ChangeAnimation(IdleName);
+        Anim.Idle();
         AgentStopped = true;
         AgentUpdateRotation = false;
     }
-    public virtual void SetIdling()
+    public virtual void SetMainIdling()
     {
         CurrentStateAction = null;
         MainState = MainAIStates.Idling;
         SecondaryState = SecondaryAIStates.Waiting;
-        ChangeAnimation(IdleName);
+        Anim.Idle();
         AgentStopped = false;
     }
-    public void SetIdling(Vector3 destination)
+    public void SetMainIdling(Vector3 destination)
     {
         CurrentStateAction = IdlingAction;
         MainState = MainAIStates.Idling;
@@ -109,19 +121,20 @@ public abstract class BaseAI : BaseCharacter
     }
     protected virtual void SetBackingOff()
     {
-        ChangeAnimation(BackwardAnim);
+        Anim.WalkBackwards();
         SecondaryState = SecondaryAIStates.BackingOff;
         ResetAgentPath();
-        AgentStopped = false;
+        AgentStopped = false; 
+        AgentUpdateRotation = false;
         AgentSpeed = BackingOffSpeed;
     }
-    public virtual void SetWaiting(string animName)
+    public virtual void SetWaiting()
     {
         SecondaryState = SecondaryAIStates.Waiting;
-        ChangeAnimation(animName);
+        Anim.Idle();
         AgentStopped = true;
     }
-    public virtual void SetPatrolling()
+    public virtual void SetMainPatrolling()
     {
         if (PatrolPoints != null)
         {
@@ -138,16 +151,16 @@ public abstract class BaseAI : BaseCharacter
                 SetWalking(PatrolPoints[0]);
                 return;
             }
-            else if(PatrolPoints.Length == 1)
+            else if (PatrolPoints.Length == 1)
             {
-                SetIdling(PatrolPoints[0]);
+                SetMainIdling(PatrolPoints[0]);
                 return;
             }
         }
 
-        SetIdling();
+        SetMainIdling();
     }
-    public abstract void SetPatrolling(Vector3[] patrolPoints);
+    public abstract void SetMainPatrolling(Vector3[] patrolPoints);
     public virtual void SetAttackingChase(BaseCharacter target)
     {
         AttackTimer = AttackCooldown + 1;
@@ -157,27 +170,64 @@ public abstract class BaseAI : BaseCharacter
         SetRunning(Target.GetTransform.position);
     }
 
-    protected virtual void TargetCheck() { AttackTimer += Time.deltaTime; }
-
-    protected virtual void AttackingChaseAction()
+    public virtual void SetEncircling(BaseCharacter target) 
+    {
+        Target = target;
+        HeadConstraint.enabled = true;
+        SetEncircling(); 
+    }
+    public virtual void SetEncircling()
+    {
+        Anim.Run();
+        AgentSpeed = WalkingSpeed;
+        ResetAgentPath();
+        AgentStopped = false;
+        AgentUpdateRotation = false;
+        SecondaryState = SecondaryAIStates.Encircling;
+    }
+    public virtual void EncirclingAction()
     {
         TargetCheck();
 
-        if (TargetDestinationDistance > 1) SetDestination(Target.GetTransform.position);
-        else if (AttackTimer > AttackCooldown && TargetDistance < AttackRange)
+        Vector3 newPos = (Quaternion.AngleAxis(1, new(0, 1, 0)) * (MyTransform.position - Target.GetTransform.position)) + Target.GetTransform.position;
+        AgentMove(0.6f * Time.deltaTime * WalkingSpeed * (newPos - MyTransform.position).normalized);
+        RotateTowards(newPos);
+
+        if (AttackTimer > AttackCooldown || TargetDistance > MaxBackOffDistance)
         {
-            SetRotating();
-            CurrentStateAction = AttackingRotatingAction;
+            SetRunning(Target.GetTransform.position);
+            CurrentStateAction = AttackingChaseAction;
         }
         else if (TargetDistance < MinBackOffDistance)
         {
             SetBackingOff();
             CurrentStateAction = AttackingBackingOffAction;
         }
-        else if (DestinationDistance < 1)
+    }
+
+    protected virtual void TargetCheck() { AttackTimer += Time.deltaTime; }
+
+    protected virtual void AttackingChaseAction()
+    {
+        TargetCheck();
+        if (TargetDestinationDistance > 1) SetDestination(Target.GetTransform.position);
+        else if (AttackTimer > AttackCooldown)
         {
-            SetWaiting(IdleName);
-            CurrentStateAction = AttackingWaitingAction;
+            if (TargetDistance < AttackRange)
+            {
+                SetRotating();
+                CurrentStateAction = AttackingRotatingAction;
+            }
+        }
+        else if (TargetDistance < MinBackOffDistance)
+        {
+            SetBackingOff();
+            CurrentStateAction = AttackingBackingOffAction;
+        }
+        else if(TargetDistance < (MinBackOffDistance + MaxBackOffDistance) / 2)
+        {
+            SetEncircling();
+            CurrentStateAction = EncirclingAction;
         }
     }
     protected virtual void AttackingRotatingAction()
@@ -210,8 +260,8 @@ public abstract class BaseAI : BaseCharacter
         }
         else if (TargetDistance > MinBackOffDistance)
         {
-            SetWaiting(IdleName);
-            CurrentStateAction = AttackingWaitingAction;
+            SetEncircling();
+            CurrentStateAction = EncirclingAction;
         }
     }
     protected virtual void AttackingWaitingAction()
@@ -241,7 +291,7 @@ public abstract class BaseAI : BaseCharacter
         }
     }
 
-    protected void IdlingAction() { if (SecondaryState == SecondaryAIStates.Walking && DestinationDistance < 1) SetIdling(); }
+    protected void IdlingAction() { if (SecondaryState == SecondaryAIStates.Walking && DestinationDistance < 1) SetMainIdling(); }
     protected void PatrollingAction()
     {
         if (SecondaryState == SecondaryAIStates.Walking)
@@ -249,7 +299,7 @@ public abstract class BaseAI : BaseCharacter
             if (DestinationDistance < 1)
             {
                 WaitingTimer = 0;
-                SetWaiting(IdleName);
+                SetWaiting();
             }
         }
         else if (SecondaryState == SecondaryAIStates.Waiting)
@@ -283,16 +333,29 @@ public abstract class BaseAI : BaseCharacter
     }
     protected void BasicMeleeAttack()
     {
-        Anim.SetInteger(WeaponNumber, 0);
+        Anim.SetWeaponNumber(0);
         Anim.SetTrigger("AttackOne");
         WaitingTimer = 0;
         AttackTimer = 0;
-        Fists[0].ToggleFist(true);
+        Fists[0].ToggleWeapon(true);
     }
-    protected bool RotateTowardsTarget()
+    protected bool RotateTowards(Vector3 position)
     {
-        float yRotation = Quaternion.LookRotation(Target.GetTransform.position - MyTransform.position).eulerAngles.y;
+        float yRotation = Quaternion.LookRotation(position - MyTransform.position).eulerAngles.y;
         MyTransform.rotation = Quaternion.RotateTowards(MyTransform.rotation, Quaternion.Euler(MyTransform.eulerAngles.x, yRotation, MyTransform.eulerAngles.z), Mathf.Min(Time.deltaTime * RotationSpeed, MathF.Abs(yRotation - MyTransform.eulerAngles.y)));
         return true && Mathf.Abs(yRotation - MyTransform.eulerAngles.y) < 5f;
     }
+    protected bool RotateTowardsTarget()
+    {
+        return RotateTowards(Target.GetTransform.position);
+    }
+
+#if UNITY_EDITOR
+    protected override void OnValidate()
+    {
+        base.OnValidate();
+
+        if (!Anim) Anim = GetComponentInChildren<AnimatorManager>();
+    }
+#endif
 }

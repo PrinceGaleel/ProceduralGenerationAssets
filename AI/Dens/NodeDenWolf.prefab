@@ -246,7 +246,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   CurrentArmorRating: 0
-  Character: {fileID: -5271823159128510018}
+  Character: {fileID: 3363986564862441580}
   DamageMultiplier: 0.8
 --- !u!1 &1184568658847334
 GameObject:
@@ -340,7 +340,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   CurrentArmorRating: 0
-  Character: {fileID: -5271823159128510018}
+  Character: {fileID: 3363986564862441580}
   DamageMultiplier: 0.8
 --- !u!1 &1204771042999782
 GameObject:
@@ -464,7 +464,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   CurrentArmorRating: 0
-  Character: {fileID: -5271823159128510018}
+  Character: {fileID: 3363986564862441580}
   DamageMultiplier: 0.8
 --- !u!1 &1227735497199808
 GameObject:
@@ -557,7 +557,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   CurrentArmorRating: 0
-  Character: {fileID: -5271823159128510018}
+  Character: {fileID: 3363986564862441580}
   DamageMultiplier: 1
 --- !u!1 &1262260006197776
 GameObject:
@@ -619,7 +619,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   CurrentArmorRating: 0
-  Character: {fileID: -5271823159128510018}
+  Character: {fileID: 3363986564862441580}
   DamageMultiplier: 0.8
 --- !u!1 &1271138617705620
 GameObject:
@@ -747,7 +747,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   CurrentArmorRating: 0
-  Character: {fileID: -5271823159128510018}
+  Character: {fileID: 3363986564862441580}
   DamageMultiplier: 0.8
 --- !u!1 &1332994541535204
 GameObject:
@@ -840,7 +840,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   CurrentArmorRating: 0
-  Character: {fileID: -5271823159128510018}
+  Character: {fileID: 3363986564862441580}
   DamageMultiplier: 0.8
 --- !u!1 &1400499649821958
 GameObject:
@@ -933,7 +933,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   CurrentArmorRating: 0
-  Character: {fileID: -5271823159128510018}
+  Character: {fileID: 3363986564862441580}
   DamageMultiplier: 1
 --- !u!1 &1411430603249936
 GameObject:
@@ -995,7 +995,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   CurrentArmorRating: 0
-  Character: {fileID: -5271823159128510018}
+  Character: {fileID: 3363986564862441580}
   DamageMultiplier: 0.8
 --- !u!1 &1429635640016956
 GameObject:
@@ -1089,7 +1089,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   CurrentArmorRating: 0
-  Character: {fileID: -5271823159128510018}
+  Character: {fileID: 3363986564862441580}
   DamageMultiplier: 1
 --- !u!1 &1469370110053680
 GameObject:
@@ -1232,7 +1232,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f8d0e7ba56f8e584c9b571ba94fa7a10, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Character: {fileID: -5271823159128510018}
+  Character: {fileID: 3363986564862441580}
   Damage: 10
   WeaponNum: 0
   MyCollider: {fileID: 7835408352395544375}
@@ -1325,7 +1325,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   CurrentArmorRating: 0
-  Character: {fileID: -5271823159128510018}
+  Character: {fileID: 3363986564862441580}
   DamageMultiplier: 0.8
 --- !u!1 &1564268816905920
 GameObject:
@@ -1546,7 +1546,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   CurrentArmorRating: 0
-  Character: {fileID: -5271823159128510018}
+  Character: {fileID: 3363986564862441580}
   DamageMultiplier: 0.8
 --- !u!1 &1672113489759722
 GameObject:
@@ -1639,7 +1639,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   CurrentArmorRating: 0
-  Character: {fileID: -5271823159128510018}
+  Character: {fileID: 3363986564862441580}
   DamageMultiplier: 0.8
 --- !u!1 &1732460002252636
 GameObject:
@@ -1701,7 +1701,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   CurrentArmorRating: 0
-  Character: {fileID: -5271823159128510018}
+  Character: {fileID: 3363986564862441580}
   DamageMultiplier: 0.8
 --- !u!1 &1735516423897896
 GameObject:
@@ -1763,7 +1763,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   CurrentArmorRating: 0
-  Character: {fileID: -5271823159128510018}
+  Character: {fileID: 3363986564862441580}
   DamageMultiplier: 0.8
 --- !u!1 &1738986965219230
 GameObject:
@@ -1839,7 +1839,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   CurrentArmorRating: 0
-  Character: {fileID: -5271823159128510018}
+  Character: {fileID: 3363986564862441580}
   DamageMultiplier: 1
 --- !u!1 &1744429126559222
 GameObject:
@@ -2004,12 +2004,14 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4906187713331098}
-  - component: {fileID: -5271823159128510018}
+  - component: {fileID: 6676035756438180828}
   - component: {fileID: 95605706055870404}
+  - component: {fileID: 6290691550728974472}
+  - component: {fileID: 3363986564862441580}
+  - component: {fileID: -5271823159128510018}
   - component: {fileID: -516038310286894451}
   - component: {fileID: 8193417202916341566}
   - component: {fileID: -2819125382277446055}
-  - component: {fileID: 6676035756438180828}
   m_Layer: 9
   m_Name: NodeDenWolf
   m_TagString: Untagged
@@ -2045,59 +2047,29 @@ Transform:
   - {fileID: 4991304303960748}
   - {fileID: 4514449603950490}
   - {fileID: 4600640488368948}
+  - {fileID: 1220210321019364465}
+  - {fileID: 1404094333143079619}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &-5271823159128510018
-MonoBehaviour:
+--- !u!143 &6676035756438180828
+CharacterController:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1811715708561768}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
   m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 120676bd3682cc54e9d9b308ad0e2b11, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  CurrentHealth: 100
-  MaxHealth: 100
-  CurrentStamina: 100
-  MaxStamina: 100
-  CurrentMana: 0
-  MaxMana: 0
-  BaseDamage: 10
-  CurrentExp: 0
-  ExpToLevelUp: 100
-  Level: 0
-  SkillPoints: 29
-  StaminaRegenState: 1
-  StaminaRegen: 7
-  StaminaRegenTimer: 0
-  StaminaRegenTime: 5
-  WalkingSpeed: 6
-  SprintSpeed: 9
-  BackingOffSpeed: 4
-  StrafeSpeed: 5
-  DodgeSpeed: 9
-  RotationSpeed: 160
-  MyTransform: {fileID: 4906187713331098}
-  Anim: {fileID: 95605706055870404}
-  _Inventory: {fileID: 8193417202916341566}
-  Fists:
-  - {fileID: 699922750987530746}
-  Drops: []
-  MyRace: 1
-  MyTeamID: 0
-  HeadConstraint: {fileID: 0}
-  Target: {fileID: 0}
-  AttackRange: 5
-  AttackTimer: 0
-  AttackCooldown: 5
-  MaxBackOffDistance: 10
-  MinBackOffDistance: 5
-  Agent: {fileID: -516038310286894451}
-  Den: {fileID: 0}
+  serializedVersion: 2
+  m_Height: 0.5
+  m_Radius: 0.5
+  m_SlopeLimit: 45
+  m_StepOffset: 0.3
+  m_SkinWidth: 0.08
+  m_MinMoveDistance: 0.001
+  m_Center: {x: 0, y: 0.5, z: 0}
 --- !u!95 &95605706055870404
 Animator:
   serializedVersion: 4
@@ -2118,6 +2090,91 @@ Animator:
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorControllerStateOnDisable: 0
+--- !u!114 &6290691550728974472
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1811715708561768}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b4e0354fce3b58d41b7a509f2499a7ae, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Anim: {fileID: 95605706055870404}
+  LastAnimations: []
+  Dead: 0
+--- !u!114 &3363986564862441580
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1811715708561768}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9647ef168784c034695b4ec018303cc2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  CurrentHealth: 100
+  MaxHealth: 100
+  CurrentStamina: 100
+  MaxStamina: 100
+  CurrentMana: 100
+  MaxMana: 100
+  CurrentExp: 0
+  ExpToLevelUp: 100
+  Level: 0
+  SkillPoints: 29
+  StaminaRegenState: 1
+  StaminaRegen: 7
+  StaminaRegenTimer: 0
+  StaminaRegenTime: 5
+  AnimManager: {fileID: 6290691550728974472}
+  MyTransform: {fileID: 4906187713331098}
+  _Inventory: {fileID: 8193417202916341566}
+  Drops: []
+  MyRace: 0
+  MyTeamID: 0
+--- !u!114 &-5271823159128510018
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1811715708561768}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 120676bd3682cc54e9d9b308ad0e2b11, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  AnimManager: {fileID: 6290691550728974472}
+  MyTransform: {fileID: 4906187713331098}
+  MyCharacter: {fileID: 3363986564862441580}
+  BaseDamage: 10
+  Fists:
+  - {fileID: 699922750987530746}
+  WalkingSpeed: 6
+  SprintSpeed: 9
+  BackingOffSpeed: 4
+  StrafeSpeed: 5
+  DodgeSpeed: 9
+  RotationSpeed: 160
+  HeadConstraint: {fileID: 0}
+  Target: {fileID: 0}
+  Anim: {fileID: 6290691550728974472}
+  AttackRange: 7
+  AttackTimer: 0
+  AttackCooldown: 5
+  MainState: 0
+  SecondaryState: 0
+  CurrentDestination: {x: 0, y: 0, z: 0}
+  PatrolPoints: []
+  MinBackOffDistance: 7
+  MaxBackOffDistance: 13
+  Agent: {fileID: -516038310286894451}
+  Den: {fileID: 0}
 --- !u!114 &-516038310286894451
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2130,12 +2187,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7526bc5dce003444bbe179015f14e647, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Controller: {fileID: 6676035756438180828}
+  CanMove: 1
+  IsGroundedPhysics: 0
   MyTransform: {fileID: 4906187713331098}
+  MyController: {fileID: 6676035756438180828}
+  GroundChecker: {fileID: 1220210321019364465}
+  Vec2Velocity: {x: 0, y: 0}
+  VerticalAcceleration: 0
+  VerticalSpeed: 0
+  JumpStrength: 2
   NodeState: 0
   _CurrentJobID: 0
-  MovementSpeed: 6
-  RotationSpeed: 160
+  CurrentMovementSpeed: 0
+  CurrentRotationSpeed: 160
   UpdateRotation: 1
   Stopped: 0
 --- !u!114 &8193417202916341566
@@ -2150,7 +2214,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 19c8a127549cbdb438461c150c34fc75, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Owner: {fileID: -5271823159128510018}
+  Owner: {fileID: 3363986564862441580}
   MyEquipmentContainer: {fileID: 0}
   Gold: 0
 --- !u!114 &-2819125382277446055
@@ -2165,24 +2229,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0cbf25b1d9fda08478e9752e1a8490d9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!143 &6676035756438180828
-CharacterController:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1811715708561768}
-  m_Material: {fileID: 0}
-  m_IsTrigger: 0
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Height: 1
-  m_Radius: 0.5
-  m_SlopeLimit: 45
-  m_StepOffset: 0.3
-  m_SkinWidth: 0.08
-  m_MinMoveDistance: 0.001
-  m_Center: {x: 0, y: 0.5, z: 0}
 --- !u!1 &1817945666988552
 GameObject:
   m_ObjectHideFlags: 0
@@ -2309,7 +2355,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   CurrentArmorRating: 0
-  Character: {fileID: -5271823159128510018}
+  Character: {fileID: 3363986564862441580}
   DamageMultiplier: 0.8
 --- !u!1 &1934176251570566
 GameObject:
@@ -2489,7 +2535,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   CurrentArmorRating: 0
-  Character: {fileID: -5271823159128510018}
+  Character: {fileID: 3363986564862441580}
   DamageMultiplier: 2
 --- !u!1 &1971053421766010
 GameObject:
@@ -2582,7 +2628,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   CurrentArmorRating: 0
-  Character: {fileID: -5271823159128510018}
+  Character: {fileID: 3363986564862441580}
   DamageMultiplier: 1
 --- !u!1 &1998365729734212
 GameObject:
@@ -2644,5 +2690,82 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   CurrentArmorRating: 0
-  Character: {fileID: -5271823159128510018}
+  Character: {fileID: 3363986564862441580}
   DamageMultiplier: 0.8
+--- !u!1 &4705538460854955863
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1404094333143079619}
+  - component: {fileID: 1486814517556131206}
+  m_Layer: 15
+  m_Name: ControllerCollider
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1404094333143079619
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4705538460854955863}
+  m_LocalRotation: {x: 0.5, y: -0.5, z: -0.5, w: -0.5}
+  m_LocalPosition: {x: 0, y: 0.222, z: 0}
+  m_LocalScale: {x: 0.675, y: 0.5, z: 0.675}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4906187713331098}
+  m_RootOrder: 17
+  m_LocalEulerAnglesHint: {x: 270, y: 270, z: -180}
+--- !u!64 &1486814517556131206
+MeshCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4705538460854955863}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 4
+  m_Convex: 1
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 4493585093827132993, guid: e3751f1ca71c6d24ab8709e0bb221068, type: 3}
+--- !u!1 &8433872094481281926
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1220210321019364465}
+  m_Layer: 0
+  m_Name: Ground Checker
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1220210321019364465
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8433872094481281926}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0.1, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4906187713331098}
+  m_RootOrder: 16
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}

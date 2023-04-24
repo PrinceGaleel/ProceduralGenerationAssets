@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -10,7 +11,7 @@ public class Quest
     public readonly int RequiredAmount;
 
     public readonly int GoldReward;
-    public readonly PairList<Item, int> Drops;
+    public readonly List<CustomTuple<Item, int>> Drops;
     public readonly BaseCharacter Questee;
 
     public Quest(string name, string description, int requiredAmount)
@@ -23,7 +24,7 @@ public class Quest
 
     public virtual void GiveReward()
     {
-        PlayerStats.Instance._Inventory.AddItems(Drops);
+        PlayerStats.Instance.MyInventory.AddItems(Drops);
 
     }
 }

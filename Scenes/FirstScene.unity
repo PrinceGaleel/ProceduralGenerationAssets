@@ -167,25 +167,44 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 6bae0edd7cb91674da79c012555efd05, type: 2}
   - {fileID: 11400000, guid: aef5582ed9fade24d82ed2b2273dbb9b, type: 2}
   - {fileID: 11400000, guid: 1db7df6695c6ac34298f7ecaf21adeed, type: 2}
+  TerrainGradient:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0.01
+      inSlope: 0.08758668
+      outSlope: 0.08758668
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0.09252699
+    - serializedVersion: 3
+      time: 0.087418556
+      value: 0.07667662
+      inSlope: 1.0628182
+      outSlope: 1.0628182
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.027129343
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 1.011771
+      outSlope: 1.011771
+      tangentMode: 34
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
   GrassMaterial: {fileID: 2100000, guid: 2df821560363b734f9e608cd58c126e7, type: 2}
   GrassShader: {fileID: 7200000, guid: 710ea47fbf095524caa7eba6d0e1fa25, type: 3}
   MobDenPrefabs:
   - {fileID: 2904323585035569092, guid: d01947d5753937d4683c4928b591c9eb, type: 3}
-  CenterBuildings:
-    Keys: []
-    Values: []
-  EssentialBuildings:
-    Keys: []
-    Values: []
-  Houses:
-    Keys: []
-    Values: []
-  OptionalBuildings:
-    Keys: []
-    Values: []
-  Extras:
-    Keys: []
-    Values: []
+  Village: {fileID: 11400000, guid: 69833a43119188a4fb835dfdedf08419, type: 2}
 --- !u!4 &192318521
 Transform:
   m_ObjectHideFlags: 0

@@ -1,14 +1,22 @@
 using System.Collections;
 using System.Collections.Generic;
+
 using UnityEngine;
+using Unity.Jobs;
+
+using static Chunk;
+using static GameManager;
+using static PerlinData;
+using Unity.Burst;
 
 public class GrassChunk : MonoBehaviour
 {
-    private Vector2Int MyPos;
+    public Vector2Int MyPos;
     private List<SourceVertex> SourceVertices;
     public static List<GrassShaderInteractor> ShaderInteractors;
 
     [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)]
+    [System.Serializable]
     public struct SourceVertex
     {
         public Vector3 Position;
@@ -30,23 +38,15 @@ public class GrassChunk : MonoBehaviour
     private static int DispatchSize;
 
     [Header("Constants")]
-    private const float MinimumDirtPerlin = 0.15f;
-
     public const float WindSpeed = 6;
     public const float WindStrength = 0.05f;
-
     public const int BladesPerVertex = 3;
     public const int SegmentsPerBlade = 3;
-
     public const float BrushSize = 10;
-    public const int GrassDensity = 3;
-
     public const float GrassWidth = 0.1f;
     public const float GrassHeight = 0.3f;
-
     public const float MinFadeDistance = 40;
     public const float MaxFadeDistance = 60;
-
     public const float GrassAffectRadius = 0.8f;
     public const float GrassAffectStrength = 1;
 
@@ -117,6 +117,10 @@ public class GrassChunk : MonoBehaviour
         SourceVertices = vertices;
         MyGrassBounds = bounds;
 
+        ArgsBuffer?.Dispose();
+        DrawBuffer?.Dispose();
+        SourceVertBuffer?.Dispose();
+
         SourceVertBuffer = new ComputeBuffer(SourceVertices.Count, sizeof(float) * (3 + 3 + 2 + 3), ComputeBufferType.Structured, ComputeBufferMode.Immutable);
         SourceVertBuffer.SetData(SourceVertices);
 
@@ -137,89 +141,87 @@ public class GrassChunk : MonoBehaviour
         RenderTerrainMap.ReloadBlending();
     }
 
-    public class GrassUpdateJob : SecondaryThreadJob
+    public readonly struct GrassUpdateJob : IJob
     {
+        private readonly int GrassNum;
         private readonly Vector2Int NewPos;
-        private readonly GrassChunk MyGrassChunk;
-        private readonly System.Random Rnd;
-        public bool IsCompleted { get; set; }
 
-        public GrassUpdateJob(GrassChunk grassChunk, Vector2Int newPos)
+        public GrassUpdateJob(Vector2Int newPos)
         {
-            MyGrassChunk = grassChunk;
-            MyGrassChunk.MyPos = newPos;
+            GrassNum = GrassManager.GrassChunks[newPos];
             NewPos = newPos;
-            Rnd = new();
-            IsCompleted = false;
         }
 
-        public override void Execute()
+        public void Execute()
         {
-            List<SourceVertex> newSourceVertices = new();
-            Bounds newBounds = new(new(NewPos.x * Chunk.DefaultChunkSize, Chunk.HeightMultipler / 2, NewPos.y * Chunk.DefaultChunkSize),
-                new(Chunk.DefaultChunkSize, Chunk.HeightMultipler * 2, Chunk.DefaultChunkSize));
-
-            Vector2Int max = new(((NewPos.x * Chunk.DefaultChunkSize) - Chunk.DefaultChunkSize / 2) + Chunk.DefaultChunkSize,
-               ((NewPos.y * Chunk.DefaultChunkSize) - Chunk.DefaultChunkSize / 2) + Chunk.DefaultChunkSize);
-
-            for (int i = 0, y = (NewPos.y * Chunk.DefaultChunkSize) - Chunk.DefaultChunkSize / 2; y <= max.y; y++)
+            if (GrassManager.GrassChunks.ContainsKey(NewPos))
             {
-                for (int x = (NewPos.x * Chunk.DefaultChunkSize) - Chunk.DefaultChunkSize / 2; x <= max.x; x++)
-                {
-                    for (int j = 0; j < GrassDensity; j++)
-                    {
-                        float randX = ((float)Rnd.NextDouble() * 2 * BrushSize) - BrushSize + x;
-                        float randZ = ((float)Rnd.NextDouble() * 2 * BrushSize) - BrushSize + y;
-                        float dirtPerlin = Chunk.GetDirtPerlin(randX, randZ);
+                List<SourceVertex> newSourceVertices = new();
+                Bounds newBounds = new(new(NewPos.x * ChunkSize, HeightMultipler / 2, NewPos.y * ChunkSize),
+                    new(ChunkSize, HeightMultipler * 2, ChunkSize));
 
-                        if (Chunk.GetDirtPerlin(randX, randZ) > MinimumDirtPerlin)
+                Vector2Int max = new(((NewPos.x * ChunkSize) - ChunkSize / 2) + ChunkSize,
+                   ((NewPos.y * ChunkSize) - ChunkSize / 2) + ChunkSize);
+
+                lock (GrassManager.Randoms[GrassNum])
+                {
+                    for (int i = 0, y = (NewPos.y * ChunkSize) - ChunkSize / 2; y <= max.y; y++)
+                    {
+                        for (int x = (NewPos.x * ChunkSize) - ChunkSize / 2; x <= max.x; x++)
                         {
+                            float randX = ((float)GrassManager.Randoms[GrassNum].NextDouble() * 2 * BrushSize) - BrushSize + x;
+                            float randZ = ((float)GrassManager.Randoms[GrassNum].NextDouble() * 2 * BrushSize) - BrushSize + y;
+
                             newSourceVertices.Add(new()
                             {
-                                Position = Chunk.GetPerlinPosition(randX, randZ),
+                                Position = GetPerlinPosition(randX, randZ),
                                 Normal = Vector3.up,
                                 UV = new(GrassWidth, GrassHeight),
-                                Color = TerrainGradient.TerrainColorAsVector3(randX, randZ, dirtPerlin)
+                                Color = TerrainColorGradient.TerrainColorAsVector3(randX, randZ)
                             });
-                        }
 
-                        i++;
+                            i++;
+                        }
                     }
                 }
-            }
 
-            IsCompleted = true;
-            new RefreshBuffers(NewPos, MyGrassChunk, newSourceVertices, newBounds).Schedule();
+                new RefreshBuffers(GrassNum, NewPos, newSourceVertices, newBounds).Schedule();
+            }
         }
     }
 
     private class RefreshBuffers : MainThreadJob
     {
+        private readonly int GrassNum;
         private readonly Vector2Int MyPos;
-        private readonly GrassChunk MyGrassChunk;
         private readonly List<SourceVertex> NewSourceVertices;
         private readonly Bounds NewBounds;
 
-        public RefreshBuffers(Vector2Int myPos, GrassChunk grassChunk, List<SourceVertex> newSourceVertices, Bounds newBounds)
+        public RefreshBuffers(int grassNum, Vector2Int myPos, List<SourceVertex> newSourceVertices, Bounds newBounds)
         {
+            GrassNum = grassNum;
+            Priority = 0;
             MyPos = myPos;
-            MyGrassChunk = grassChunk;
             NewSourceVertices = newSourceVertices;
             NewBounds = newBounds;
         }
 
         public override void Execute()
         {
-            if (MyPos == MyGrassChunk.MyPos)
+            if (GrassManager.GrassChunks.ContainsKey(MyPos))
             {
-                if (NewSourceVertices.Count > 0)
+                GrassChunk grassChunk = GrassManager.References[GrassNum];
+                if (MyPos == grassChunk.MyPos)
                 {
-                    MyGrassChunk.UpdateGrass(NewSourceVertices, NewBounds);
-                    MyGrassChunk.enabled = true;
-                }
-                else
-                {
-                    MyGrassChunk.enabled = false;
+                    if (NewSourceVertices.Count > 0)
+                    {
+                        grassChunk.UpdateGrass(NewSourceVertices, NewBounds);
+                        grassChunk.enabled = true;
+                    }
+                    else
+                    {
+                        grassChunk.enabled = false;
+                    }
                 }
             }
         }

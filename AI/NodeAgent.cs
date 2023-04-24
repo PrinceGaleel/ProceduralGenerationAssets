@@ -11,23 +11,19 @@ public enum NodeAIStates
     Following_Path
 }
 
-[RequireComponent(typeof(CharacterController))]
-public class NodeAgent : MonoBehaviour
+public class NodeAgent : ControllerExtension
 {
-    [SerializeField] private CharacterController Controller;
-    [SerializeField] private Transform MyTransform;
     private Vector2 MyVec2Pos { get { return new(MyTransform.position.x, MyTransform.position.z); } }
     private Action CurrentCheck = null;
     [SerializeField] private NodeAIStates NodeState = NodeAIStates.Idle;
 
-    public int CurrentJobID { get { return _CurrentJobID; } set { _CurrentJobID = value; } }
+    [Header("JobInfo")]
     [SerializeField] private int _CurrentJobID;
+    public int CurrentJobID { get { return _CurrentJobID; } set { _CurrentJobID = value; } }
 
     [Header("Physics")]
-    public float MovementSpeed;
-    public float RotationSpeed;
-    private Vector2 Velocity2D = new();
-    private readonly float VerticalSpeed = Physics.gravity.y;
+    public float CurrentMovementSpeed;
+    public float CurrentRotationSpeed;
     public bool UpdateRotation = true;
 
     [Header("Pathfinding")]
@@ -35,13 +31,11 @@ public class NodeAgent : MonoBehaviour
     private Vector2 TargetPosition;
     private const float MinDistToTarget = 0.1f;
 
-    public void Move(Vector3 direction) { Controller.Move(direction); }
-
     public void Warp(Vector3 position)
     {
-        Controller.enabled = false;
+        EnableController = false;
         MyTransform.position = position;
-        Controller.enabled = true;
+        EnableController = true;
     }
 
     public bool IsStopped
@@ -59,11 +53,10 @@ public class NodeAgent : MonoBehaviour
 
     private void Awake() { Stopped = false; }
 
-    private void Update()
+    private void Update() 
     {
-        CurrentCheck?.Invoke();
-        if (!Stopped) Controller.Move(Time.deltaTime * new Vector3(Velocity2D.x * MovementSpeed, VerticalSpeed, Velocity2D.y * MovementSpeed));
-        else { Controller.Move(Time.deltaTime * new Vector3(0, VerticalSpeed, 0)); }
+        CurrentCheck?.Invoke(); 
+        MoveController();
     }
 
     public void SetPath(ConcurrentQueue<Vector2> positions, int jobID)
@@ -87,10 +80,14 @@ public class NodeAgent : MonoBehaviour
         if (UpdateRotation)
         {
             Quaternion targetRot = Quaternion.LookRotation(new Vector3(TargetPosition.x, 0, TargetPosition.y) - new Vector3(MyTransform.position.x, 0, MyTransform.position.z));
-            MyTransform.rotation = Quaternion.RotateTowards(transform.rotation, targetRot, RotationSpeed * Time.deltaTime);
+            MyTransform.rotation = Quaternion.RotateTowards(transform.rotation, targetRot, CurrentRotationSpeed * Time.deltaTime);
         }
 
-        Velocity2D = (TargetPosition - MyVec2Pos).normalized;
+        float aSide = Vector3.Distance(MyTransform.position, MyTransform.forward + MyTransform.position);
+        float bSide = Vector3.Distance(MyTransform.position, new Vector3(TargetPosition.x, 0, TargetPosition.y));
+        float cSide = Vector3.Distance(MyTransform.forward + MyTransform.position, new Vector3(TargetPosition.x, 0, TargetPosition.y));
+
+        Velocity = (TargetPosition - MyVec2Pos).normalized * (CurrentMovementSpeed * ((360 - ExtraUtils.Cosine3Sides(aSide, bSide, cSide)) / 360));
         if (Vector2.Distance(TargetPosition, MyVec2Pos) < MinDistToTarget)
         {
             if (CurrentPath.Count > 0) CurrentPath.TryDequeue(out TargetPosition);
@@ -101,29 +98,25 @@ public class NodeAgent : MonoBehaviour
     public void SetIdle()
     {
         NodeState = NodeAIStates.Idle;
-        Velocity2D = Vector2.zero;
+        Velocity = Vector2.zero;
         CurrentPath = new();
         CurrentCheck = null;
     }
 
-    public void SetDestination(Vector2 target)
-    {
-        NodeState = NodeAIStates.Waiting_For_Path;
-        Velocity2D = Vector2.zero;
-        CurrentCheck = null;
-        AINodeManager.GetPath(this, new(MyTransform.position.x, MyTransform.position.z), target);
-    }
-
     public void SetDestination(Vector3 target)
     {
-        SetDestination(new Vector2(target.x, target.z));
+        NodeState = NodeAIStates.Waiting_For_Path;
+        Velocity = Vector2.zero;
+        CurrentCheck = null;
+        AINodeManager.QueueGetPath(this, MyTransform.position, target);
     }
 
 #if UNITY_EDITOR
-    protected void OnValidate()
+    protected override void OnValidate()
     {
-        Controller = GetComponent<CharacterController>();
-        MyTransform = transform;
+        base.OnValidate();
+
+        if (!MyTransform) MyTransform = transform;
     }
 
     private void OnDrawGizmosSelected()
@@ -133,19 +126,19 @@ public class NodeAgent : MonoBehaviour
             Gizmos.color = Color.blue;
             List<Vector2> path = new(CurrentPath);
 
-            Gizmos.DrawCube(MyTransform.position, new(0.5f, 0, 0.5f));
-            Gizmos.DrawCube(new Vector3(TargetPosition.x, MyTransform.position.y, TargetPosition.y), new(0.5f, 0, 0.5f));
+            Gizmos.DrawSphere(MyTransform.position, 0.25f);
+            Gizmos.DrawSphere(new Vector3(TargetPosition.x, MyTransform.position.y, TargetPosition.y), 0.25f);
             Gizmos.DrawLine(MyTransform.position, new Vector3(TargetPosition.x, MyTransform.position.y, TargetPosition.y));
 
             if (CurrentPath.Count > 0)
             {
                 Gizmos.DrawLine(new Vector3(TargetPosition.x, MyTransform.position.y, TargetPosition.y), new Vector3(path[0].x, MyTransform.position.y, path[0].y));
-                Gizmos.DrawCube(new Vector3(path[0].x, MyTransform.position.y, path[0].y), new(0.5f, 0, 0.5f));
+                Gizmos.DrawSphere(new Vector3(path[0].x, MyTransform.position.y, path[0].y), 0.25f);
                 Gizmos.DrawLine(new Vector3(TargetPosition.x, MyTransform.position.y, TargetPosition.y), new Vector3(path[0].x, MyTransform.position.y, path[0].y));
 
                 for (int i = 1; i < path.Count; i++)
                 {
-                    Gizmos.DrawCube(new Vector3(path[i].x, MyTransform.position.y, path[i].y), new(0.5f, 0, 0.5f));
+                    Gizmos.DrawSphere(new Vector3(path[i].x, MyTransform.position.y, path[i].y), 0.25f);
                     Gizmos.DrawLine(new Vector3(path[i - 1].x, MyTransform.position.y, path[i - 1].y), new Vector3(path[i].x, MyTransform.position.y, path[i].y));
                 }
             }

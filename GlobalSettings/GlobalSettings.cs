@@ -101,7 +101,7 @@ public class GlobalSettings
         {
             ScreenMode = FullScreenMode.ExclusiveFullScreen;
             TargetFPS = 60;
-            VSyncCount = 0;
+            VSyncCount = 1;
 
             ScreenWidth = 1920;
             ScreenHeight = 1080;
@@ -119,13 +119,13 @@ public class GlobalSettings
             }
         }
 
-        public ScreenSettings(int screenWidth, int screenHeight, FullScreenMode screenMode, int fpsTarget, int vSync)
+        public ScreenSettings(int screenWidth, int screenHeight, FullScreenMode screenMode, int fpsTarget)
         {
             ScreenWidth = screenWidth;
             ScreenHeight = screenHeight;
             ScreenMode = screenMode;
             TargetFPS = fpsTarget;
-            VSyncCount = vSync;
+            VSyncCount = 1;
         }
 
         public void AssignResolution()

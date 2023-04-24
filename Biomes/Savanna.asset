@@ -50,7 +50,8 @@ MonoBehaviour:
     - Prefab: {fileID: 186820, guid: d6452cc423df5ae4e99b4cdef7b10e10, type: 3}
       MaxExtensionHeight: 1
       ChanceOfSpawning: 0.5
-    - Prefab: {fileID: 107988, guid: c56d23e67fdb15a41a0e520fdd34d8cc, type: 3}
+    - Prefab: {fileID: 5794013070549378819, guid: 0abce16275e91f54abf8225766015f89,
+        type: 3}
       MaxExtensionHeight: 1
       ChanceOfSpawning: 0.5
     ChanceOfTree: 0.4
